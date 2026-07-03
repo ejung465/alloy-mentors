@@ -32,6 +32,10 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+
+# sensitive account info
+ACCOUNTS.md
 
 # typescript
 *.tsbuildinfo
@@ -41,3 +45,6 @@ app-example
 # generated native folders
 /ios
 /android
+
+# supabase CLI local state (project refs, pooler URLs — not secrets, but local machine state)
+supabase/.temp/

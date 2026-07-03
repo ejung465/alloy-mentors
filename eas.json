@@ -1,0 +1,39 @@
+{
+  "cli": {
+    "version": ">= 18.4.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gcveyqsnllfvnuxurnaq.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_OdUiN5f2vB2j21iVDEG0RA_c-ujP21M"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gcveyqsnllfvnuxurnaq.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_OdUiN5f2vB2j21iVDEG0RA_c-ujP21M"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gcveyqsnllfvnuxurnaq.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_OdUiN5f2vB2j21iVDEG0RA_c-ujP21M"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "archiyaa@hotmail.com",
+        "ascAppId": "6786923831",
+        "appleTeamId": "8CLSBMDM33"
+      }
+    }
+  }
+}
