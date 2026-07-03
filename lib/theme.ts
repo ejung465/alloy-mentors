@@ -54,8 +54,10 @@ export const colors = {
   textGhost: 'rgba(34,39,31,0.26)',
 } as const;
 
-/** Harbor-blue gradient — brand mark, primary buttons, FAB. */
-export const alloyGradient = ['#2C7C96', '#165B74', '#0E3E4F'] as const;
+/** Harbor-blue gradient — brand mark, primary buttons, FAB. Tight stops
+ * close to the true #165B74 so the blended result stays a dark teal
+ * instead of drifting toward a brighter cyan. */
+export const alloyGradient = ['#124D63', '#165B74', '#0E3E4F'] as const;
 /** Alias, semantic name. */
 export const metalGradient = alloyGradient;
 /** Faint gray wash used by the aurora backdrop. */
