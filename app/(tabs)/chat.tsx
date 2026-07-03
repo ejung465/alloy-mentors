@@ -523,11 +523,11 @@ export default function ChatScreen() {
       >
         {/* Org group chat */}
         <AnimPress onPress={() => setActiveChat({ type: 'org', id: 'org', full_name: `All ${membersLabel}`, onlineCount: orgUsers.length + 1 })} style={{ marginBottom: 16 }}>
-          <GlassCard style={{ borderColor: 'rgba(62,106,82,0.4)', borderWidth: 1.5 }}>
+          <GlassCard style={{ borderColor: 'rgba(44,124,150,0.4)', borderWidth: 1.5 }}>
             <View style={styles.memberRow}>
-              <View style={[styles.avatarWrap, { backgroundColor: 'rgba(62,106,82,0.18)', borderColor: 'rgba(62,106,82,0.3)', width: 54, height: 54, borderRadius: 27 }]}>
+              <View style={[styles.avatarWrap, { backgroundColor: 'rgba(44,124,150,0.18)', borderColor: 'rgba(44,124,150,0.3)', width: 54, height: 54, borderRadius: 27 }]}>
                 <Ionicons name="people" size={24} color="#41785C" />
-                <View style={[styles.onlineDot, { backgroundColor: '#4C7A61' }]} />
+                <View style={[styles.onlineDot, { backgroundColor: '#2C7C96' }]} />
               </View>
               <View style={{ flex: 1, marginLeft: 16 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -551,7 +551,7 @@ export default function ChatScreen() {
                 <GlassCard>
                   <View style={styles.memberRow}>
                     <View style={[styles.avatarWrap, { backgroundColor: 'rgba(94,116,136,0.15)', borderColor: 'rgba(94,116,136,0.3)' }]}>
-                      <Ionicons name="people-circle-outline" size={22} color="#5E7488" />
+                      <Ionicons name="people-circle-outline" size={22} color="#7A7A7A" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.memberName}>{gc.name}</Text>
@@ -580,14 +580,14 @@ export default function ChatScreen() {
                 <View style={styles.memberRow}>
                   <View style={styles.avatarWrap}>
                     <Text style={styles.avatarText}>{u.full_name?.charAt(0).toUpperCase() || 'U'}</Text>
-                    {onlineUsers[u.id] && <View style={[styles.onlineDot, { backgroundColor: '#4C7A61' }]} />}
+                    {onlineUsers[u.id] && <View style={[styles.onlineDot, { backgroundColor: '#2C7C96' }]} />}
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
                       <Text style={styles.memberName}>{u.full_name || 'Member'}</Text>
                       <Text style={styles.memberTime}>{onlineUsers[u.id] ? 'Online' : 'Offline'}</Text>
                     </View>
-                    <Text style={[styles.memberRole, { color: u.role === 'admin' ? '#4C7A61' : u.role === 'director' ? '#5E7488' : 'rgba(34,39,31,0.45)' }]}>
+                    <Text style={[styles.memberRole, { color: u.role === 'admin' ? '#2C7C96' : u.role === 'director' ? '#7A7A7A' : 'rgba(34,39,31,0.45)' }]}>
                       {u.role} · {u.school || 'Member'}
                     </Text>
                   </View>
@@ -622,7 +622,7 @@ export default function ChatScreen() {
                     style={[styles.tabBtn, newChatTab === tab && styles.tabBtnActive]}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name={tab === 'dm' ? 'person-outline' : 'people-outline'} size={15} color={newChatTab === tab ? '#375946' : 'rgba(34,39,31,0.4)'} />
+                    <Ionicons name={tab === 'dm' ? 'person-outline' : 'people-outline'} size={15} color={newChatTab === tab ? '#165B74' : 'rgba(34,39,31,0.4)'} />
                     <Text style={[styles.tabLabel, newChatTab === tab && styles.tabLabelActive]}>
                       {tab === 'dm' ? 'Direct Message' : 'New Group'}
                     </Text>
@@ -683,7 +683,7 @@ export default function ChatScreen() {
                     </View>
                     {newChatTab === 'group' && (
                       <View style={[styles.checkCircle, isSel && styles.checkCircleSel]}>
-                        {isSel && <Ionicons name="checkmark" size={14} color="#F5EFE3" />}
+                        {isSel && <Ionicons name="checkmark" size={14} color="#F4F6F6" />}
                       </View>
                     )}
                   </TouchableOpacity>
@@ -720,7 +720,7 @@ export default function ChatScreen() {
             </TouchableOpacity>
             <View style={styles.chatAvatar}>
               {activeChat?.type !== 'dm' ? (
-                <Ionicons name="people" size={20} color={activeChat?.type === 'group_chat' ? '#5E7488' : '#3E6A52'} />
+                <Ionicons name="people" size={20} color={activeChat?.type === 'group_chat' ? '#7A7A7A' : '#2C7C96'} />
               ) : (
                 <Text style={styles.avatarText}>{(activeChat as any)?.full_name?.charAt(0).toUpperCase()}</Text>
               )}
@@ -840,7 +840,7 @@ export default function ChatScreen() {
                           </TouchableOpacity>
                         )}
                         {isMe && isGroupFooter && m.status === 'read' && (
-                          <Ionicons name="checkmark-done" size={14} color="#4C7A61" style={{ marginBottom: 4 }} />
+                          <Ionicons name="checkmark-done" size={14} color="#2C7C96" style={{ marginBottom: 4 }} />
                         )}
                         {isMe && isGroupFooter && m.status === 'sent' && (
                           <Ionicons name="checkmark" size={14} color="rgba(34,39,31,0.4)" style={{ marginBottom: 4 }} />
@@ -883,7 +883,7 @@ export default function ChatScreen() {
               />
             </View>
             <TouchableOpacity style={styles.sendBtn} onPress={sendMessage}>
-              <Ionicons name="paper-plane" size={18} color="#375946" />
+              <Ionicons name="paper-plane" size={18} color="#165B74" />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -945,7 +945,7 @@ export default function ChatScreen() {
             <View style={[styles.actionList, { minWidth: 300, padding: 18 }]}>
               <Text style={{ fontFamily: 'Inter-Bold', fontSize: 17, color: '#22271F', marginBottom: 12 }}>Edit message</Text>
               <TextInput
-                style={{ fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F', backgroundColor: '#FBF6EC', borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', borderRadius: 12, padding: 12, minHeight: 60, textAlignVertical: 'top' }}
+                style={{ fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F', backgroundColor: '#F7F8F8', borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', borderRadius: 12, padding: 12, minHeight: 60, textAlignVertical: 'top' }}
                 value={editText}
                 onChangeText={setEditText}
                 multiline
@@ -954,9 +954,9 @@ export default function ChatScreen() {
               <TouchableOpacity
                 onPress={saveEdit}
                 disabled={!editText.trim()}
-                style={{ backgroundColor: '#375946', borderRadius: 12, paddingVertical: 13, alignItems: 'center', marginTop: 14, opacity: editText.trim() ? 1 : 0.5 }}
+                style={{ backgroundColor: '#165B74', borderRadius: 12, paddingVertical: 13, alignItems: 'center', marginTop: 14, opacity: editText.trim() ? 1 : 0.5 }}
               >
-                <Text style={{ fontFamily: 'Inter-Bold', fontSize: 14.5, color: '#F5EFE3' }}>Save</Text>
+                <Text style={{ fontFamily: 'Inter-Bold', fontSize: 14.5, color: '#F4F6F6' }}>Save</Text>
               </TouchableOpacity>
             </View>
           </Pressable>
@@ -1002,14 +1002,14 @@ const styles = StyleSheet.create({
   header: { paddingTop: 72, paddingBottom: 16, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   pageTitle: { fontFamily: 'Inter-Black', fontSize: 34, color: '#22271F', letterSpacing: -1 },
   pageSubtitle: { fontFamily: 'Inter-Regular', fontSize: 14, color: 'rgba(34,39,31,0.45)', marginTop: 3 },
-  headerActions: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(43,70,56,0.16)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.26)', borderRadius: 20, overflow: 'hidden' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(196,196,196,0.16)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', borderRadius: 20, overflow: 'hidden' },
   headerBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  headerDivider: { width: 1, height: 22, backgroundColor: 'rgba(43,70,56,0.32)' },
+  headerDivider: { width: 1, height: 22, backgroundColor: 'rgba(196,196,196,0.32)' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 140 },
   sectionLabel: { fontFamily: 'Inter-SemiBold', fontSize: 11, color: 'rgba(34,39,31,0.3)', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 10, marginTop: 4 },
   memberRow: { flexDirection: 'row', alignItems: 'center' },
-  avatarWrap: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(62,106,82,0.12)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 14, position: 'relative' },
-  avatarText: { fontFamily: 'Inter-Bold', fontSize: 20, color: '#3E6A52' },
+  avatarWrap: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(44,124,150,0.12)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 14, position: 'relative' },
+  avatarText: { fontFamily: 'Inter-Bold', fontSize: 20, color: '#2C7C96' },
   onlineDot: { position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: colors.base },
   memberName: { fontFamily: 'Inter-SemiBold', fontSize: 16, color: '#22271F' },
   memberTime: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(34,39,31,0.35)' },
@@ -1019,78 +1019,78 @@ const styles = StyleSheet.create({
 
   // New chat sheet
   newChatBackdrop: { flex: 1, justifyContent: 'flex-end' },
-  newChatSheet: { height: '85%', overflow: 'hidden', borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: 'rgba(43,70,56,0.32)', backgroundColor: '#FFFDF7' },
-  newChatTop: { padding: 20, paddingTop: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(43,70,56,0.16)', zIndex: 10 },
-  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(43,70,56,0.25)', alignSelf: 'center', marginBottom: 16 },
+  newChatSheet: { height: '85%', overflow: 'hidden', borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: 'rgba(196,196,196,0.32)', backgroundColor: '#FFFFFF' },
+  newChatTop: { padding: 20, paddingTop: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(196,196,196,0.16)', zIndex: 10 },
+  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(196,196,196,0.25)', alignSelf: 'center', marginBottom: 16 },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   sheetTitle: { fontFamily: 'Inter-Bold', fontSize: 20, color: '#22271F' },
-  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(43,70,56,0.22)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.26)', alignItems: 'center', justifyContent: 'center' },
+  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(196,196,196,0.22)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', alignItems: 'center', justifyContent: 'center' },
 
   // Tab toggle
   tabToggle: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', backgroundColor: 'rgba(43,70,56,0.06)' },
-  tabBtnActive: { borderColor: 'rgba(43,70,56,0.4)', backgroundColor: 'rgba(43,70,56,0.14)' },
+  tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', backgroundColor: 'rgba(196,196,196,0.06)' },
+  tabBtnActive: { borderColor: 'rgba(196,196,196,0.4)', backgroundColor: 'rgba(196,196,196,0.14)' },
   tabLabel: { fontFamily: 'Inter-SemiBold', fontSize: 13, color: 'rgba(34,39,31,0.4)' },
   tabLabelActive: { color: '#22271F' },
 
-  groupNameInput: { backgroundColor: 'rgba(43,70,56,0.1)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(43,70,56,0.2)', paddingHorizontal: 16, paddingVertical: 12, fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F', marginBottom: 12 },
+  groupNameInput: { backgroundColor: 'rgba(196,196,196,0.1)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(196,196,196,0.2)', paddingHorizontal: 16, paddingVertical: 12, fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F', marginBottom: 12 },
 
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(43,70,56,0.16)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(43,70,56,0.26)', paddingHorizontal: 14, paddingVertical: 12, gap: 10 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(196,196,196,0.16)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', paddingHorizontal: 14, paddingVertical: 12, gap: 10 },
   searchInput: { flex: 1, fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F' },
-  memberSelectRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(43,70,56,0.16)' },
-  checkCircle: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: 'rgba(43,70,56,0.3)', alignItems: 'center', justifyContent: 'center' },
-  checkCircleSel: { backgroundColor: '#3E6A52', borderColor: '#3E6A52' },
+  memberSelectRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(196,196,196,0.16)' },
+  checkCircle: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: 'rgba(196,196,196,0.3)', alignItems: 'center', justifyContent: 'center' },
+  checkCircleSel: { backgroundColor: '#2C7C96', borderColor: '#2C7C96' },
 
-  createGroupFooter: { padding: 20, paddingBottom: 40, borderTopWidth: 1, borderTopColor: 'rgba(43,70,56,0.16)', gap: 10, zIndex: 10 },
+  createGroupFooter: { padding: 20, paddingBottom: 40, borderTopWidth: 1, borderTopColor: 'rgba(196,196,196,0.16)', gap: 10, zIndex: 10 },
   createGroupCount: { fontFamily: 'Inter-Medium', fontSize: 13, color: 'rgba(34,39,31,0.5)', textAlign: 'center' },
   createGroupBtn: { backgroundColor: colors.platinum, paddingVertical: 16, borderRadius: 18, alignItems: 'center' },
   createGroupBtnDisabled: { opacity: 0.35 },
   createGroupBtnTxt: { fontFamily: 'Inter-Bold', fontSize: 16, color: colors.base },
 
   // Chat thread
-  chatHeader: { paddingTop: 24, paddingBottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(43,70,56,0.16)' },
-  chatAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(62,106,82,0.15)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.25)', alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
+  chatHeader: { paddingTop: 24, paddingBottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(196,196,196,0.16)' },
+  chatAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(44,124,150,0.15)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
   chatName: { fontFamily: 'Inter-SemiBold', fontSize: 16, color: '#22271F' },
   onlineTxt: { fontFamily: 'Inter-Medium', fontSize: 12, color: 'rgba(34,39,31,0.4)', marginTop: 2, textTransform: 'capitalize' },
-  dateChip: { alignSelf: 'center', backgroundColor: 'rgba(43,70,56,0.16)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginBottom: 8 },
+  dateChip: { alignSelf: 'center', backgroundColor: 'rgba(196,196,196,0.16)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginBottom: 8 },
   dateChipTxt: { fontFamily: 'Inter-Medium', fontSize: 12, color: 'rgba(34,39,31,0.4)' },
   bubbleSentWrap: { alignSelf: 'flex-end', maxWidth: '78%' },
   bubbleRecvWrap: { alignSelf: 'flex-start', maxWidth: '78%' },
-  bubbleRecv: { backgroundColor: '#FBF6EC', borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 18, borderBottomLeftRadius: 5, paddingVertical: 10, paddingHorizontal: 14 },
-  bubbleSent: { backgroundColor: '#375946', borderRadius: 18, borderBottomRightRadius: 5, paddingVertical: 10, paddingHorizontal: 14 },
+  bubbleRecv: { backgroundColor: '#F7F8F8', borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 18, borderBottomLeftRadius: 5, paddingVertical: 10, paddingHorizontal: 14 },
+  bubbleSent: { backgroundColor: '#165B74', borderRadius: 18, borderBottomRightRadius: 5, paddingVertical: 10, paddingHorizontal: 14 },
   bubbleTxt: { fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F', lineHeight: 21 },
-  bubbleTxtSent: { fontFamily: 'Inter-Regular', fontSize: 15, color: '#F5EFE3', lineHeight: 21 },
+  bubbleTxtSent: { fontFamily: 'Inter-Regular', fontSize: 15, color: '#F4F6F6', lineHeight: 21 },
   unsentTxt: { fontFamily: 'Inter-Regular', fontSize: 13, fontStyle: 'italic', color: 'rgba(34,39,31,0.4)', paddingVertical: 8, paddingHorizontal: 4 },
   editedTxt: { fontFamily: 'Inter-Regular', fontSize: 10.5, color: 'rgba(34,39,31,0.4)', marginTop: 2, marginHorizontal: 6 },
-  reactPill: { position: 'absolute', top: -14, flexDirection: 'row', gap: 3, backgroundColor: '#FFFDF7', borderWidth: 1, borderColor: 'rgba(43,70,56,0.18)', borderRadius: 14, paddingHorizontal: 7, paddingVertical: 3, shadowColor: '#2B3325', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 4, elevation: 3 },
+  reactPill: { position: 'absolute', top: -14, flexDirection: 'row', gap: 3, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', borderRadius: 14, paddingHorizontal: 7, paddingVertical: 3, shadowColor: '#2B3325', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 4, elevation: 3 },
   reactPillTxt: { fontSize: 12 },
   // iMessage action overlay
   actionScrim: { flex: 1, backgroundColor: 'rgba(30,36,28,0.4)', justifyContent: 'center', paddingHorizontal: 28 },
-  tapbackBar: { flexDirection: 'row', alignSelf: 'center', gap: 4, backgroundColor: '#FFFDF7', borderRadius: 26, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', paddingHorizontal: 10, paddingVertical: 8, marginBottom: 12 },
+  tapbackBar: { flexDirection: 'row', alignSelf: 'center', gap: 4, backgroundColor: '#FFFFFF', borderRadius: 26, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', paddingHorizontal: 10, paddingVertical: 8, marginBottom: 12 },
   tapbackBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  tapbackOn: { backgroundColor: 'rgba(62,106,82,0.16)' },
+  tapbackOn: { backgroundColor: 'rgba(44,124,150,0.16)' },
   tapbackEmoji: { fontSize: 21 },
   actionPreview: { alignSelf: 'center', maxWidth: '84%', marginBottom: 14 },
-  actionList: { alignSelf: 'center', minWidth: 220, backgroundColor: '#FFFDF7', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', overflow: 'hidden' },
-  actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(43,70,56,0.08)' },
+  actionList: { alignSelf: 'center', minWidth: 220, backgroundColor: '#FFFFFF', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', overflow: 'hidden' },
+  actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(196,196,196,0.08)' },
   actionRowTxt: { fontFamily: 'Inter-Medium', fontSize: 15.5, color: '#22271F' },
-  chatInputRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 32, borderTopWidth: 1, borderTopColor: 'rgba(43,70,56,0.16)', gap: 10 },
-  chatInputBox: { flex: 1, height: 48, borderRadius: 24, backgroundColor: 'rgba(43,70,56,0.16)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.26)', paddingHorizontal: 18, justifyContent: 'center' },
+  chatInputRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 32, borderTopWidth: 1, borderTopColor: 'rgba(196,196,196,0.16)', gap: 10 },
+  chatInputBox: { flex: 1, height: 48, borderRadius: 24, backgroundColor: 'rgba(196,196,196,0.16)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', paddingHorizontal: 18, justifyContent: 'center' },
   chatInputReal: { flex: 1, fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F' },
-  sendBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(62,106,82,0.35)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.5)', alignItems: 'center', justifyContent: 'center' },
+  sendBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(44,124,150,0.35)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.5)', alignItems: 'center', justifyContent: 'center' },
 
   // Settings
   settingsBackdrop: { flex: 1, justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 110, paddingRight: 20 },
-  settingsMenu: { width: 220, borderRadius: 20, overflow: 'hidden', backgroundColor: '#FFFDF7', borderWidth: 1, borderColor: 'rgba(43,70,56,0.26)', shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 10 },
+  settingsMenu: { width: 220, borderRadius: 20, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 10 },
   settingsItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12, gap: 12 },
   settingsItemTxt: { fontFamily: 'Inter-Medium', fontSize: 14, color: '#22271F' },
-  settingsDivider: { height: 1, backgroundColor: 'rgba(43,70,56,0.16)', marginHorizontal: 12 },
+  settingsDivider: { height: 1, backgroundColor: 'rgba(196,196,196,0.16)', marginHorizontal: 12 },
 
   // Message
   dateDivider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10, paddingHorizontal: 10 },
-  divideLine: { flex: 1, height: 1, backgroundColor: 'rgba(43,70,56,0.16)' },
+  divideLine: { flex: 1, height: 1, backgroundColor: 'rgba(196,196,196,0.16)' },
   divideText: { fontFamily: 'Inter-Medium', fontSize: 11, color: 'rgba(34,39,31,0.3)', textTransform: 'uppercase', letterSpacing: 1 },
-  senderNameTxt: { fontSize: 11, fontFamily: 'Inter-Bold', color: '#3E6A52', marginLeft: 14, marginBottom: 4, opacity: 0.8 },
+  senderNameTxt: { fontSize: 11, fontFamily: 'Inter-Bold', color: '#2C7C96', marginLeft: 14, marginBottom: 4, opacity: 0.8 },
   statusTxt: { fontSize: 10, fontFamily: 'Inter-Regular', color: 'rgba(34,39,31,0.3)', marginLeft: 12, marginTop: 2 },
   typingContainer: { paddingLeft: 12, paddingVertical: 8, height: 30 },
   typingText: { fontFamily: 'Inter-Medium', fontSize: 11, color: 'rgba(34,39,31,0.4)', fontStyle: 'italic' },

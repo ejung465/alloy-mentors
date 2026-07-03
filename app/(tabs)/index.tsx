@@ -27,10 +27,10 @@ import {
 } from '@/lib/sessions';
 
 // ── Palette (cream & pine, editorial) ────────────────────────────────────────
-const PINE_DEEP = '#2C4A39';   // hero block
-const PINE      = '#375946';   // primary accent
-const PINE_MID  = '#3E6A52';
-const CREAM     = '#F5EFE3';   // text on pine
+const PINE_DEEP = '#0E3E4F';   // hero block
+const PINE      = '#165B74';   // primary accent
+const PINE_MID  = '#2C7C96';
+const CREAM     = '#F4F6F6';   // text on pine
 const CLAY      = '#B15A4E';
 const INK       = '#22271F';
 
@@ -335,15 +335,15 @@ export default function DashboardScreen() {
               </AnimPress>
             )}
             <AnimPress onPress={() => setShowCreateModal(true)} style={{ marginBottom: 24 }}>
-              <View style={[styles.listCard, { borderColor: 'rgba(62,106,82,0.30)', backgroundColor: 'rgba(62,106,82,0.07)' }]}>
-                <View style={[styles.listIcon, { backgroundColor: 'rgba(62,106,82,0.15)', borderColor: 'rgba(62,106,82,0.3)' }]}>
+              <View style={[styles.listCard, { borderColor: 'rgba(44,124,150,0.30)', backgroundColor: 'rgba(44,124,150,0.07)' }]}>
+                <View style={[styles.listIcon, { backgroundColor: 'rgba(44,124,150,0.15)', borderColor: 'rgba(44,124,150,0.3)' }]}>
                   <Ionicons name="megaphone-outline" size={20} color={PINE_MID} />
                 </View>
                 <View style={{ flex: 1, marginLeft: 14 }}>
                   <Text style={[styles.listLabel, { color: PINE_MID }]}>Broadcast announcement</Text>
                   <Text style={styles.listSub}>Post to everyone in {org?.name || 'your org'}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="rgba(62,106,82,0.4)" />
+                <Ionicons name="chevron-forward" size={16} color="rgba(44,124,150,0.4)" />
               </View>
             </AnimPress>
           </>
@@ -502,7 +502,7 @@ export default function DashboardScreen() {
               <View style={styles.barChart}>
                 {weeklyBars.map((v, i) => (
                   <View key={i} style={styles.barSlot}>
-                    <View style={[styles.bar, { height: 6 + (v / barMax) * 46, backgroundColor: v > 0 ? PINE_MID : 'rgba(43,70,56,0.12)' }]} />
+                    <View style={[styles.bar, { height: 6 + (v / barMax) * 46, backgroundColor: v > 0 ? PINE_MID : 'rgba(196,196,196,0.12)' }]} />
                   </View>
                 ))}
               </View>
@@ -572,7 +572,7 @@ export default function DashboardScreen() {
                   </View>
 
                   <View style={{ marginBottom: 18 }}>
-                    <View style={{ alignSelf: 'flex-start', backgroundColor: 'rgba(62,106,82,0.15)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 8 }}>
+                    <View style={{ alignSelf: 'flex-start', backgroundColor: 'rgba(44,124,150,0.15)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 8 }}>
                       <Text style={{ fontFamily: 'Inter-Bold', fontSize: 10, color: PINE_MID, letterSpacing: 0.8 }}>
                         {sessionDetail.tag}
                       </Text>
@@ -582,7 +582,7 @@ export default function DashboardScreen() {
 
                   <View style={styles.infoBlock}>
                     <View style={styles.infoRow}>
-                      <View style={[styles.infoIcon, { backgroundColor: 'rgba(62,106,82,0.15)' }]}>
+                      <View style={[styles.infoIcon, { backgroundColor: 'rgba(44,124,150,0.15)' }]}>
                         <Ionicons name="calendar-outline" size={15} color={PINE_MID} />
                       </View>
                       <View>
@@ -592,7 +592,7 @@ export default function DashboardScreen() {
                     </View>
                     <View style={styles.infoRow}>
                       <View style={[styles.infoIcon, { backgroundColor: 'rgba(94,116,136,0.15)' }]}>
-                        <Ionicons name="time-outline" size={15} color="#5E7488" />
+                        <Ionicons name="time-outline" size={15} color="#7A7A7A" />
                       </View>
                       <View>
                         <Text style={styles.infoLabel}>Time</Text>
@@ -602,7 +602,7 @@ export default function DashboardScreen() {
                     {sessionDetail.location ? (
                       <View style={styles.infoRow}>
                         <View style={[styles.infoIcon, { backgroundColor: 'rgba(76,122,97,0.15)' }]}>
-                          <Ionicons name="location-outline" size={15} color="#4C7A61" />
+                          <Ionicons name="location-outline" size={15} color="#2C7C96" />
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.infoLabel}>Location</Text>
@@ -625,7 +625,7 @@ export default function DashboardScreen() {
 
                   {sessionDetail.location ? (
                     <TouchableOpacity onPress={() => openMaps(sessionDetail.location!)} style={styles.dirBtn} activeOpacity={0.8}>
-                      <Ionicons name="navigate-outline" size={17} color="#4C7A61" />
+                      <Ionicons name="navigate-outline" size={17} color="#2C7C96" />
                       <Text style={styles.dirBtnTxt}>Get directions in Maps</Text>
                     </TouchableOpacity>
                   ) : null}
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
   name: { fontFamily: 'Inter-Black', fontSize: 40, color: PINE, letterSpacing: -1.6, lineHeight: 44, marginTop: 2 },
   subline: { fontFamily: 'Inter-Regular', fontSize: 14.5, color: 'rgba(34,39,31,0.6)', lineHeight: 21, marginTop: 10, maxWidth: '94%' },
 
-  adminBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(62,106,82,0.12)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.35)', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 20 },
+  adminBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(44,124,150,0.12)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.35)', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 20 },
   adminBadgeActive: { backgroundColor: PINE_MID, borderColor: PINE_MID },
   adminBadgeText: { fontFamily: 'Inter-Bold', fontSize: 11, color: PINE_MID, letterSpacing: 0.5 },
 
@@ -743,41 +743,41 @@ const styles = StyleSheet.create({
   bar: { width: '100%', borderRadius: 5, minHeight: 6 },
   barCaption: { fontFamily: 'Inter-Medium', fontSize: 11, color: 'rgba(34,39,31,0.4)', marginTop: 10, letterSpacing: 0.3 },
 
-  triad: { flexDirection: 'row', alignItems: 'center', marginTop: 20, paddingTop: 18, borderTopWidth: 1, borderTopColor: 'rgba(43,70,56,0.1)' },
+  triad: { flexDirection: 'row', alignItems: 'center', marginTop: 20, paddingTop: 18, borderTopWidth: 1, borderTopColor: 'rgba(196,196,196,0.1)' },
   triCell: { flex: 1, alignItems: 'center' },
   triNum: { fontFamily: 'Inter-Black', fontSize: 30, color: INK, letterSpacing: -1 },
   triLabel: { fontFamily: 'Inter-Medium', fontSize: 11.5, color: 'rgba(34,39,31,0.5)', marginTop: 3 },
-  triDivider: { width: 1, height: 34, backgroundColor: 'rgba(43,70,56,0.1)' },
+  triDivider: { width: 1, height: 34, backgroundColor: 'rgba(196,196,196,0.1)' },
 
-  goalWrap: { marginTop: 20, paddingTop: 18, borderTopWidth: 1, borderTopColor: 'rgba(43,70,56,0.1)' },
+  goalWrap: { marginTop: 20, paddingTop: 18, borderTopWidth: 1, borderTopColor: 'rgba(196,196,196,0.1)' },
   goalHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   goalLabel: { fontFamily: 'Inter-SemiBold', fontSize: 11.5, color: colors.silver, letterSpacing: 1 },
   goalValue: { fontFamily: 'Inter-Medium', fontSize: 13 },
-  goalTrack: { height: 8, backgroundColor: 'rgba(43,70,56,0.1)', borderRadius: 4, overflow: 'hidden' },
+  goalTrack: { height: 8, backgroundColor: 'rgba(196,196,196,0.1)', borderRadius: 4, overflow: 'hidden' },
   goalFill: { height: '100%', backgroundColor: PINE, borderRadius: 4 },
   goalCaption: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(34,39,31,0.4)', marginTop: 10 },
 
   // Shortcut chips
   chipRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
-  chip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)' },
+  chip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)' },
   chipPrimary: { backgroundColor: PINE, borderColor: PINE },
   chipLabel: { fontFamily: 'Inter-SemiBold', fontSize: 13.5, color: INK },
 
-  linkNotice: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: 'rgba(62,106,82,0.08)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.22)', borderRadius: 14, padding: 14, marginBottom: 24 },
+  linkNotice: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: 'rgba(44,124,150,0.08)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.22)', borderRadius: 14, padding: 14, marginBottom: 24 },
   linkNoticeTxt: { flex: 1, fontFamily: 'Inter-Regular', fontSize: 13, color: 'rgba(34,39,31,0.6)', lineHeight: 19 },
 
   // Your students
-  studentRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 18, padding: 14 },
+  studentRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 18, padding: 14 },
   studentAvatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: PINE, alignItems: 'center', justifyContent: 'center' },
   studentAvatarTxt: { fontFamily: 'Inter-Bold', fontSize: 17, color: CREAM },
   studentName: { fontFamily: 'Inter-SemiBold', fontSize: 15.5, color: INK },
   studentGoal: { fontFamily: 'Inter-Regular', fontSize: 12.5, color: 'rgba(34,39,31,0.55)', marginTop: 2 },
   studentGoalMuted: { fontFamily: 'Inter-Regular', fontSize: 12.5, color: 'rgba(34,39,31,0.4)', marginTop: 3 },
-  studentTrack: { height: 5, backgroundColor: 'rgba(43,70,56,0.10)', borderRadius: 3, overflow: 'hidden', marginTop: 7 },
+  studentTrack: { height: 5, backgroundColor: 'rgba(196,196,196,0.10)', borderRadius: 3, overflow: 'hidden', marginTop: 7 },
   studentFill: { height: '100%', backgroundColor: PINE_MID, borderRadius: 3 },
 
   // List cards (admin)
-  listCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', padding: 16 },
+  listCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', padding: 16 },
   listIcon: { width: 48, height: 48, borderRadius: 15, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   listValue: { fontFamily: 'Inter-Black', fontSize: 24, color: INK, letterSpacing: -0.8 },
   listLabel: { fontFamily: 'Inter-SemiBold', fontSize: 14.5, color: INK },
@@ -788,24 +788,24 @@ const styles = StyleSheet.create({
   // Overlay modals
   overlayHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   overlayTitle: { fontFamily: 'Inter-Bold', fontSize: 22, color: INK, letterSpacing: -0.3 },
-  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(43,70,56,0.10)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.2)', alignItems: 'center', justifyContent: 'center' },
-  overlayRow: { backgroundColor: 'rgba(43,70,56,0.06)', borderRadius: 16, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)' },
+  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(196,196,196,0.10)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.2)', alignItems: 'center', justifyContent: 'center' },
+  overlayRow: { backgroundColor: 'rgba(196,196,196,0.06)', borderRadius: 16, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)' },
   overlayLabel: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: INK },
   overlayDesc: { fontFamily: 'Inter-Regular', fontSize: 13, color: 'rgba(34,39,31,0.55)', marginTop: 4, lineHeight: 20 },
-  hrsBadge: { backgroundColor: 'rgba(62,106,82,0.15)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
+  hrsBadge: { backgroundColor: 'rgba(44,124,150,0.15)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
   hrsBadgeTxt: { fontFamily: 'Inter-SemiBold', fontSize: 13, color: PINE_MID },
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20, marginTop: 8, borderWidth: 1 },
   statusGreen: { backgroundColor: 'rgba(65,120,92,0.15)', borderColor: 'rgba(65,120,92,0.3)' },
   statusRed: { backgroundColor: 'rgba(177,90,78,0.15)', borderColor: 'rgba(177,90,78,0.3)' },
-  statusGrey: { backgroundColor: 'rgba(43,70,56,0.12)', borderColor: 'rgba(43,70,56,0.2)' },
+  statusGrey: { backgroundColor: 'rgba(196,196,196,0.12)', borderColor: 'rgba(196,196,196,0.2)' },
   statusTxt: { fontFamily: 'Inter-Medium', fontSize: 12, color: 'rgba(34,39,31,0.7)', textTransform: 'capitalize' },
   emptyText: { fontFamily: 'Inter-Regular', fontSize: 14, color: 'rgba(34,39,31,0.4)', textAlign: 'center', paddingVertical: 30 },
 
-  infoBlock: { backgroundColor: 'rgba(43,70,56,0.06)', borderRadius: 16, padding: 14, gap: 14, marginBottom: 18, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)' },
+  infoBlock: { backgroundColor: 'rgba(196,196,196,0.06)', borderRadius: 16, padding: 14, gap: 14, marginBottom: 18, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)' },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   infoIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   infoLabel: { fontFamily: 'Inter-Medium', fontSize: 11, color: 'rgba(34,39,31,0.4)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2 },
   infoValue: { fontFamily: 'Inter-Medium', fontSize: 14, color: INK },
   dirBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(76,122,97,0.12)', borderWidth: 1, borderColor: 'rgba(76,122,97,0.3)', borderRadius: 16, paddingVertical: 14 },
-  dirBtnTxt: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: '#4C7A61' },
+  dirBtnTxt: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: '#2C7C96' },
 });

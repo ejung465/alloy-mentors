@@ -22,10 +22,10 @@ import {
   SKILL_LEVELS, type StudentGoal, type StudentSkill, type TimelineEntry, type Marker, type StudentAccount,
 } from '@/lib/progress';
 
-const PINE_DEEP = '#2C4A39';
-const PINE = '#375946';
-const PINE_MID = '#3E6A52';
-const CREAM = '#F5EFE3';
+const PINE_DEEP = '#0E3E4F';
+const PINE = '#165B74';
+const PINE_MID = '#2C7C96';
+const CREAM = '#F4F6F6';
 const CLAY = '#B15A4E';
 const OCHRE = '#B08A3E';
 const INK = '#22271F';
@@ -36,7 +36,7 @@ const MARKERS: { key: Marker; label: string; color: string; icon: any }[] = [
   { key: 'struggled', label: 'Found it tricky', color: CLAY, icon: 'help-buoy-outline' },
 ];
 const markerMeta = (m: Marker | null) =>
-  MARKERS.find((x) => x.key === m) ?? { key: 'milestone' as Marker, label: 'Milestone', color: 'rgba(43,70,56,0.35)', icon: 'flag' };
+  MARKERS.find((x) => x.key === m) ?? { key: 'milestone' as Marker, label: 'Milestone', color: 'rgba(196,196,196,0.35)', icon: 'flag' };
 
 function ageFrom(iso?: string | null): number | null {
   if (!iso) return null;
@@ -356,8 +356,8 @@ export default function StudentProgressScreen() {
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Details</Text>
         <View style={styles.detailsCard}>
           <InfoRow icon="calendar-outline" label="Age" value={age ? `${age} years` : null} />
-          <InfoRow icon="language-outline" label="Home language" value={student?.language} color="#5E7488" />
-          <InfoRow icon="chatbubbles-outline" label="English level" value={student?.english_level} color="#5E7488" />
+          <InfoRow icon="language-outline" label="Home language" value={student?.language} color="#7A7A7A" />
+          <InfoRow icon="chatbubbles-outline" label="English level" value={student?.english_level} color="#7A7A7A" />
           <InfoRow icon="car-outline" label="Transportation" value={student?.transportation} />
           <InfoRow icon="people-outline" label="Guardian" value={[student?.guardian_name, student?.guardian_relationship].filter(Boolean).join(' · ') || null} color={OCHRE} />
           <InfoRow icon="call-outline" label="Guardian phone" value={student?.guardian_phone} color={OCHRE} />
@@ -373,7 +373,7 @@ export default function StudentProgressScreen() {
 
         {elevated && (
           <TouchableOpacity style={styles.linkRow} activeOpacity={0.85} onPress={openLinkPicker}>
-            <View style={[styles.linkIcon, linkedAccount && { backgroundColor: 'rgba(62,106,82,0.15)', borderColor: 'rgba(62,106,82,0.35)' }]}>
+            <View style={[styles.linkIcon, linkedAccount && { backgroundColor: 'rgba(44,124,150,0.15)', borderColor: 'rgba(44,124,150,0.35)' }]}>
               <Ionicons name={linkedAccount ? 'link' : 'link-outline'} size={16} color={linkedAccount ? PINE_MID : 'rgba(34,39,31,0.45)'} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   goalFill: { height: '100%', backgroundColor: CREAM, borderRadius: 4 },
   goalMeta: { fontFamily: font.regular, fontSize: 12, color: 'rgba(245,239,227,0.7)', marginTop: 8 },
 
-  setGoalBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.18)', borderRadius: 16, paddingVertical: 16, marginBottom: 22 },
+  setGoalBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', borderRadius: 16, paddingVertical: 16, marginBottom: 22 },
   setGoalTxt: { fontFamily: font.semibold, fontSize: 14.5, color: PINE },
 
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
@@ -567,16 +567,16 @@ const styles = StyleSheet.create({
   emptyLine: { fontFamily: font.regular, fontSize: 13, color: 'rgba(34,39,31,0.42)', marginBottom: 4 },
 
   skillGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  skillCard: { width: '48.5%', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 12, padding: 12 },
+  skillCard: { width: '48.5%', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 12, padding: 12 },
   skillName: { fontFamily: font.semibold, fontSize: 13.5, color: INK },
   skillMastered: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
   skillMasteredTxt: { fontFamily: font.medium, fontSize: 11.5, color: PINE_MID },
   skillDots: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
-  skillDot: { width: 22, height: 4, borderRadius: 2, backgroundColor: 'rgba(43,70,56,0.15)' },
+  skillDot: { width: 22, height: 4, borderRadius: 2, backgroundColor: 'rgba(196,196,196,0.15)' },
   skillLevelTxt: { fontFamily: font.medium, fontSize: 10.5, color: 'rgba(34,39,31,0.45)', marginLeft: 4 },
 
   timeline: { position: 'relative', paddingLeft: 26, marginTop: 4 },
-  timelineRail: { position: 'absolute', left: 7, top: 6, bottom: 14, width: 2, backgroundColor: 'rgba(43,70,56,0.14)' },
+  timelineRail: { position: 'absolute', left: 7, top: 6, bottom: 14, width: 2, backgroundColor: 'rgba(196,196,196,0.14)' },
   tlEntry: { flexDirection: 'row', marginBottom: 16 },
   tlDot: { position: 'absolute', left: -26, top: 2, width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: colors.base },
   tlHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
@@ -585,44 +585,44 @@ const styles = StyleSheet.create({
   tlBody: { fontFamily: font.regular, fontSize: 13, color: 'rgba(34,39,31,0.62)', lineHeight: 19, marginTop: 3 },
   tlAuthor: { fontFamily: font.medium, fontSize: 11.5, color: 'rgba(34,39,31,0.4)', marginTop: 4 },
 
-  detailsCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 },
+  detailsCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 9 },
   infoIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   infoLabel: { fontFamily: font.medium, fontSize: 11, color: 'rgba(34,39,31,0.4)', textTransform: 'uppercase', letterSpacing: 0.6 },
   infoValue: { fontFamily: font.medium, fontSize: 15, color: INK, marginTop: 2 },
   restrictedLabel: { fontFamily: font.semibold, fontSize: 11, color: colors.steel, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 12, marginBottom: 2, marginLeft: 4 },
 
-  guardianBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 14, backgroundColor: 'rgba(62,106,82,0.10)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.28)', borderRadius: 14, paddingVertical: 14 },
+  guardianBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 14, backgroundColor: 'rgba(44,124,150,0.10)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.28)', borderRadius: 14, paddingVertical: 14 },
   guardianBtnTxt: { fontFamily: font.semibold, fontSize: 14, color: PINE_MID },
 
-  linkRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 14, padding: 13, marginTop: 14 },
-  linkIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(43,70,56,0.08)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.18)', alignItems: 'center', justifyContent: 'center' },
+  linkRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 14, padding: 13, marginTop: 14 },
+  linkIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(196,196,196,0.08)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', alignItems: 'center', justifyContent: 'center' },
   linkLabel: { fontFamily: font.medium, fontSize: 11, color: 'rgba(34,39,31,0.4)', textTransform: 'uppercase', letterSpacing: 0.8 },
   linkValue: { fontFamily: font.medium, fontSize: 13.5, color: INK, marginTop: 2 },
   linkHelp: { fontFamily: font.regular, fontSize: 13, color: 'rgba(34,39,31,0.55)', lineHeight: 19, marginBottom: 14 },
   linkEmpty: { fontFamily: font.regular, fontSize: 13.5, color: 'rgba(34,39,31,0.45)', textAlign: 'center', paddingVertical: 26, lineHeight: 20 },
-  linkAccountRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 14, padding: 12, marginBottom: 8 },
+  linkAccountRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 14, padding: 12, marginBottom: 8 },
   linkAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: PINE, alignItems: 'center', justifyContent: 'center' },
   linkAvatarTxt: { fontFamily: font.bold, fontSize: 13, color: CREAM },
   linkAccountName: { fontFamily: font.semibold, fontSize: 14.5, color: INK },
   linkAccountEmail: { fontFamily: font.regular, fontSize: 12, color: 'rgba(34,39,31,0.5)', marginTop: 1 },
 
-  footer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 28, borderTopWidth: 1, borderTopColor: 'rgba(43,70,56,0.10)', backgroundColor: colors.base },
+  footer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 28, borderTopWidth: 1, borderTopColor: 'rgba(196,196,196,0.10)', backgroundColor: colors.base },
   logCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: PINE, borderRadius: 16, paddingVertical: 16 },
   logCtaTxt: { fontFamily: font.bold, fontSize: 15, color: CREAM },
 
   // Sheets
-  sheet: { marginTop: 'auto', maxHeight: '90%', backgroundColor: colors.surfaceStrong, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: 'rgba(43,70,56,0.18)', padding: 22, paddingTop: 12 },
-  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(43,70,56,0.2)', alignSelf: 'center', marginBottom: 14 },
+  sheet: { marginTop: 'auto', maxHeight: '90%', backgroundColor: colors.surfaceStrong, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', padding: 22, paddingTop: 12 },
+  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(196,196,196,0.2)', alignSelf: 'center', marginBottom: 14 },
   sheetTitle: { fontFamily: font.bold, fontSize: 20, color: INK, letterSpacing: -0.3, marginBottom: 16 },
   fieldLabel: { fontFamily: font.semibold, fontSize: 11, color: colors.silver, letterSpacing: 1, marginBottom: 8, marginTop: 12 },
-  input: { fontFamily: font.medium, fontSize: 15, color: INK, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12 },
+  input: { fontFamily: font.medium, fontSize: 15, color: INK, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12 },
   hint: { fontFamily: font.regular, fontSize: 12, color: 'rgba(34,39,31,0.45)', marginTop: 10, lineHeight: 17 },
   markerRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  markerChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', backgroundColor: colors.surface },
+  markerChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', backgroundColor: colors.surface },
   markerTxt: { fontFamily: font.medium, fontSize: 12.5, color: colors.textDim },
   checkpointRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 18 },
-  checkbox: { width: 22, height: 22, borderRadius: 7, borderWidth: 1.5, borderColor: 'rgba(43,70,56,0.3)', alignItems: 'center', justifyContent: 'center' },
+  checkbox: { width: 22, height: 22, borderRadius: 7, borderWidth: 1.5, borderColor: 'rgba(196,196,196,0.3)', alignItems: 'center', justifyContent: 'center' },
   checkboxOn: { backgroundColor: PINE, borderColor: PINE },
   checkpointTxt: { flex: 1, fontFamily: font.medium, fontSize: 13.5, color: INK },
   saveBtn: { backgroundColor: PINE, borderRadius: 16, paddingVertical: 15, alignItems: 'center', marginTop: 22 },

@@ -13,9 +13,9 @@ import { useUser } from '@/contexts/UserContext';
 import { canManageOrg } from '@/lib/roles';
 import { FEATURES, FEATURE_KEYS, featureEnabled, type FeatureKey } from '@/lib/features';
 
-const PINE = '#375946';
-const PINE_MID = '#3E6A52';
-const CREAM = '#F5EFE3';
+const PINE = '#165B74';
+const PINE_MID = '#2C7C96';
+const CREAM = '#F4F6F6';
 const INK = '#22271F';
 
 export default function OrgSettingsScreen() {
@@ -149,8 +149,8 @@ export default function OrgSettingsScreen() {
               <Switch
                 value={toggles[k]}
                 onValueChange={() => flip(k)}
-                trackColor={{ false: 'rgba(43,70,56,0.15)', true: PINE_MID }}
-                thumbColor="#FFFDF7"
+                trackColor={{ false: 'rgba(196,196,196,0.15)', true: PINE_MID }}
+                thumbColor="#FFFFFF"
               />
             </View>
           ))}
@@ -197,21 +197,21 @@ const styles = StyleSheet.create({
   section: { fontFamily: font.bold, fontSize: 11.5, color: PINE_MID, letterSpacing: 2 },
   sectionHelp: { fontFamily: font.regular, fontSize: 12.5, color: 'rgba(34,39,31,0.5)', lineHeight: 18, marginTop: 6, marginBottom: 12 },
 
-  codeRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', borderRadius: 18, padding: 16, marginBottom: 10 },
+  codeRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', borderRadius: 18, padding: 16, marginBottom: 10 },
   codeWho: { fontFamily: font.bold, fontSize: 10.5, color: 'rgba(34,39,31,0.45)', letterSpacing: 1.5 },
   codeVal: { fontFamily: font.black, fontSize: 24, color: INK, letterSpacing: 2, marginTop: 3 },
   shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: PINE, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
   shareTxt: { fontFamily: font.semibold, fontSize: 13, color: CREAM },
 
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 20, paddingHorizontal: 14 },
+  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 20, paddingHorizontal: 14 },
   featureRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
-  featureRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(43,70,56,0.08)' },
-  featureIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(62,106,82,0.10)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.22)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  featureRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(196,196,196,0.08)' },
+  featureIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(44,124,150,0.10)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.22)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   featureLabel: { fontFamily: font.semibold, fontSize: 14.5, color: INK },
   featureDesc: { fontFamily: font.regular, fontSize: 12, color: 'rgba(34,39,31,0.5)', lineHeight: 17, marginTop: 2 },
 
   nounGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  nounCell: { width: '48%', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 14, padding: 12 },
+  nounCell: { width: '48%', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 14, padding: 12 },
   nounLabel: { fontFamily: font.semibold, fontSize: 9.5, color: 'rgba(34,39,31,0.45)', letterSpacing: 1 },
   nounInput: { fontFamily: font.bold, fontSize: 17, color: INK, marginTop: 4, padding: 0 },
 
@@ -219,6 +219,6 @@ const styles = StyleSheet.create({
   saveTxt: { fontFamily: font.bold, fontSize: 15.5, color: CREAM },
 
   lockedTxt: { fontFamily: font.medium, fontSize: 14.5, color: colors.textDim, textAlign: 'center', marginTop: 14, lineHeight: 21 },
-  lockedBack: { marginTop: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.18)', borderRadius: 14, paddingHorizontal: 22, paddingVertical: 12 },
+  lockedBack: { marginTop: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', borderRadius: 14, paddingHorizontal: 22, paddingVertical: 12 },
   lockedBackTxt: { fontFamily: font.semibold, fontSize: 14, color: PINE_MID },
 });

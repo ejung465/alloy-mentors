@@ -160,7 +160,7 @@ export default function AdminDashboard() {
 
   const tabColors = {
     pending: '#B08A3E',
-    approved: '#4C7A61',
+    approved: '#2C7C96',
     rejected: '#B15A4E', // rose — distinct from approved (was green, looked approved)
   };
 
@@ -198,10 +198,10 @@ export default function AdminDashboard() {
             <Text style={styles.pageSubtitle}>Tutoring Hours Review</Text>
           </View>
           <TouchableOpacity onPress={() => router.push('/org-settings')} style={styles.gearBtn} activeOpacity={0.8}>
-            <Ionicons name="settings-outline" size={18} color="#3E6A52" />
+            <Ionicons name="settings-outline" size={18} color="#2C7C96" />
           </TouchableOpacity>
           <View style={styles.adminBadge}>
-            <Ionicons name="shield-checkmark" size={13} color="#4C7A61" />
+            <Ionicons name="shield-checkmark" size={13} color="#2C7C96" />
             <Text style={styles.adminBadgeText}>Admin</Text>
           </View>
         </View>
@@ -210,9 +210,9 @@ export default function AdminDashboard() {
         <View style={styles.statsRow}>
           {[
             { label: 'Pending', value: stats.pending, color: '#B08A3E', icon: 'time-outline' },
-            { label: 'Approved', value: stats.approved, color: '#4C7A61', icon: 'checkmark-circle-outline' },
-            { label: 'Total Hrs', value: stats.totalHours, color: '#3E6A52', icon: 'hourglass-outline' },
-            { label: 'Mentors', value: stats.mentors, color: '#5E7488', icon: 'people-outline' },
+            { label: 'Approved', value: stats.approved, color: '#2C7C96', icon: 'checkmark-circle-outline' },
+            { label: 'Total Hrs', value: stats.totalHours, color: '#2C7C96', icon: 'hourglass-outline' },
+            { label: 'Mentors', value: stats.mentors, color: '#7A7A7A', icon: 'people-outline' },
           ].map((s) => (
             <View key={s.label} style={styles.statTile}>
               <BlurView intensity={20} tint="light" style={StyleSheet.absoluteFillObject} />
@@ -299,8 +299,8 @@ export default function AdminDashboard() {
                       style={[styles.actionBtn, styles.rejectBtn]}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="close" size={16} color="#3E6A52" />
-                      <Text style={[styles.actionBtnText, { color: '#3E6A52' }]}>Reject</Text>
+                      <Ionicons name="close" size={16} color="#2C7C96" />
+                      <Text style={[styles.actionBtnText, { color: '#2C7C96' }]}>Reject</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleDecision(log.id, 'approved')}
@@ -309,10 +309,10 @@ export default function AdminDashboard() {
                       activeOpacity={0.8}
                     >
                       {updating === log.id
-                        ? <Text style={[styles.actionBtnText, { color: '#4C7A61' }]}>Saving...</Text>
+                        ? <Text style={[styles.actionBtnText, { color: '#2C7C96' }]}>Saving...</Text>
                         : <>
-                            <Ionicons name="checkmark" size={16} color="#4C7A61" />
-                            <Text style={[styles.actionBtnText, { color: '#4C7A61' }]}>Approve</Text>
+                            <Ionicons name="checkmark" size={16} color="#2C7C96" />
+                            <Text style={[styles.actionBtnText, { color: '#2C7C96' }]}>Approve</Text>
                           </>
                       }
                     </TouchableOpacity>
@@ -328,9 +328,9 @@ export default function AdminDashboard() {
                     <Ionicons
                       name={log.status === 'approved' ? 'checkmark-circle' : 'close-circle'}
                       size={13}
-                      color={log.status === 'approved' ? '#4C7A61' : '#B15A4E'}
+                      color={log.status === 'approved' ? '#2C7C96' : '#B15A4E'}
                     />
-                    <Text style={[styles.statusText, { color: log.status === 'approved' ? '#4C7A61' : '#B15A4E' }]}>
+                    <Text style={[styles.statusText, { color: log.status === 'approved' ? '#2C7C96' : '#B15A4E' }]}>
                       {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
                     </Text>
                   </View>
@@ -436,27 +436,27 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
   backBtn: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(43,70,56,0.16)',
-    borderWidth: 1, borderColor: 'rgba(43,70,56,0.26)',
+    backgroundColor: 'rgba(196,196,196,0.16)',
+    borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)',
     alignItems: 'center', justifyContent: 'center',
   },
   pageTitle: { fontFamily: 'Inter-Black', fontSize: 30, color: '#22271F', letterSpacing: -1 },
   pageSubtitle: { fontFamily: 'Inter-Regular', fontSize: 14, color: 'rgba(34,39,31,0.45)', marginTop: 3 },
-  gearBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(62,106,82,0.10)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  gearBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(44,124,150,0.10)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 8 },
   adminBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(76,122,97,0.12)',
     borderWidth: 1, borderColor: 'rgba(76,122,97,0.3)',
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12,
   },
-  adminBadgeText: { fontFamily: 'Inter-SemiBold', fontSize: 12, color: '#4C7A61' },
+  adminBadgeText: { fontFamily: 'Inter-SemiBold', fontSize: 12, color: '#2C7C96' },
 
   // Stats
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   statTile: {
     flex: 1, overflow: 'hidden', borderRadius: 16,
-    borderWidth: 1, borderColor: 'rgba(43,70,56,0.26)',
-    backgroundColor: 'rgba(43,70,56,0.16)',
+    borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)',
+    backgroundColor: 'rgba(196,196,196,0.16)',
     paddingVertical: 14, alignItems: 'center',
   },
   statNum: { fontFamily: 'Inter-Bold', fontSize: 22, marginTop: 6, letterSpacing: -0.5 },
@@ -466,8 +466,8 @@ const styles = StyleSheet.create({
   tabRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   tabPill: {
     flex: 1, paddingVertical: 9, borderRadius: 12,
-    backgroundColor: 'rgba(43,70,56,0.12)',
-    borderWidth: 1, borderColor: 'rgba(43,70,56,0.22)',
+    backgroundColor: 'rgba(196,196,196,0.12)',
+    borderWidth: 1, borderColor: 'rgba(196,196,196,0.22)',
     alignItems: 'center',
   },
   tabText: { fontFamily: 'Inter-SemiBold', fontSize: 13, color: 'rgba(34,39,31,0.4)' },
@@ -476,22 +476,22 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
   mentorAvatar: {
     width: 46, height: 46, borderRadius: 23,
-    backgroundColor: 'rgba(62,106,82,0.12)',
-    borderWidth: 1, borderColor: 'rgba(62,106,82,0.25)',
+    backgroundColor: 'rgba(44,124,150,0.12)',
+    borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)',
     alignItems: 'center', justifyContent: 'center',
   },
-  mentorAvatarText: { fontFamily: 'Inter-Bold', fontSize: 20, color: '#3E6A52' },
+  mentorAvatarText: { fontFamily: 'Inter-Bold', fontSize: 20, color: '#2C7C96' },
   mentorName: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: '#22271F' },
   mentorEmail: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(34,39,31,0.4)', marginTop: 2 },
   hoursBadge: {
-    backgroundColor: 'rgba(62,106,82,0.15)',
-    borderWidth: 1, borderColor: 'rgba(62,106,82,0.3)',
+    backgroundColor: 'rgba(44,124,150,0.15)',
+    borderWidth: 1, borderColor: 'rgba(44,124,150,0.3)',
     borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6,
   },
-  hoursBadgeText: { fontFamily: 'Inter-Bold', fontSize: 18, color: '#3E6A52' },
+  hoursBadgeText: { fontFamily: 'Inter-Bold', fontSize: 18, color: '#2C7C96' },
 
   cardDetails: {
-    backgroundColor: 'rgba(43,70,56,0.12)',
+    backgroundColor: 'rgba(196,196,196,0.12)',
     borderRadius: 12, padding: 12, gap: 6, marginBottom: 14,
   },
   detailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 12, borderRadius: 14, borderWidth: 1,
   },
-  rejectBtn: { backgroundColor: 'rgba(62,106,82,0.08)', borderColor: 'rgba(62,106,82,0.25)' },
+  rejectBtn: { backgroundColor: 'rgba(44,124,150,0.08)', borderColor: 'rgba(44,124,150,0.25)' },
   approveBtn: { backgroundColor: 'rgba(76,122,97,0.1)', borderColor: 'rgba(76,122,97,0.3)' },
   actionBtnText: { fontFamily: 'Inter-SemiBold', fontSize: 14 },
 
@@ -539,13 +539,13 @@ const styles = StyleSheet.create({
   roleOption: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingVertical: 13, paddingHorizontal: 16, borderRadius: 14,
-    borderWidth: 1, borderColor: 'rgba(43,70,56,0.12)', backgroundColor: 'rgba(43,70,56,0.05)',
+    borderWidth: 1, borderColor: 'rgba(196,196,196,0.12)', backgroundColor: 'rgba(196,196,196,0.05)',
   },
   roleOptionTxt: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: 'rgba(34,39,31,0.85)' },
   roleInput: {
     fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F',
-    backgroundColor: 'rgba(43,70,56,0.05)', borderRadius: 14, borderWidth: 1,
-    borderColor: 'rgba(43,70,56,0.12)', paddingHorizontal: 14, paddingVertical: 12,
+    backgroundColor: 'rgba(196,196,196,0.05)', borderRadius: 14, borderWidth: 1,
+    borderColor: 'rgba(196,196,196,0.12)', paddingHorizontal: 14, paddingVertical: 12,
   },
   addHoursBtn: { backgroundColor: colors.platinum, borderRadius: 14, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' },
   addHoursTxt: { fontFamily: 'Inter-Bold', fontSize: 15, color: colors.base },

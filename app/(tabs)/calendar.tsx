@@ -59,9 +59,9 @@ function durSlotToMins(s: string): number {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const TAG_STYLE: Record<string, { bg: string; text: string }> = {
-  UPCOMING: { bg:'rgba(62,106,82,0.15)', text:'#3E6A52' },
-  OPTIONAL: { bg:'rgba(94,116,136,0.15)', text:'#5E7488' },
-  NEW:      { bg:'rgba(76,122,97,0.15)', text:'#4C7A61' },
+  UPCOMING: { bg:'rgba(44,124,150,0.15)', text:'#2C7C96' },
+  OPTIONAL: { bg:'rgba(94,116,136,0.15)', text:'#7A7A7A' },
+  NEW:      { bg:'rgba(76,122,97,0.15)', text:'#2C7C96' },
 };
 const MONTH_NAMES   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const SHORT_MONTH   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -537,13 +537,13 @@ export default function CalendarScreen() {
           <GlassCard style={{ marginBottom: 24, borderRadius: 24 }} contentStyle={{ padding: 20 }}>
             {/* Month navigation */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <TouchableOpacity onPress={goToPrevMonth} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(43,70,56,0.08)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.7}>
+              <TouchableOpacity onPress={goToPrevMonth} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(196,196,196,0.08)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.7}>
                 <Ionicons name="chevron-back" size={18} color="rgba(34,39,31,0.75)" />
               </TouchableOpacity>
               <Text style={{ fontFamily: 'Inter-Bold', fontSize: 17, color: '#22271F', letterSpacing: -0.3 }}>
                 {MONTH_NAMES[selectedDate.getMonth()]} {selectedDate.getFullYear()}
               </Text>
-              <TouchableOpacity onPress={goToNextMonth} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(43,70,56,0.08)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.7}>
+              <TouchableOpacity onPress={goToNextMonth} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(196,196,196,0.08)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.7}>
                 <Ionicons name="chevron-forward" size={18} color="rgba(34,39,31,0.75)" />
               </TouchableOpacity>
             </View>
@@ -573,7 +573,7 @@ export default function CalendarScreen() {
                           key={colIndex} 
                           style={[
                             { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20 },
-                            isTdy && { backgroundColor: '#375946' },
+                            isTdy && { backgroundColor: '#165B74' },
                             isCurMonth ? {} : { opacity: 0.25 }
                           ]}
                           activeOpacity={0.7}
@@ -587,8 +587,8 @@ export default function CalendarScreen() {
                             }
                           }}
                         >
-                           <Text style={{ fontFamily: isTdy ? 'Inter-Bold' : 'Inter-Medium', fontSize: 15, color: isTdy ? '#F5EFE3' : '#22271F' }}>{d.getDate()}</Text>
-                           {hasEvt && <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: isTdy ? '#F5EFE3' : '#375946', position: 'absolute', bottom: 4 }} />}
+                           <Text style={{ fontFamily: isTdy ? 'Inter-Bold' : 'Inter-Medium', fontSize: 15, color: isTdy ? '#F4F6F6' : '#22271F' }}>{d.getDate()}</Text>
+                           {hasEvt && <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: isTdy ? '#F4F6F6' : '#165B74', position: 'absolute', bottom: 4 }} />}
                         </TouchableOpacity>
                       );
                     })}
@@ -631,14 +631,14 @@ export default function CalendarScreen() {
                         }}
                         style={[
                           styles.dayCell,
-                          isSel && { backgroundColor:'rgba(62,106,82,0.2)', borderWidth:1.5, borderColor:'#41785C' },
-                          !isSel && isTdy && { backgroundColor:'#375946' },
+                          isSel && { backgroundColor:'rgba(44,124,150,0.2)', borderWidth:1.5, borderColor:'#41785C' },
+                          !isSel && isTdy && { backgroundColor:'#165B74' },
                         ]}
                         activeOpacity={0.7}
                       >
                         <Text style={[styles.dayLetter, isSel && { color:'#B15A4E' }, !isSel && isTdy && { color:'rgba(245,239,227,0.75)' }]}>{getDayLetter(d)}</Text>
-                        <Text style={[styles.dayNum,    isSel && { color:'#22271F' }, !isSel && isTdy && { color:'#F5EFE3' }]}>{d.getDate()}</Text>
-                        {hasEvt && <View style={[styles.eventDot, (isSel || isTdy) && { backgroundColor: '#FBF6EC' }]} />}
+                        <Text style={[styles.dayNum,    isSel && { color:'#22271F' }, !isSel && isTdy && { color:'#F4F6F6' }]}>{d.getDate()}</Text>
+                        {hasEvt && <View style={[styles.eventDot, (isSel || isTdy) && { backgroundColor: '#F7F8F8' }]} />}
                       </TouchableOpacity>
                     </View>
                   );
@@ -669,7 +669,7 @@ export default function CalendarScreen() {
                 <View style={{ flex:1 }}>
                   <Text style={styles.sessionTitle}>{s.title}</Text>
                   <View style={styles.metaRow}><Ionicons name="time-outline" size={12} color="rgba(34,39,31,0.4)" /><Text style={styles.metaTxt}>{s.time}</Text></View>
-                  {s.location && <View style={styles.metaRow}><Ionicons name="location-outline" size={12} color="#3E6A52" /><Text style={[styles.metaTxt,{color:'#3E6A52'}]} numberOfLines={1}>{s.location}</Text></View>}
+                  {s.location && <View style={styles.metaRow}><Ionicons name="location-outline" size={12} color="#2C7C96" /><Text style={[styles.metaTxt,{color:'#2C7C96'}]} numberOfLines={1}>{s.location}</Text></View>}
                 </View>
                 <Ionicons name="chevron-forward" size={15} color="rgba(34,39,31,0.32)" />
               </View>
@@ -700,14 +700,14 @@ export default function CalendarScreen() {
                     </View>
                     <View style={styles.detailInfoBlock}>
                       <View style={styles.detailInfoRow}>
-                        <Ionicons name="calendar-outline" size={15} color="#3E6A52" />
+                        <Ionicons name="calendar-outline" size={15} color="#2C7C96" />
                         <View style={{ flex: 1, marginLeft: 10 }}>
                           <Text style={styles.detailLabel}>Date</Text>
                           <Text style={styles.detailValue}>{formatSessionLongDate(detail.start_time)}</Text>
                         </View>
                       </View>
                       <View style={styles.detailInfoRow}>
-                        <Ionicons name="time-outline" size={15} color="#5E7488" />
+                        <Ionicons name="time-outline" size={15} color="#7A7A7A" />
                         <View style={{ flex: 1, marginLeft: 10 }}>
                           <Text style={styles.detailLabel}>Time</Text>
                           <Text style={styles.detailValue}>{formatSessionTimeRange(detail.start_time, detail.end_time)}</Text>
@@ -749,15 +749,15 @@ export default function CalendarScreen() {
                         onPress={() => persistDetailRsvp('going')}
                         style={[styles.rsvpBtn, detailRsvp === 'going' && styles.rsvpBtnGoing]}
                       >
-                        <Ionicons name="checkmark-circle" size={16} color={detailRsvp === 'going' ? '#F5EFE3' : '#3E6A52'} />
-                        <Text style={[styles.rsvpBtnTxt, detailRsvp === 'going' && { color: '#F5EFE3' }]}>I'm going</Text>
+                        <Ionicons name="checkmark-circle" size={16} color={detailRsvp === 'going' ? '#F4F6F6' : '#2C7C96'} />
+                        <Text style={[styles.rsvpBtnTxt, detailRsvp === 'going' && { color: '#F4F6F6' }]}>I'm going</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         activeOpacity={0.85}
                         onPress={() => persistDetailRsvp('not_going')}
                         style={[styles.rsvpBtn, detailRsvp === 'not_going' && styles.rsvpBtnNo]}
                       >
-                        <Text style={[styles.rsvpBtnTxt, detailRsvp === 'not_going' && { color: '#F5EFE3' }]}>Can't make it</Text>
+                        <Text style={[styles.rsvpBtnTxt, detailRsvp === 'not_going' && { color: '#F4F6F6' }]}>Can't make it</Text>
                       </TouchableOpacity>
                     </View>
                   </>
@@ -799,7 +799,7 @@ export default function CalendarScreen() {
                   <Ionicons
                     name={inputMode === 'wheels' ? 'reorder-four-outline' : 'create-outline'}
                     size={12}
-                    color="#3E6A52"
+                    color="#2C7C96"
                   />
                   <Text style={styles.modeToggleTxt}>
                     {inputMode === 'wheels' ? 'Scroll' : 'Type'}
@@ -911,7 +911,7 @@ export default function CalendarScreen() {
               <View style={styles.glassInput}>
                 <TextInput style={styles.fieldInput} placeholder="Type an address or place…"
                   placeholderTextColor="rgba(34,39,31,0.4)" value={location} onChangeText={setLocation} />
-                <Ionicons name="map-outline" size={15} color="#3E6A52" style={{ marginRight:14 }} />
+                <Ionicons name="map-outline" size={15} color="#2C7C96" style={{ marginRight:14 }} />
               </View>
 
               {location.length > 2 && (
@@ -924,7 +924,7 @@ export default function CalendarScreen() {
                     <Text style={styles.mapOverlayTxt} numberOfLines={1}>{location}</Text>
                   </BlurView>
                   <TouchableOpacity style={styles.mapNavBtn} onPress={() => openAppleMaps(location)}>
-                    <Ionicons name="navigate-circle" size={28} color="#3E6A52" />
+                    <Ionicons name="navigate-circle" size={28} color="#2C7C96" />
                   </TouchableOpacity>
                 </View>
               )}
@@ -955,18 +955,18 @@ const styles = StyleSheet.create({
   pageTitle:     { fontFamily:'Inter-Black', fontSize:34, color:'#22271F', letterSpacing:-1 },
   pageSubtitle:  { fontFamily:'Inter-Regular', fontSize:14, color:'rgba(34,39,31,0.45)', marginTop:3 },
 
-  todayBtn:      { flexDirection:'row', alignItems:'center', gap:5, paddingHorizontal:12, height:34, borderRadius:12, backgroundColor:'rgba(43,70,56,0.08)', borderWidth:1, borderColor:'rgba(43,70,56,0.18)' },
-  todayBtnTxt:   { fontFamily:'Inter-SemiBold', fontSize:13, color:'#375946' },
-  segment:       { flexDirection:'row', height:34, borderRadius:12, backgroundColor:'rgba(43,70,56,0.05)', borderWidth:1, borderColor:'rgba(43,70,56,0.14)', padding:3, gap:3 },
+  todayBtn:      { flexDirection:'row', alignItems:'center', gap:5, paddingHorizontal:12, height:34, borderRadius:12, backgroundColor:'rgba(196,196,196,0.08)', borderWidth:1, borderColor:'rgba(196,196,196,0.18)' },
+  todayBtnTxt:   { fontFamily:'Inter-SemiBold', fontSize:13, color:'#165B74' },
+  segment:       { flexDirection:'row', height:34, borderRadius:12, backgroundColor:'rgba(196,196,196,0.05)', borderWidth:1, borderColor:'rgba(196,196,196,0.14)', padding:3, gap:3 },
   segmentBtn:    { paddingHorizontal:12, borderRadius:9, alignItems:'center', justifyContent:'center' },
-  segmentBtnActive: { backgroundColor:'rgba(43,70,56,0.14)', borderWidth:1, borderColor:'rgba(43,70,56,0.22)' },
+  segmentBtnActive: { backgroundColor:'rgba(196,196,196,0.14)', borderWidth:1, borderColor:'rgba(196,196,196,0.22)' },
   segmentTxt:    { fontFamily:'Inter-SemiBold', fontSize:13, color:'rgba(34,39,31,0.45)' },
-  segmentTxtActive: { color:'#375946' },
-  addBtn:        { width:34, height:34, borderRadius:12, backgroundColor:'rgba(43,70,56,0.08)', borderWidth:1, borderColor:'rgba(43,70,56,0.18)', alignItems:'center', justifyContent:'center' },
-  headerPill:    { flexDirection:'row', alignItems:'center', backgroundColor:'rgba(62,106,82,0.1)', borderWidth:1, borderColor:'rgba(62,106,82,0.25)', borderRadius:20, overflow:'hidden' },
+  segmentTxtActive: { color:'#165B74' },
+  addBtn:        { width:34, height:34, borderRadius:12, backgroundColor:'rgba(196,196,196,0.08)', borderWidth:1, borderColor:'rgba(196,196,196,0.18)', alignItems:'center', justifyContent:'center' },
+  headerPill:    { flexDirection:'row', alignItems:'center', backgroundColor:'rgba(44,124,150,0.1)', borderWidth:1, borderColor:'rgba(44,124,150,0.25)', borderRadius:20, overflow:'hidden' },
   pillBtn:       { flexDirection:'row', alignItems:'center', paddingHorizontal:12, paddingVertical:9, gap:4 },
-  pillTxt:       { fontFamily:'Inter-Medium', fontSize:13, color:'#3E6A52' },
-  pillDivider:   { width:1, height:20, backgroundColor:'rgba(62,106,82,0.3)' },
+  pillTxt:       { fontFamily:'Inter-Medium', fontSize:13, color:'#2C7C96' },
+  pillDivider:   { width:1, height:20, backgroundColor:'rgba(44,124,150,0.3)' },
   stripContent:       { paddingHorizontal:170, paddingVertical:10 },
   stripItemContainer: { width:ITEM_WIDTH, alignItems:'center' },
   dayCell:   { alignItems:'center', width:44, paddingVertical:8, borderRadius:14 },
@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
   sectionLabel: { fontFamily:'Inter-SemiBold', fontSize:11.5, color:'rgba(34,39,31,0.4)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:14 },
   emptyText:    { fontFamily:'Inter-Regular', fontSize:14, color:'rgba(34,39,31,0.3)', marginTop:12 },
   sessionRow:   { flexDirection:'row', alignItems:'flex-start', gap:12 },
-  dateBadge:    { width:50, height:56, borderRadius:14, backgroundColor:'rgba(43,70,56,0.16)', borderWidth:1, borderColor:'rgba(43,70,56,0.22)', alignItems:'center', justifyContent:'center', flexShrink:0 },
+  dateBadge:    { width:50, height:56, borderRadius:14, backgroundColor:'rgba(196,196,196,0.16)', borderWidth:1, borderColor:'rgba(196,196,196,0.22)', alignItems:'center', justifyContent:'center', flexShrink:0 },
   dateBadgeNum: { fontFamily:'Inter-Bold', fontSize:21, color:'#22271F', lineHeight:24 },
   dateBadgeMon: { fontFamily:'Inter-Medium', fontSize:10, color:'#C77E72', letterSpacing:0.5 },
   sessionTitle: { fontFamily:'Inter-SemiBold', fontSize:15, color:'#22271F', marginBottom:4 },
@@ -984,43 +984,43 @@ const styles = StyleSheet.create({
   metaTxt:      { fontFamily:'Inter-Regular', fontSize:12, color:'rgba(34,39,31,0.5)' },
 
   // Sheet
-  addSheet:        { backgroundColor:'#FFFDF7', borderTopLeftRadius:36, borderTopRightRadius:36, maxHeight:'95%', borderWidth:1, borderColor:'rgba(43,70,56,0.16)' },
+  addSheet:        { backgroundColor:'#FFFFFF', borderTopLeftRadius:36, borderTopRightRadius:36, maxHeight:'95%', borderWidth:1, borderColor:'rgba(196,196,196,0.16)' },
   addSheetContent: { padding:20, paddingBottom:52 },
-  sheetHandle:     { width:38, height:4, borderRadius:2, backgroundColor:'rgba(43,70,56,0.32)' },
+  sheetHandle:     { width:38, height:4, borderRadius:2, backgroundColor:'rgba(196,196,196,0.32)' },
   sheetHeader:     { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:20 },
   sheetTitle:      { fontFamily:'Inter-Bold', fontSize:24, color:'#22271F' },
-  closeBtn:        { width:36, height:36, borderRadius:18, backgroundColor:'rgba(43,70,56,0.16)', alignItems:'center', justifyContent:'center' },
+  closeBtn:        { width:36, height:36, borderRadius:18, backgroundColor:'rgba(196,196,196,0.16)', alignItems:'center', justifyContent:'center' },
 
   // Mode toggle (single button)
-  modeToggleBtn: { flexDirection:'row', alignItems:'center', gap:5, paddingHorizontal:11, paddingVertical:7, backgroundColor:'rgba(62,106,82,0.1)', borderRadius:12, borderWidth:1, borderColor:'rgba(62,106,82,0.25)' },
-  modeToggleTxt: { fontFamily:'Inter-SemiBold', fontSize:12, color:'#3E6A52' },
+  modeToggleBtn: { flexDirection:'row', alignItems:'center', gap:5, paddingHorizontal:11, paddingVertical:7, backgroundColor:'rgba(44,124,150,0.1)', borderRadius:12, borderWidth:1, borderColor:'rgba(44,124,150,0.25)' },
+  modeToggleTxt: { fontFamily:'Inter-SemiBold', fontSize:12, color:'#2C7C96' },
 
   fieldSection: { marginBottom:20 },
   fieldLabel:   { fontFamily:'Inter-Medium', fontSize:11, color:'rgba(34,39,31,0.38)', textTransform:'uppercase', letterSpacing:1, marginBottom:10 },
   subLabel:     { fontFamily:'Inter-Medium', fontSize:11, color:'rgba(34,39,31,0.4)', marginBottom:6 },
-  glassInput:   { backgroundColor:'rgba(43,70,56,0.12)', borderWidth:1, borderColor:'rgba(43,70,56,0.22)', borderRadius:16, flexDirection:'row', alignItems:'center' },
+  glassInput:   { backgroundColor:'rgba(196,196,196,0.12)', borderWidth:1, borderColor:'rgba(196,196,196,0.22)', borderRadius:16, flexDirection:'row', alignItems:'center' },
   fieldInput:   { flex:1, padding:14, fontFamily:'Inter-Regular', fontSize:15, color:'#22271F' },
 
   // Pickers
   pickerRow:     { flexDirection:'row', gap:8 },
   timeColLabels: { flexDirection:'row', marginBottom:6 },
   colLabel:      { fontFamily:'Inter-SemiBold', fontSize:10, color:'rgba(34,39,31,0.3)', textTransform:'uppercase', letterSpacing:1 },
-  autoChip:      { backgroundColor:'rgba(62,106,82,0.12)', borderRadius:6, paddingHorizontal:5, paddingVertical:1, borderWidth:1, borderColor:'rgba(62,106,82,0.3)' },
-  autoChipTxt:   { fontFamily:'Inter-Bold', fontSize:7.5, color:'#3E6A52', letterSpacing:0.5 },
+  autoChip:      { backgroundColor:'rgba(44,124,150,0.12)', borderRadius:6, paddingHorizontal:5, paddingVertical:1, borderWidth:1, borderColor:'rgba(44,124,150,0.3)' },
+  autoChipTxt:   { fontFamily:'Inter-Bold', fontSize:7.5, color:'#2C7C96', letterSpacing:0.5 },
 
   // Wheel picker
-  wheelWrap:        { flex:1, overflow:'hidden', backgroundColor:'rgba(43,70,56,0.12)', borderRadius:14, borderWidth:1, borderColor:'rgba(43,70,56,0.16)' },
+  wheelWrap:        { flex:1, overflow:'hidden', backgroundColor:'rgba(196,196,196,0.12)', borderRadius:14, borderWidth:1, borderColor:'rgba(196,196,196,0.16)' },
   wheelDisabled:    { opacity:0.45 },
   wheelTxt:         { fontFamily:'Inter-Medium', textAlign:'center' },
-  wheelActive:      { color:'#3E6A52', fontSize:13 },
+  wheelActive:      { color:'#2C7C96', fontSize:13 },
   wheelInactive:    { color:'rgba(34,39,31,0.32)', fontSize:11 },
-  wheelRail:        { position:'absolute', left:6, right:6, backgroundColor:'rgba(62,106,82,0.1)', borderRadius:8, borderWidth:1, borderColor:'rgba(62,106,82,0.22)' },
+  wheelRail:        { position:'absolute', left:6, right:6, backgroundColor:'rgba(44,124,150,0.1)', borderRadius:8, borderWidth:1, borderColor:'rgba(44,124,150,0.22)' },
   wheelFade:        { position:'absolute', left:0, right:0, height:18 },
   wheelFadeTop:     { top:0, backgroundColor:'rgba(255,253,247,0.9)' },
   wheelFadeBottom:  { bottom:0, backgroundColor:'rgba(255,253,247,0.9)' },
 
   // Map
-  mapCard:       { marginTop:10, height:100, borderRadius:18, overflow:'hidden', borderWidth:1, borderColor:'rgba(43,70,56,0.22)' },
+  mapCard:       { marginTop:10, height:100, borderRadius:18, overflow:'hidden', borderWidth:1, borderColor:'rgba(196,196,196,0.22)' },
   mapImage:      { width:'100%', height:'100%' },
   mapOverlay:    { position:'absolute', bottom:0, left:0, right:0, paddingHorizontal:14, paddingVertical:8 },
   mapOverlayTxt: { fontFamily:'Inter-Medium', fontSize:11, color:'#22271F' },
@@ -1034,22 +1034,22 @@ const styles = StyleSheet.create({
   tagPill: { alignSelf:'flex-start', borderRadius:8, paddingHorizontal:8, paddingVertical:3, marginBottom:8 },
   tagPillTxt: { fontFamily:'Inter-Bold', fontSize:10, letterSpacing:0.8 },
   detailTitle: { fontFamily:'Inter-Bold', fontSize:22, color:'#22271F', letterSpacing:-0.3, lineHeight:28 },
-  detailInfoBlock: { backgroundColor:'rgba(43,70,56,0.12)', borderRadius:16, padding:14, gap:12, borderWidth:1, borderColor:'rgba(43,70,56,0.16)' },
+  detailInfoBlock: { backgroundColor:'rgba(196,196,196,0.12)', borderRadius:16, padding:14, gap:12, borderWidth:1, borderColor:'rgba(196,196,196,0.16)' },
   detailInfoRow: { flexDirection:'row', alignItems:'flex-start' },
   detailLabel: { fontFamily:'Inter-Medium', fontSize:11, color:'rgba(34,39,31,0.4)', textTransform:'uppercase', letterSpacing:0.8, marginBottom:2 },
   detailValue: { fontFamily:'Inter-Medium', fontSize:14, color:'#22271F', lineHeight:20 },
   rsvpAsk: { fontFamily:'Inter-SemiBold', fontSize:12, color:'rgba(34,39,31,0.5)', letterSpacing:1, textTransform:'uppercase', marginTop:16, marginBottom:10 },
   rsvpBtnRow: { flexDirection:'row', gap:10 },
-  rsvpBtn: { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', gap:7, paddingVertical:13, borderRadius:14, borderWidth:1, borderColor:'rgba(43,70,56,0.22)', backgroundColor:'rgba(43,70,56,0.05)' },
-  rsvpBtnGoing: { backgroundColor:'#3E6A52', borderColor:'#3E6A52' },
+  rsvpBtn: { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', gap:7, paddingVertical:13, borderRadius:14, borderWidth:1, borderColor:'rgba(196,196,196,0.22)', backgroundColor:'rgba(196,196,196,0.05)' },
+  rsvpBtnGoing: { backgroundColor:'#2C7C96', borderColor:'#2C7C96' },
   rsvpBtnNo: { backgroundColor:'#B15A4E', borderColor:'#B15A4E' },
   rsvpBtnTxt: { fontFamily:'Inter-SemiBold', fontSize:14, color:'#22271F' },
-  coverageBox: { marginTop:16, backgroundColor:'rgba(43,70,56,0.06)', borderRadius:14, padding:14, borderWidth:1, borderColor:'rgba(43,70,56,0.14)' },
+  coverageBox: { marginTop:16, backgroundColor:'rgba(196,196,196,0.06)', borderRadius:14, padding:14, borderWidth:1, borderColor:'rgba(196,196,196,0.14)' },
   coverageHead: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:9 },
-  coverageLabel: { fontFamily:'Inter-Bold', fontSize:10.5, color:'#3E6A52', letterSpacing:1.5 },
+  coverageLabel: { fontFamily:'Inter-Bold', fontSize:10.5, color:'#2C7C96', letterSpacing:1.5 },
   coverageCount: { fontFamily:'Inter-SemiBold', fontSize:13, color:'#22271F' },
-  coverageTrack: { flexDirection:'row', height:7, borderRadius:4, overflow:'hidden', backgroundColor:'rgba(43,70,56,0.12)' },
-  coverageFillGoing: { height:'100%', backgroundColor:'#3E6A52' },
+  coverageTrack: { flexDirection:'row', height:7, borderRadius:4, overflow:'hidden', backgroundColor:'rgba(196,196,196,0.12)' },
+  coverageFillGoing: { height:'100%', backgroundColor:'#2C7C96' },
   coverageFillNo: { height:'100%', backgroundColor:'#B15A4E' },
   coverageNote: { fontFamily:'Inter-Regular', fontSize:11.5, color:'rgba(34,39,31,0.5)', marginTop:8 },
 });

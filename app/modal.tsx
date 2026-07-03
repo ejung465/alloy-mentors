@@ -9,9 +9,9 @@ import { colors } from '@/lib/theme';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 
-const PINE = '#375946';
-const PINE_MID = '#3E6A52';
-const CREAM = '#F5EFE3';
+const PINE = '#165B74';
+const PINE_MID = '#2C7C96';
+const CREAM = '#F4F6F6';
 const INK = '#22271F';
 
 const QUICK_HOURS = [0.5, 1, 1.5, 2, 2.5, 3];
@@ -206,25 +206,25 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 18 },
   pageTitle: { fontFamily: 'Inter-Black', fontSize: 30, color: INK, letterSpacing: -0.8 },
   pageSubtitle: { fontFamily: 'Inter-Regular', fontSize: 14, color: 'rgba(34,39,31,0.5)', marginTop: 3 },
-  closeBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(43,70,56,0.10)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.2)', alignItems: 'center', justifyContent: 'center' },
+  closeBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(196,196,196,0.10)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.2)', alignItems: 'center', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 80 },
 
   sectionLabel: { fontFamily: 'Inter-SemiBold', fontSize: 11.5, color: 'rgba(34,39,31,0.5)', letterSpacing: 1.2, marginBottom: 10 },
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 20, padding: 18, marginBottom: 22 },
+  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 20, padding: 18, marginBottom: 22 },
 
   hoursRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, marginBottom: 16 },
-  stepBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(43,70,56,0.08)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.2)', alignItems: 'center', justifyContent: 'center' },
+  stepBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(196,196,196,0.08)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.2)', alignItems: 'center', justifyContent: 'center' },
   hoursBig: { fontFamily: 'Inter-Black', fontSize: 44, color: PINE, letterSpacing: -1.5, lineHeight: 48 },
   hoursUnit: { fontFamily: 'Inter-Medium', fontSize: 13, color: 'rgba(34,39,31,0.5)', marginTop: -2 },
 
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20, backgroundColor: 'rgba(43,70,56,0.06)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)' },
-  actChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)' },
+  chip: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20, backgroundColor: 'rgba(196,196,196,0.06)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)' },
+  actChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)' },
   chipOn: { backgroundColor: PINE, borderColor: PINE },
   chipTxt: { fontFamily: 'Inter-SemiBold', fontSize: 13.5, color: INK },
   chipTxtOn: { color: CREAM },
 
-  dayChip: { alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', minWidth: 74 },
+  dayChip: { alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', minWidth: 74 },
   dayChipOn: { backgroundColor: PINE, borderColor: PINE },
   dayChipLabel: { fontFamily: 'Inter-Medium', fontSize: 11.5, color: 'rgba(34,39,31,0.5)' },
   dayChipSub: { fontFamily: 'Inter-Bold', fontSize: 14, color: INK, marginTop: 2 },

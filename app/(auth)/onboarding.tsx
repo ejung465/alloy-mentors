@@ -85,7 +85,7 @@ export default function OnboardingScreen() {
 
             {/* Self-serve: Bob starts his own org and shares its codes */}
             <TouchableOpacity onPress={() => router.push('/(auth)/create-org')} style={styles.createOrgBtn} activeOpacity={0.85}>
-              <Ionicons name="add-circle-outline" size={18} color="#3E6A52" />
+              <Ionicons name="add-circle-outline" size={18} color="#2C7C96" />
               <Text style={styles.createOrgTxt}>Start a new organization</Text>
             </TouchableOpacity>
           </View>
@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 2 },
   line: { flex: 1, height: 1, backgroundColor: colors.hairline },
   orText: { fontFamily: font.medium, fontSize: 13, color: colors.textGhost, marginHorizontal: 14 },
-  createOrgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.18)', borderRadius: 16, paddingVertical: 15 },
-  createOrgTxt: { fontFamily: font.semibold, fontSize: 14.5, color: '#3E6A52' },
+  createOrgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', borderRadius: 16, paddingVertical: 15 },
+  createOrgTxt: { fontFamily: font.semibold, fontSize: 14.5, color: '#2C7C96' },
   scrollContent: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 60, justifyContent: 'center', paddingTop: 80 },
   eyebrow: { fontFamily: font.bold, fontSize: 13, color: colors.silver, letterSpacing: 6, marginTop: 32 },
   title: { fontFamily: font.black, fontSize: 44, color: colors.text, letterSpacing: -1.5, lineHeight: 46, marginTop: 8, marginBottom: 14 },

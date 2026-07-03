@@ -12,9 +12,9 @@ import { supabase } from '@/lib/supabase';
 import { useUser } from '@/contexts/UserContext';
 import { SUBJECTS, DAYS, TIMES, TSHIRTS } from '@/lib/intake';
 
-const PINE = '#375946';
-const PINE_MID = '#3E6A52';
-const CREAM = '#F5EFE3';
+const PINE = '#165B74';
+const PINE_MID = '#2C7C96';
+const CREAM = '#F4F6F6';
 const INK = '#22271F';
 
 function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
@@ -200,10 +200,10 @@ const styles = StyleSheet.create({
 
   section: { fontFamily: font.bold, fontSize: 11.5, color: PINE_MID, letterSpacing: 2, marginTop: 22, marginBottom: 12 },
   fieldLabel: { fontFamily: font.semibold, fontSize: 11, color: colors.silver, letterSpacing: 1, marginBottom: 8 },
-  input: { fontFamily: font.medium, fontSize: 15, color: INK, backgroundColor: colors.surfaceStrong, borderWidth: 1.5, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13 },
+  input: { fontFamily: font.medium, fontSize: 15, color: INK, backgroundColor: colors.surfaceStrong, borderWidth: 1.5, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13 },
 
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  chip: { paddingHorizontal: 13, paddingVertical: 9, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)' },
+  chip: { paddingHorizontal: 13, paddingVertical: 9, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)' },
   chipOn: { backgroundColor: PINE, borderColor: PINE },
   chipTxt: { fontFamily: font.medium, fontSize: 13, color: INK },
   chipTxtOn: { color: CREAM },

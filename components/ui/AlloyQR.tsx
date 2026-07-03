@@ -4,9 +4,9 @@ import { qrMatrix } from '@/lib/qrcode';
 import { font } from '@/lib/theme';
 
 const INK = '#22271F';
-const CREAM_BG = '#F2ECDE';
-const PINE = '#375946';
-const CREAM = '#F5EFE3';
+const CREAM_BG = '#F1F1EF';
+const PINE = '#165B74';
+const CREAM = '#F4F6F6';
 
 /**
  * The branded Alloy QR: locally generated (lib/qrcode.ts, EC level H), ink

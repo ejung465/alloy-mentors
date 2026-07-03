@@ -101,13 +101,13 @@ const styles = StyleSheet.create({
 
   body: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, gap: 24 },
   qrCard: { alignItems: 'center', padding: 26, borderRadius: 28, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, gap: 12 },
-  orgEyebrow: { fontFamily: font.bold, fontSize: 11, color: '#3E6A52', letterSpacing: 3 },
+  orgEyebrow: { fontFamily: font.bold, fontSize: 11, color: '#2C7C96', letterSpacing: 3 },
 
   liveRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 2 },
-  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#3E6A52' },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#2C7C96' },
   liveTxt: { fontFamily: font.medium, fontSize: 12.5, color: 'rgba(34,39,31,0.55)' },
-  track: { width: 200, height: 4, borderRadius: 2, backgroundColor: 'rgba(43,70,56,0.12)', overflow: 'hidden' },
-  trackFill: { height: '100%', backgroundColor: '#375946', borderRadius: 2 },
+  track: { width: 200, height: 4, borderRadius: 2, backgroundColor: 'rgba(196,196,196,0.12)', overflow: 'hidden' },
+  trackFill: { height: '100%', backgroundColor: '#165B74', borderRadius: 2 },
 
   name: { fontFamily: font.bold, fontSize: 20, color: colors.text, letterSpacing: -0.3, marginTop: 4 },
   role: { fontFamily: font.medium, fontSize: 14, color: colors.titanium },

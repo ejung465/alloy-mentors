@@ -120,7 +120,7 @@ export default function CreateAnnouncementModal({ visible, onClose, onSuccess }:
 
               <Text style={styles.subLabel}>Urgency Level</Text>
               <View style={styles.urgencyRow}>
-                <UrgencyOption type="info" label="Info" color="#4C7A61" />
+                <UrgencyOption type="info" label="Info" color="#2C7C96" />
                 <UrgencyOption type="warning" label="Warning" color="#B08A3E" />
                 <UrgencyOption type="emergency" label="Urgent" color="#B15A4E" />
               </View>
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(43,70,56,0.15)',
+    backgroundColor: 'rgba(196,196,196,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -192,8 +192,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(43,70,56,0.15)',
-    backgroundColor: 'rgba(43,70,56,0.05)',
+    borderColor: 'rgba(196,196,196,0.15)',
+    backgroundColor: 'rgba(196,196,196,0.05)',
   },
   urgencyLabel: {
     fontFamily: 'Inter-SemiBold',

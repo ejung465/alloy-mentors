@@ -407,6 +407,6 @@ const styles = StyleSheet.create({
   cameraTitle: { fontFamily: font.bold, fontSize: 22, color: '#22271F', letterSpacing: -0.5 },
   cameraFrame: { width: 240, height: 240, borderRadius: 24, borderWidth: 2, borderColor: colors.platinum, backgroundColor: 'transparent' },
   cameraHint: { fontFamily: font.regular, fontSize: 13, color: 'rgba(34,39,31,0.6)', textAlign: 'center' },
-  manualBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 24, backgroundColor: 'rgba(43,70,56,0.16)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.3)' },
+  manualBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 24, backgroundColor: 'rgba(196,196,196,0.16)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.3)' },
   manualTxt: { fontFamily: font.semibold, fontSize: 14, color: '#22271F' },
 });

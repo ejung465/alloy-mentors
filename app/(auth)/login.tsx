@@ -134,11 +134,11 @@ export default function LoginScreen() {
             </View>
 
             {__DEV__ && (
-              <View style={{ marginTop: 12, padding: 12, backgroundColor: 'rgba(43,70,56,0.12)', borderRadius: 8 }}>
+              <View style={{ marginTop: 12, padding: 12, backgroundColor: 'rgba(196,196,196,0.12)', borderRadius: 8 }}>
                 <Text style={{ fontFamily: 'Inter-Medium', fontSize: 12, color: 'rgba(34,39,31,0.4)', textAlign: 'center' }}>
                   Dev: add this to Supabase Redirect URLs
                 </Text>
-                <Text style={{ fontFamily: 'Inter-Regular', fontSize: 11, color: '#3E6A52', textAlign: 'center', marginTop: 4 }}>
+                <Text style={{ fontFamily: 'Inter-Regular', fontSize: 11, color: '#2C7C96', textAlign: 'center', marginTop: 4 }}>
                   {redirectUrl}
                 </Text>
               </View>

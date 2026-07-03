@@ -73,18 +73,18 @@ export function AuroraBackground({ variant = 'default' }: { variant?: 'default' 
   const { width, height } = useWindowDimensions();
 
   // A single soft accent wash, shifted subtly by variant so different surfaces
-  // feel distinct without leaving the cream-and-pine family.
+  // feel distinct without leaving the harbor family.
   const accent =
-    variant === 'warm' ? '#D8C7A6' : variant === 'iris' ? '#B7C2C9' : colors.titanium;
+    variant === 'warm' ? '#E8B48C' : variant === 'iris' ? '#9FC0CE' : colors.titanium;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* warm cream paper ground */}
+      {/* gray-white paper ground */}
       <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.base }]} />
-      {/* soft sage wash, upper-left */}
-      <Blob color={tint('#AFC0AE', 0.22)} size={width * 1.1} startX={-width * 0.3} startY={-height * 0.1} travelX={width * 0.22} travelY={height * 0.12} duration={22000} maxOpacity={0.5} />
-      {/* faint pine wash, lower-right, for quiet depth */}
-      <Blob color={tint('#8FA891', 0.18)} size={width * 0.95} startX={width * 0.4} startY={height * 0.62} travelX={-width * 0.2} travelY={-height * 0.1} duration={26000} maxOpacity={0.42} />
+      {/* soft gray wash, upper-left */}
+      <Blob color={tint('#C4C4C4', 0.22)} size={width * 1.1} startX={-width * 0.3} startY={-height * 0.1} travelX={width * 0.22} travelY={height * 0.12} duration={22000} maxOpacity={0.5} />
+      {/* faint blue wash, lower-right, for quiet depth */}
+      <Blob color={tint('#9CA8AC', 0.18)} size={width * 0.95} startX={width * 0.4} startY={height * 0.62} travelX={-width * 0.2} travelY={-height * 0.1} duration={26000} maxOpacity={0.42} />
       {/* the variant accent, kept very subtle */}
       <Blob color={tint(accent, 0.16)} size={width * 0.85} startX={width * 0.1} startY={height * 0.3} travelX={width * 0.16} travelY={height * 0.1} duration={24000} maxOpacity={0.34} />
       {/* faint warm veil unifies the field into calm paper */}

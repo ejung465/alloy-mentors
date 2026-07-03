@@ -30,9 +30,9 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#F2ECDE' }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#F1F1EF' }}>
       <UserProvider>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F2ECDE' } }}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F1F1EF' } }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="kiosk" options={{ presentation: 'modal', headerShown: false }} />

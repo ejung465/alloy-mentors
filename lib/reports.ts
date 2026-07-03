@@ -2,9 +2,9 @@ import { SKILL_LEVELS, type StudentGoal, type StudentSkill, type TimelineEntry }
 
 // Shared print palette (works on white paper, on-brand)
 const INK = '#1E2A22';
-const PINE = '#2C4A39';
-const PINE_MID = '#3E6A52';
-const SAGE = '#6E7C6F';
+const PINE = '#0E3E4F';
+const PINE_MID = '#2C7C96';
+const SAGE = '#8C8C8C';
 const PAPER = '#F7F2E8';
 
 function esc(s?: string | null): string {

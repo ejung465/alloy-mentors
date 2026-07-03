@@ -9,11 +9,11 @@ import { supabase } from '@/lib/supabase';
 import { useUser } from '@/contexts/UserContext';
 import { roleLabel, roleColor } from '@/lib/roles';
 
-const PINE = '#375946';
-const PINE_MID = '#3E6A52';
-const CREAM = '#F5EFE3';
+const PINE = '#165B74';
+const PINE_MID = '#2C7C96';
+const CREAM = '#F4F6F6';
 const INK = '#22271F';
-const RAIL = 'rgba(43,70,56,0.16)';
+const RAIL = 'rgba(196,196,196,0.16)';
 
 type Member = {
   id: string;
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
 
   tierHead: { marginTop: 6 },
   tierRail: { width: 2, height: 18, backgroundColor: RAIL, marginLeft: 15 },
-  tierPill: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', backgroundColor: 'rgba(62,106,82,0.10)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.25)', borderRadius: 20, paddingLeft: 14, paddingRight: 6, paddingVertical: 6 },
+  tierPill: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', backgroundColor: 'rgba(44,124,150,0.10)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', borderRadius: 20, paddingLeft: 14, paddingRight: 6, paddingVertical: 6 },
   tierPillTxt: { fontFamily: font.bold, fontSize: 11, color: PINE_MID, letterSpacing: 1.2 },
   countDot: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, backgroundColor: PINE_MID, alignItems: 'center', justifyContent: 'center' },
   countTxt: { fontFamily: font.bold, fontSize: 11.5, color: CREAM },
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   railV: { position: 'absolute', left: 15, top: 0, bottom: 0, width: 2, backgroundColor: RAIL },
   railH: { position: 'absolute', left: 15, top: 22, width: 17, height: 2, backgroundColor: RAIL },
 
-  personCard: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.14)', borderRadius: 14, paddingVertical: 10, paddingHorizontal: 12, marginVertical: 5 },
+  personCard: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 14, paddingVertical: 10, paddingHorizontal: 12, marginVertical: 5 },
   avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: PINE, alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { fontFamily: font.bold, fontSize: 13, color: CREAM },
   personName: { fontFamily: font.semibold, fontSize: 14.5, color: INK },

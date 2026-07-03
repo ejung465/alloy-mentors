@@ -35,7 +35,7 @@ function PressRow({ children, onPress }: any) {
   );
 }
 
-function SettingRow({ icon, label, sublabel, onPress, rightEl, color = '#3E6A52', last = false }: any) {
+function SettingRow({ icon, label, sublabel, onPress, rightEl, color = '#2C7C96', last = false }: any) {
   return (
     <PressRow onPress={onPress}>
       <View style={[styles.settingRow, !last && styles.settingRowBorder]}>
@@ -75,11 +75,11 @@ function StatBar({ label, value, max, color }: { label: string; value: number; m
 
 // ── Rank badge helper ─────────────────────────────────────────
 function getStreakTier(weeks: number): { title: string; color: string; nextAt: number } {
-  if (weeks >= 12) return { title: 'Unstoppable', color: '#3E6A52', nextAt: 999 };
+  if (weeks >= 12) return { title: 'Unstoppable', color: '#2C7C96', nextAt: 999 };
   if (weeks >= 8)  return { title: 'Dedicated',   color: '#B08A3E', nextAt: 12  };
-  if (weeks >= 4)  return { title: 'Consistent',  color: '#6E7C6F', nextAt: 8   };
-  if (weeks >= 2)  return { title: 'Building',    color: '#B0714A', nextAt: 4   };
-  return              { title: 'Just started', color: '#4C7A61', nextAt: 2   };
+  if (weeks >= 4)  return { title: 'Consistent',  color: '#8C8C8C', nextAt: 8   };
+  if (weeks >= 2)  return { title: 'Building',    color: '#E26522', nextAt: 4   };
+  return              { title: 'Just started', color: '#2C7C96', nextAt: 2   };
 }
 
 export default function ProfileScreen() {
@@ -273,7 +273,7 @@ export default function ProfileScreen() {
                 <Text style={styles.profileRole} numberOfLines={1}>{roleText} · Alloy</Text>
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
                   <View style={styles.verifiedBadge}>
-                    <Ionicons name="shield-checkmark" size={11} color="#4C7A61" />
+                    <Ionicons name="shield-checkmark" size={11} color="#2C7C96" />
                     <Text style={styles.verifiedText}>Verified</Text>
                   </View>
                   <View style={[styles.verifiedBadge, { backgroundColor: `${tier.color}18`, borderColor: `${tier.color}35` }]}>
@@ -317,8 +317,8 @@ export default function ProfileScreen() {
         {/* ── Account ────────────────────────────── */}
         <Text style={styles.sectionLabel}>ACCOUNT</Text>
         <GlassCard style={styles.settingsCard} contentStyle={{ padding: 0 }}>
-          <SettingRow icon="mail-outline"     label="Email"        sublabel={profile?.email || '—'}           color="#3E6A52" onPress={() => { setNewEmail(profile?.email || ''); setShowEmail(true); }} />
-          <SettingRow icon="school-outline"   label="Institution"  sublabel={profile?.school || 'Not set'}    color="#5E7488" onPress={() => router.push('/edit-profile')} />
+          <SettingRow icon="mail-outline"     label="Email"        sublabel={profile?.email || '—'}           color="#2C7C96" onPress={() => { setNewEmail(profile?.email || ''); setShowEmail(true); }} />
+          <SettingRow icon="school-outline"   label="Institution"  sublabel={profile?.school || 'Not set'}    color="#7A7A7A" onPress={() => router.push('/edit-profile')} />
           <SettingRow icon="person-outline"   label="Role"         sublabel={roleText}                        color={colors.gold} onPress={() => router.push('/org-tree')} />
           {featureEnabled(org, 'checkin') && (
             <SettingRow icon="qr-code-outline"  label="Check-In QR"  sublabel="Show this at the door"           color={colors.silver} onPress={() => router.push('/my-qr')} />
@@ -340,28 +340,28 @@ export default function ProfileScreen() {
           {featureEnabled(org, 'hours') && (
             <SettingRow icon="document-text-outline" label={loadingPdf ? 'Generating...' : 'Export Verification PDF'} sublabel="Download your signed hours record" onPress={exportPDF} color="#41785C" />
           )}
-          <SettingRow icon="cloud-download-outline" label="Request Data Export" sublabel="Email us to receive a copy of your data" color="#3E6A52" onPress={() => mail('Data export request')} last />
+          <SettingRow icon="cloud-download-outline" label="Request Data Export" sublabel="Email us to receive a copy of your data" color="#2C7C96" onPress={() => mail('Data export request')} last />
         </GlassCard>
 
         {/* ── Support ─────────────────────────────── */}
         <Text style={styles.sectionLabel}>SUPPORT</Text>
         <GlassCard style={styles.settingsCard} contentStyle={{ padding: 0 }}>
           <SettingRow icon="help-circle-outline" label="Help Center" color="#B08A3E" onPress={() => mail('Help request')} />
-          <SettingRow icon="chatbox-outline" label="Contact Support" sublabel="Email the Alloy Mentors team" color="#3E6A52" onPress={() => mail('Support')} />
+          <SettingRow icon="chatbox-outline" label="Contact Support" sublabel="Email the Alloy Mentors team" color="#2C7C96" onPress={() => mail('Support')} />
           <SettingRow icon="star-outline" label="Rate the App" color="#C77E88" onPress={() => Alert.alert('Thanks!', 'Ratings open once Alloy is on the App Store.')} last />
         </GlassCard>
 
         {/* ── Legal ───────────────────────────────── */}
         <Text style={styles.sectionLabel}>LEGAL</Text>
         <GlassCard style={styles.settingsCard} contentStyle={{ padding: 0 }}>
-          <SettingRow icon="shield-outline" label="Privacy Policy" color="#5E7488" onPress={() => openURL('https://alloy.app/privacy')} />
-          <SettingRow icon="document-outline" label="Terms of Service" color="#5E7488" onPress={() => openURL('https://alloy.app/terms')} last />
+          <SettingRow icon="shield-outline" label="Privacy Policy" color="#7A7A7A" onPress={() => openURL('https://alloy.app/privacy')} />
+          <SettingRow icon="document-outline" label="Terms of Service" color="#7A7A7A" onPress={() => openURL('https://alloy.app/terms')} last />
         </GlassCard>
 
         {/* ── Sign Out ─────────────────────────────── */}
         <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn} activeOpacity={0.8}>
           <BlurView intensity={15} tint="light" style={StyleSheet.absoluteFillObject} />
-          <Ionicons name="log-out-outline" size={18} color="#3E6A52" style={{ marginRight: 8 }} />
+          <Ionicons name="log-out-outline" size={18} color="#2C7C96" style={{ marginRight: 8 }} />
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
         <Text style={styles.versionText}>Alloy Mentors · v1.0.0</Text>
@@ -396,8 +396,8 @@ export default function ProfileScreen() {
                 <View style={{ alignItems: 'center' }}>
                   <Text style={styles.rankNum}>{streak}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                    <Ionicons name="flame" size={12} color="#B0714A" />
-                    <Text style={{ fontFamily: 'Inter-SemiBold', fontSize: 12, color: '#B0714A' }}>
+                    <Ionicons name="flame" size={12} color="#E26522" />
+                    <Text style={{ fontFamily: 'Inter-SemiBold', fontSize: 12, color: '#E26522' }}>
                       {streak === 1 ? 'week' : 'weeks'} running
                     </Text>
                   </View>
@@ -407,9 +407,9 @@ export default function ProfileScreen() {
 
               {/* Stat bars (video-game style) */}
               <View style={styles.statBarsWrapper}>
-                <StatBar label="Hours Contributed" value={totalHours} max={200} color="#3E6A52" />
-                <StatBar label="Students Helped"   value={studentsHelped} max={20} color="#4C7A61" />
-                <StatBar label="Sessions Completed" value={Math.ceil(totalHours / 2)} max={50} color="#5E7488" />
+                <StatBar label="Hours Contributed" value={totalHours} max={200} color="#2C7C96" />
+                <StatBar label="Students Helped"   value={studentsHelped} max={20} color="#2C7C96" />
+                <StatBar label="Sessions Completed" value={Math.ceil(totalHours / 2)} max={50} color="#7A7A7A" />
               </View>
 
               {/* Next tier progress */}
@@ -423,9 +423,9 @@ export default function ProfileScreen() {
               {/* Number badges */}
               <View style={styles.badgeRow}>
                 {[
-                  { icon: 'time', val: totalHours, label: 'Hours', color: '#3E6A52' },
-                  { icon: 'people', val: studentsHelped, label: 'Students', color: '#4C7A61' },
-                  { icon: 'flame', val: `${streak}wk`, label: 'Streak', color: '#B0714A' },
+                  { icon: 'time', val: totalHours, label: 'Hours', color: '#2C7C96' },
+                  { icon: 'people', val: studentsHelped, label: 'Students', color: '#2C7C96' },
+                  { icon: 'flame', val: `${streak}wk`, label: 'Streak', color: '#E26522' },
                 ].map((b) => (
                   <View key={b.label} style={[styles.badge, { borderColor: `${b.color}30` }]}>
                     <Ionicons name={b.icon as any} size={18} color={b.color} />
@@ -496,56 +496,56 @@ const styles = StyleSheet.create({
   scrollContent: { paddingTop: 72, paddingHorizontal: 20, paddingBottom: 180 },
   pageHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   pageTitle: { fontFamily: 'Inter-Black', fontSize: 34, color: '#22271F', letterSpacing: -1 },
-  editPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(43,70,56,0.22)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.32)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  editPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(196,196,196,0.22)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.32)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
   editPillText: { fontFamily: 'Inter-Medium', fontSize: 13, color: '#22271F' },
 
   profileCard: { marginBottom: 28 },
   avatarRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(62,106,82,0.12)', borderWidth: 1.5, borderColor: 'rgba(62,106,82,0.3)', alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  avatarText: { fontFamily: 'Inter-Bold', fontSize: 30, color: '#3E6A52' },
+  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(44,124,150,0.12)', borderWidth: 1.5, borderColor: 'rgba(44,124,150,0.3)', alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  avatarText: { fontFamily: 'Inter-Bold', fontSize: 30, color: '#2C7C96' },
   avatarOnline: { position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: '#41785C', borderWidth: 2, borderColor: '#050812' },
   profileName: { fontFamily: 'Inter-Bold', fontSize: 20, color: '#22271F', letterSpacing: -0.3 },
   profileRole: { fontFamily: 'Inter-Regular', fontSize: 13, color: 'rgba(34,39,31,0.4)', marginTop: 2, textTransform: 'capitalize' },
   verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(76,122,97,0.12)', borderWidth: 1, borderColor: 'rgba(76,122,97,0.25)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  verifiedText: { fontFamily: 'Inter-Medium', fontSize: 11, color: '#4C7A61' },
-  statStrip: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: 'rgba(43,70,56,0.16)', paddingTop: 16 },
+  verifiedText: { fontFamily: 'Inter-Medium', fontSize: 11, color: '#2C7C96' },
+  statStrip: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: 'rgba(196,196,196,0.16)', paddingTop: 16 },
   statItem: { flex: 1, alignItems: 'center' },
   statNum: { fontFamily: 'Inter-Bold', fontSize: 22, color: '#22271F', letterSpacing: -0.5 },
   statLbl: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(34,39,31,0.4)', marginTop: 2 },
-  statDivider: { width: 1, backgroundColor: 'rgba(43,70,56,0.22)', marginVertical: 4 },
+  statDivider: { width: 1, backgroundColor: 'rgba(196,196,196,0.22)', marginVertical: 4 },
 
   sectionLabel: { fontFamily: 'Inter-Medium', fontSize: 11.5, color: 'rgba(34,39,31,0.35)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10, marginLeft: 4 },
   settingsCard: { marginBottom: 24 },
-  adminCard: { borderColor: 'rgba(76,122,97,0.3)', shadowColor: '#4C7A61', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 12 },
+  adminCard: { borderColor: 'rgba(76,122,97,0.3)', shadowColor: '#2C7C96', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 12 },
   settingRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14 },
-  settingRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(43,70,56,0.16)' },
+  settingRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(196,196,196,0.16)' },
   settingIcon: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   settingLabel: { fontFamily: 'Inter-Medium', fontSize: 15, color: '#22271F' },
   settingSubLabel: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(34,39,31,0.4)', marginTop: 2 },
-  signOutBtn: { overflow: 'hidden', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(62,106,82,0.25)', backgroundColor: 'rgba(62,106,82,0.1)', paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  signOutText: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: '#3E6A52' },
+  signOutBtn: { overflow: 'hidden', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', backgroundColor: 'rgba(44,124,150,0.1)', paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  signOutText: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: '#2C7C96' },
   versionText: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(34,39,31,0.32)', textAlign: 'center' },
 
   // Stats modal
-  statsSheet: { overflow: 'hidden', borderTopLeftRadius: 32, borderTopRightRadius: 32, borderWidth: 1, borderColor: 'rgba(43,70,56,0.32)', backgroundColor: '#FFFDF7', padding: 24, paddingBottom: 48 },
-  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(43,70,56,0.3)' },
+  statsSheet: { overflow: 'hidden', borderTopLeftRadius: 32, borderTopRightRadius: 32, borderWidth: 1, borderColor: 'rgba(196,196,196,0.32)', backgroundColor: '#FFFFFF', padding: 24, paddingBottom: 48 },
+  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(196,196,196,0.3)' },
   statsHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
-  statsAvatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(62,106,82,0.12)', borderWidth: 1.5, borderColor: 'rgba(62,106,82,0.3)', alignItems: 'center', justifyContent: 'center' },
-  statsAvatarText: { fontFamily: 'Inter-Bold', fontSize: 26, color: '#3E6A52' },
+  statsAvatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(44,124,150,0.12)', borderWidth: 1.5, borderColor: 'rgba(44,124,150,0.3)', alignItems: 'center', justifyContent: 'center' },
+  statsAvatarText: { fontFamily: 'Inter-Bold', fontSize: 26, color: '#2C7C96' },
   statsName: { fontFamily: 'Inter-Bold', fontSize: 18, color: '#22271F', marginBottom: 6 },
   tierBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
   tierText: { fontFamily: 'Inter-SemiBold', fontSize: 12 },
   rankNum: { fontFamily: 'Inter-Black', fontSize: 28, color: '#22271F', letterSpacing: -1 },
-  statBarsWrapper: { backgroundColor: 'rgba(43,70,56,0.12)', borderRadius: 18, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)' },
+  statBarsWrapper: { backgroundColor: 'rgba(196,196,196,0.12)', borderRadius: 18, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)' },
   barLabel: { fontFamily: 'Inter-Medium', fontSize: 13, color: 'rgba(34,39,31,0.6)' },
   barVal: { fontFamily: 'Inter-Bold', fontSize: 13 },
-  barTrack: { height: 8, backgroundColor: 'rgba(43,70,56,0.16)', borderRadius: 4, overflow: 'hidden' },
+  barTrack: { height: 8, backgroundColor: 'rgba(196,196,196,0.16)', borderRadius: 4, overflow: 'hidden' },
   barFill: { height: 8, borderRadius: 4 },
-  nextTierBox: { backgroundColor: 'rgba(43,70,56,0.12)', borderRadius: 14, padding: 14, marginBottom: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)' },
+  nextTierBox: { backgroundColor: 'rgba(196,196,196,0.12)', borderRadius: 14, padding: 14, marginBottom: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)' },
   nextTierLabel: { fontFamily: 'Inter-Medium', fontSize: 13, color: 'rgba(34,39,31,0.4)' },
   nextTierVal: { fontFamily: 'Inter-SemiBold', fontSize: 14, color: '#22271F' },
   badgeRow: { flexDirection: 'row', gap: 10 },
-  badge: { flex: 1, borderRadius: 16, borderWidth: 1, backgroundColor: 'rgba(43,70,56,0.12)', padding: 14, alignItems: 'center', gap: 4 },
+  badge: { flex: 1, borderRadius: 16, borderWidth: 1, backgroundColor: 'rgba(196,196,196,0.12)', padding: 14, alignItems: 'center', gap: 4 },
   badgeNum: { fontFamily: 'Inter-Bold', fontSize: 20, letterSpacing: -0.5 },
   badgeLbl: { fontFamily: 'Inter-Regular', fontSize: 11, color: 'rgba(34,39,31,0.4)' },
 
@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
   emailBackTxt: { fontFamily: 'Inter-SemiBold', fontSize: 13, color: 'rgba(34,39,31,0.5)' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontFamily: 'Inter-Bold', fontSize: 20, color: '#22271F', letterSpacing: -0.3 },
-  sCloseBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(43,70,56,0.22)', borderWidth: 1, borderColor: 'rgba(43,70,56,0.26)', alignItems: 'center', justifyContent: 'center' },
+  sCloseBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(196,196,196,0.22)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', alignItems: 'center', justifyContent: 'center' },
   saveCTA: { backgroundColor: colors.platinum, borderRadius: 16, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
   saveCTAText: { fontFamily: 'Inter-Bold', fontSize: 15, color: colors.base },
 
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   qrBackdrop: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
   qrTitle: { fontFamily: 'Inter-Bold', fontSize: 20, color: '#22271F', letterSpacing: -0.3 },
   qrSub: { fontFamily: 'Inter-Regular', fontSize: 13, color: 'rgba(34,39,31,0.5)', textAlign: 'center', marginTop: 6, lineHeight: 19 },
-  qrPanel: { backgroundColor: '#FBF6EC', borderRadius: 20, padding: 14, marginVertical: 18 },
+  qrPanel: { backgroundColor: '#F7F8F8', borderRadius: 20, padding: 14, marginVertical: 18 },
   qrName: { fontFamily: 'Inter-Bold', fontSize: 17, color: '#22271F' },
   qrRole: { fontFamily: 'Inter-Medium', fontSize: 13, color: 'rgba(34,39,31,0.5)', marginTop: 2 },
 });

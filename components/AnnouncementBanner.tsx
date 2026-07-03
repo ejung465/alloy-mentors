@@ -84,7 +84,7 @@ export default function AnnouncementBanner() {
   }[announcement.urgency as 'info' | 'warning' | 'emergency'] as any;
 
   const iconColor = {
-    info: '#4C7A61',
+    info: '#2C7C96',
     warning: '#B08A3E',
     emergency: '#B15A4E',
   }[announcement.urgency as 'info' | 'warning' | 'emergency'];
@@ -121,8 +121,8 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   infoBanner: {
-    backgroundColor: 'rgba(62,106,82,0.12)', // Pine tint
-    borderColor: 'rgba(62,106,82,0.30)',
+    backgroundColor: 'rgba(44,124,150,0.12)', // Pine tint
+    borderColor: 'rgba(44,124,150,0.30)',
   },
   warningBanner: {
     backgroundColor: 'rgba(176,138,62,0.14)', // Ochre tint
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: 'rgba(43,70,56,0.1)',
+    backgroundColor: 'rgba(196,196,196,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -111,7 +111,7 @@ export default function ForgotPasswordScreen() {
           {phase === 'done' && (
             <>
               <View style={styles.doneBadge}>
-                <Ionicons name="checkmark" size={26} color="#F5EFE3" />
+                <Ionicons name="checkmark" size={26} color="#F4F6F6" />
               </View>
               <Text style={styles.title}>Password{'\n'}updated</Text>
               <Text style={styles.subtitle}>You're signed in with your new password.</Text>
@@ -133,6 +133,6 @@ const styles = StyleSheet.create({
   title: { fontFamily: font.black, fontSize: 38, color: colors.text, letterSpacing: -1.4, lineHeight: 42, marginBottom: 12 },
   subtitle: { fontFamily: font.regular, fontSize: 15, color: colors.textDim, lineHeight: 22 },
   error: { fontFamily: font.medium, fontSize: 13, color: '#B15A4E' },
-  linkTxt: { fontFamily: font.semibold, fontSize: 14, color: '#3E6A52' },
-  doneBadge: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#3E6A52', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  linkTxt: { fontFamily: font.semibold, fontSize: 14, color: '#2C7C96' },
+  doneBadge: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#2C7C96', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
 });

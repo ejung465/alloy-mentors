@@ -16,9 +16,9 @@ import { sendEmailOtp, verifyEmailOtp } from '@/lib/intake';
 import { ORG_PRESETS, type OrgType } from '@/lib/features';
 import { setLastOrg } from '@/lib/org';
 
-const PINE = '#375946';
-const PINE_MID = '#3E6A52';
-const CREAM = '#F5EFE3';
+const PINE = '#165B74';
+const PINE_MID = '#2C7C96';
+const CREAM = '#F4F6F6';
 const INK = '#22271F';
 
 type Phase = 'email' | 'otp' | 'details' | 'done';
@@ -220,15 +220,15 @@ const styles = StyleSheet.create({
   error: { fontFamily: font.medium, fontSize: 13, color: '#B15A4E' },
   linkTxt: { fontFamily: font.semibold, fontSize: 14, color: PINE_MID },
 
-  presetCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', borderRadius: 18, padding: 14 },
+  presetCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', borderRadius: 18, padding: 14 },
   presetCardOn: { backgroundColor: PINE, borderColor: PINE },
-  presetIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: 'rgba(62,106,82,0.10)', borderWidth: 1, borderColor: 'rgba(62,106,82,0.25)', alignItems: 'center', justifyContent: 'center' },
+  presetIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: 'rgba(44,124,150,0.10)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', alignItems: 'center', justifyContent: 'center' },
   presetLabel: { fontFamily: font.semibold, fontSize: 15, color: INK },
   presetBlurb: { fontFamily: font.regular, fontSize: 12.5, color: 'rgba(34,39,31,0.55)', marginTop: 2, lineHeight: 17 },
   presetNouns: { fontFamily: font.medium, fontSize: 11.5, color: 'rgba(34,39,31,0.4)', marginTop: 4 },
 
   doneBadge: { width: 56, height: 56, borderRadius: 28, backgroundColor: PINE_MID, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  codeCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(43,70,56,0.16)', borderRadius: 18, padding: 18, marginTop: 12, alignItems: 'center' },
+  codeCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', borderRadius: 18, padding: 18, marginTop: 12, alignItems: 'center' },
   codeLabel: { fontFamily: font.bold, fontSize: 10.5, color: PINE_MID, letterSpacing: 2 },
   codeValue: { fontFamily: font.black, fontSize: 30, color: INK, letterSpacing: 3, marginTop: 6 },
 });
