@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { GlassInput } from '@/components/ui/GlassInput';
@@ -7,6 +7,7 @@ import { GlassButton } from '@/components/ui/GlassButton';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { BrandMark } from '@/components/ui/Brand';
 import { colors, font } from '@/lib/theme';
+import Constants from 'expo-constants';
 import { resolveOrgCode, setLastOrg, getLastOrg } from '@/lib/org';
 
 export default function OnboardingScreen() {
@@ -57,21 +58,27 @@ export default function OnboardingScreen() {
 
           <BrandMark size={68} />
 
-          <Text style={styles.eyebrow}>ALLOY</Text>
-          <Text style={styles.title}>Mentors</Text>
+          <Text style={styles.title}>Alloy Mentors</Text>
           <Text style={styles.subtitle}>
             The hub for mentoring, logistics, and impact — for the people who show up.
           </Text>
 
           <View style={{ gap: 16, marginTop: 40 }}>
-            <GlassInput
-              label="Organization Code"
-              placeholder="Enter your organization code"
-              value={accessCode}
-              onChangeText={setAccessCode}
-              autoCapitalize="characters"
-              autoCorrect={false}
-            />
+            <View>
+              <Text style={styles.codeLabel}>ORGANIZATION CODE</Text>
+              <TextInput
+                style={styles.codeInput}
+                placeholder="ABC-M123"
+                placeholderTextColor="rgba(34,39,31,0.22)"
+                value={accessCode}
+                onChangeText={(t) => setAccessCode(t.toUpperCase())}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                autoComplete="off"
+                returnKeyType="go"
+                onSubmitEditing={handleVerifyCode}
+              />
+            </View>
 
             {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
 
@@ -90,7 +97,7 @@ export default function OnboardingScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.footnote}>Alloy Mentors · v1.0.0</Text>
+          <Text style={styles.footnote}>Alloy Mentors · v{Constants.expoConfig?.version ?? '1.1.0'}</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -105,10 +112,11 @@ const styles = StyleSheet.create({
   createOrgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', borderRadius: 16, paddingVertical: 15 },
   createOrgTxt: { fontFamily: font.semibold, fontSize: 14.5, color: '#2C7C96' },
   scrollContent: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 60, justifyContent: 'center', paddingTop: 80 },
-  eyebrow: { fontFamily: font.bold, fontSize: 13, color: colors.silver, letterSpacing: 6, marginTop: 32 },
-  title: { fontFamily: font.black, fontSize: 44, color: colors.text, letterSpacing: -1.5, lineHeight: 46, marginTop: 8, marginBottom: 14 },
+  title: { fontFamily: font.black, fontSize: 30, color: '#165B74', letterSpacing: -0.8, marginTop: 26, marginBottom: 12 },
   subtitle: { fontFamily: font.regular, fontSize: 15.5, color: colors.textDim, lineHeight: 24 },
   errorBox: { backgroundColor: 'rgba(176,138,62,0.12)', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: 'rgba(176,138,62,0.3)' },
   errorText: { fontFamily: font.medium, fontSize: 13, color: colors.gold, textAlign: 'center' },
+  codeLabel: { fontFamily: font.semibold, fontSize: 11, color: colors.silver, letterSpacing: 1.5, marginBottom: 8, textAlign: 'center' },
+  codeInput: { fontFamily: font.bold, fontSize: 22, color: colors.text, textAlign: 'center', letterSpacing: 5, backgroundColor: colors.surfaceStrong, borderWidth: 1.5, borderColor: 'rgba(22,91,116,0.3)', borderRadius: 16, paddingVertical: 17, paddingHorizontal: 16 },
   footnote: { fontFamily: font.medium, fontSize: 12, color: colors.textGhost, textAlign: 'center', marginTop: 36, letterSpacing: 0.5 },
 });

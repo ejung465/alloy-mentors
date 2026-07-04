@@ -70,8 +70,8 @@ export default function IntakeScreen() {
   const [code, setCode] = useState('');
 
   // identity
-  const [fullName, setFullName] = useState('');
-  const [preferredName, setPreferredName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [birthday, setBirthday] = useState('');
   const [school, setSchool] = useState('');
@@ -126,7 +126,8 @@ export default function IntakeScreen() {
   };
 
   const handleSubmit = async () => {
-    if (fullName.trim().length < 2) { Alert.alert('Required', 'Enter your full name.'); return; }
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+    if (firstName.trim().length < 1 || lastName.trim().length < 1) { Alert.alert('Required', 'Enter your first and last name.'); return; }
     if (!birthdayISO) { Alert.alert('Required', 'Enter your birthday as MM/DD/YYYY.'); return; }
     if (role !== 'student') {
       if (!phone.trim() || !/^[+()\d\s-]{7,20}$/.test(phone.trim())) { Alert.alert('Required', 'Enter a valid phone number — your coordinators need to reach you.'); return; }
@@ -148,7 +149,7 @@ export default function IntakeScreen() {
 
     setBusy(true);
     const { error } = await completeVolunteerIntake({
-      fullName, preferredName, email, phone, birthday: birthdayISO, school, gradeOrOccupation: gradeOcc,
+      fullName, preferredName: '', email, phone, birthday: birthdayISO, school, gradeOrOccupation: gradeOcc,
       subjects, languages: languages.split(',').map((s) => s.trim()).filter(Boolean),
       availableDays: days, availableTimes: times, tutoringExperience: experience, transportation: transport, tshirtSize: tshirt,
       emergencyName: emName, emergencyPhone: emPhone,
@@ -231,16 +232,16 @@ export default function IntakeScreen() {
 
               {/* Identity */}
               <SectionTitle>Identity & contact</SectionTitle>
-              <GlassInput label="Full name" placeholder="Miles Morales" value={fullName} onChangeText={setFullName} />
-              <GlassInput label="Preferred name (optional)" placeholder="What students call you" value={preferredName} onChangeText={setPreferredName} />
+              <View style={styles.row2}>
+                <View style={{ flex: 1 }}><GlassInput label="First name" placeholder="John" value={firstName} onChangeText={setFirstName} /></View>
+                <View style={{ flex: 1 }}><GlassInput label="Last name" placeholder="Doe" value={lastName} onChangeText={setLastName} /></View>
+              </View>
               <View style={styles.row2}>
                 <View style={{ flex: 1 }}><GlassInput label="Phone *" placeholder="(555) 123-4567" value={phone} onChangeText={setPhone} keyboardType="phone-pad" /></View>
                 <View style={{ flex: 1 }}><GlassInput label="Birthday" placeholder="MM/DD/YYYY" value={birthday} onChangeText={setBirthday} keyboardType="numbers-and-punctuation" /></View>
               </View>
-              <View style={styles.row2}>
-                <View style={{ flex: 1 }}><GlassInput label="School / Institution *" placeholder="Visions Academy" value={school} onChangeText={setSchool} /></View>
-                <View style={{ flex: 1 }}><GlassInput label="Grade / occupation" placeholder="11th grade" value={gradeOcc} onChangeText={setGradeOcc} /></View>
-              </View>
+              <GlassInput label="School *" placeholder="Your school or institution" value={school} onChangeText={setSchool} />
+              <GlassInput label="Grade" placeholder="11th grade" value={gradeOcc} onChangeText={setGradeOcc} />
 
               {/* Skills */}
               <SectionTitle>Skills & availability</SectionTitle>

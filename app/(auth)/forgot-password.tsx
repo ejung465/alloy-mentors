@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { GlassInput } from '@/components/ui/GlassInput';
 import { GlassButton } from '@/components/ui/GlassButton';
@@ -60,7 +61,8 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.screen}>
       <AuroraBackground />
-      <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.8}>
+        <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFillObject} />
         <Ionicons name="chevron-back" size={22} color={INK} />
       </TouchableOpacity>
 
@@ -128,7 +130,7 @@ export default function ForgotPasswordScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.base },
-  backBtn: { position: 'absolute', top: 56, left: 20, zIndex: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surfaceStrong, borderWidth: 1, borderColor: colors.hairlineStrong, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { position: 'absolute', top: 56, left: 20, zIndex: 20, width: 40, height: 40, borderRadius: 20, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.45)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.65)', alignItems: 'center', justifyContent: 'center' },
   scroll: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 116, paddingBottom: 60 },
   title: { fontFamily: font.black, fontSize: 38, color: colors.text, letterSpacing: -1.4, lineHeight: 42, marginBottom: 12 },
   subtitle: { fontFamily: font.regular, fontSize: 15, color: colors.textDim, lineHeight: 22 },

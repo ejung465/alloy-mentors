@@ -1,12 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { MeshGradient } from './MeshGradient';
-import { colors, alloyGradient, font, radius } from '@/lib/theme';
+import { View, Text, StyleSheet, ViewStyle, StyleProp, Image } from 'react-native';
+import { colors, font, radius } from '@/lib/theme';
 
-/**
- * The forged "Alloy" mark — a gradient-filled chip with an inset "A" and a
- * diagonal seam line evoking two fused metals.
- */
+/** The Alloy Mentors mark — the actual app logo on its harbor-blue ground. */
 export function BrandMark({ size = 56, style }: { size?: number; style?: StyleProp<ViewStyle> }) {
   return (
     <View
@@ -16,35 +12,16 @@ export function BrandMark({ size = 56, style }: { size?: number; style?: StylePr
           height: size,
           borderRadius: size * 0.3,
           overflow: 'hidden',
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.35)',
-          alignItems: 'center',
-          justifyContent: 'center',
+          backgroundColor: '#165B74',
         },
         style,
       ]}
     >
-      <MeshGradient colors={alloyGradient} intensity={18} />
-      {/* diagonal alloy seam */}
-      <View
-        style={{
-          position: 'absolute',
-          width: size * 1.6,
-          height: 1.5,
-          backgroundColor: 'rgba(255,255,255,0.35)',
-          transform: [{ rotate: '-32deg' }],
-        }}
+      <Image
+        source={require('@/assets/images/splash-icon.png')}
+        style={{ width: size, height: size }}
+        resizeMode="contain"
       />
-      <Text
-        style={{
-          fontFamily: font.black,
-          fontSize: size * 0.5,
-          color: colors.base,
-          letterSpacing: -1,
-        }}
-      >
-        A
-      </Text>
     </View>
   );
 }

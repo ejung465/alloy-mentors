@@ -21,6 +21,7 @@ import { featureEnabled } from '@/lib/features';
 import { clearLastOrg } from '@/lib/org';
 import { getAttendanceStreak } from '@/lib/checkin';
 import { Image } from 'expo-image';
+import Constants from 'expo-constants';
 
 function PressRow({ children, onPress }: any) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -78,7 +79,7 @@ function getStreakTier(weeks: number): { title: string; color: string; nextAt: n
   if (weeks >= 12) return { title: 'Unstoppable', color: '#2C7C96', nextAt: 999 };
   if (weeks >= 8)  return { title: 'Dedicated',   color: '#B08A3E', nextAt: 12  };
   if (weeks >= 4)  return { title: 'Consistent',  color: '#8C8C8C', nextAt: 8   };
-  if (weeks >= 2)  return { title: 'Building',    color: '#E26522', nextAt: 4   };
+  if (weeks >= 2)  return { title: 'Building',    color: '#C5642D', nextAt: 4   };
   return              { title: 'Just started', color: '#2C7C96', nextAt: 2   };
 }
 
@@ -167,6 +168,27 @@ export default function ProfileScreen() {
   useEffect(() => {
     AsyncStorage.getItem('alloy.notifEnabled').then((v) => { if (v !== null) setNotif(v === '1'); });
   }, []);
+
+  // App Store 5.1.1(v): account deletion must be available in-app.
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete your account?',
+      'This permanently erases your account, profile, and history. It cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete forever', style: 'destructive',
+          onPress: async () => {
+            const { error } = await supabase.functions.invoke('delete-account');
+            if (error) { Alert.alert("Couldn't delete account", 'Please try again or contact support@alloymentors.com.'); return; }
+            await clearLastOrg();
+            await supabase.auth.signOut();
+            router.replace('/(auth)/onboarding');
+          },
+        },
+      ]
+    );
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -364,7 +386,10 @@ export default function ProfileScreen() {
           <Ionicons name="log-out-outline" size={18} color="#2C7C96" style={{ marginRight: 8 }} />
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
-        <Text style={styles.versionText}>Alloy Mentors · v1.0.0</Text>
+        <TouchableOpacity onPress={handleDeleteAccount} style={{ alignItems: 'center', marginTop: 14 }} activeOpacity={0.7}>
+          <Text style={styles.deleteAccountText}>Delete account</Text>
+        </TouchableOpacity>
+        <Text style={styles.versionText}>Alloy Mentors · v{Constants.expoConfig?.version ?? '1.1.0'}</Text>
       </ScrollView>
 
       {/* ── VIDEO GAME STATS MODAL ─────────────────── */}
@@ -396,8 +421,8 @@ export default function ProfileScreen() {
                 <View style={{ alignItems: 'center' }}>
                   <Text style={styles.rankNum}>{streak}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                    <Ionicons name="flame" size={12} color="#E26522" />
-                    <Text style={{ fontFamily: 'Inter-SemiBold', fontSize: 12, color: '#E26522' }}>
+                    <Ionicons name="flame" size={12} color="#C5642D" />
+                    <Text style={{ fontFamily: 'Inter-SemiBold', fontSize: 12, color: '#C5642D' }}>
                       {streak === 1 ? 'week' : 'weeks'} running
                     </Text>
                   </View>
@@ -425,7 +450,7 @@ export default function ProfileScreen() {
                 {[
                   { icon: 'time', val: totalHours, label: 'Hours', color: '#2C7C96' },
                   { icon: 'people', val: studentsHelped, label: 'Students', color: '#2C7C96' },
-                  { icon: 'flame', val: `${streak}wk`, label: 'Streak', color: '#E26522' },
+                  { icon: 'flame', val: `${streak}wk`, label: 'Streak', color: '#C5642D' },
                 ].map((b) => (
                   <View key={b.label} style={[styles.badge, { borderColor: `${b.color}30` }]}>
                     <Ionicons name={b.icon as any} size={18} color={b.color} />
@@ -524,6 +549,7 @@ const styles = StyleSheet.create({
   settingSubLabel: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(34,39,31,0.4)', marginTop: 2 },
   signOutBtn: { overflow: 'hidden', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', backgroundColor: 'rgba(44,124,150,0.1)', paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   signOutText: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: '#2C7C96' },
+  deleteAccountText: { fontFamily: 'Inter-SemiBold', fontSize: 13, color: '#B15A4E', textDecorationLine: 'underline' },
   versionText: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(34,39,31,0.32)', textAlign: 'center' },
 
   // Stats modal

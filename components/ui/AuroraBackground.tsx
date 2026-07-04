@@ -75,7 +75,7 @@ export function AuroraBackground({ variant = 'default' }: { variant?: 'default' 
   // A single soft accent wash, shifted subtly by variant so different surfaces
   // feel distinct without leaving the harbor family.
   const accent =
-    variant === 'warm' ? '#E8B48C' : variant === 'iris' ? '#9FC0CE' : colors.titanium;
+    variant === 'warm' ? '#D9A175' : variant === 'iris' ? '#9FC0CE' : colors.titanium;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">

@@ -8,9 +8,7 @@ import { BrandMark } from '@/components/ui/Brand';
 import { colors, font, radius } from '@/lib/theme';
 import { clearLastOrg } from '@/lib/org';
 import { supabase } from '@/lib/supabase';
-import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
-import * as Linking from 'expo-linking';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 
@@ -26,10 +24,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  // Redirect URI that actually works on device + standalone builds (uses the app scheme).
-  const redirectUrl = makeRedirectUri({ scheme: 'alloymentors', path: 'auth/callback' });
-  React.useEffect(() => { WebBrowser.maybeCompleteAuthSession(); }, []);
 
   const handleLogin = async () => {
     if (!email || !password) { setError('All fields are required.'); return; }
@@ -40,53 +34,11 @@ export default function LoginScreen() {
     else router.replace('/(tabs)');
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setLoading(true); setError('');
-      const authRedirect = redirectUrl;
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: authRedirect,
-          skipBrowserRedirect: true,
-        }
-      });
-      if (error) throw error;
-
-      if (data.url) {
-        const res = await WebBrowser.openAuthSessionAsync(data.url, authRedirect);
-        if (res.type !== 'success') { setError('Google sign-in was cancelled.'); return; }
-        if (res.type === 'success' && res.url) {
-          const hashIdx = res.url.indexOf('#');
-          if (hashIdx !== -1) {
-            const hash = res.url.substring(hashIdx + 1);
-            const params = hash.split('&').reduce((acc, current) => {
-              const [key, value] = current.split('=');
-              acc[key] = decodeURIComponent(value);
-              return acc;
-            }, {} as Record<string, string>);
-            
-            if (params.access_token && params.refresh_token) {
-              await supabase.auth.setSession({ 
-                access_token: params.access_token, 
-                refresh_token: params.refresh_token 
-              });
-              router.replace('/(tabs)');
-            }
-          }
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || 'Google sign-in failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <View style={styles.screen}>
       <AuroraBackground />
-      <TouchableOpacity onPress={switchOrg} style={styles.backBtn}>
+      <TouchableOpacity onPress={switchOrg} style={styles.backBtn} activeOpacity={0.8}>
+        <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFillObject} />
         <Ionicons name="chevron-back" size={22} color="#22271F" />
       </TouchableOpacity>
 
@@ -95,7 +47,7 @@ export default function LoginScreen() {
           <BrandMark size={56} style={{ marginBottom: 18 }} />
           {orgName ? (
             <View style={styles.orgChip}>
-              <Ionicons name="business-outline" size={13} color={colors.silver} />
+              <Ionicons name="business-outline" size={13} color="#C5642D" />
               <Text style={styles.orgChipTxt}>{orgName}</Text>
             </View>
           ) : null}
@@ -104,7 +56,21 @@ export default function LoginScreen() {
             Signing in to {orgName || 'your organization'} as a {role || 'member'}.
           </Text>
 
-          <View style={{ gap: 16, marginTop: 32 }}>
+          {/* Log in / Create account — equally visible from the start */}
+          <View style={styles.modeRow}>
+            <View style={[styles.modeBtn, styles.modeBtnOn]}>
+              <Text style={styles.modeTxtOn}>Log In</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.modeBtn}
+              activeOpacity={0.85}
+              onPress={() => router.push({ pathname: '/(auth)/intake', params: { role, orgName, orgId, memberNoun, memberNounPlural } })}
+            >
+              <Text style={styles.modeTxt}>Create Account</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ gap: 16, marginTop: 20 }}>
             <GlassInput label="Email address" placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
             <GlassInput label="Password" placeholder="Your secure password" value={password} onChangeText={setPassword} secureTextEntry />
 
@@ -116,42 +82,7 @@ export default function LoginScreen() {
 
             <GlassButton title={loading ? 'Signing in…' : 'Log In'} onPress={handleLogin} disabled={loading} />
 
-            <View style={styles.dividerRow}>
-              <View style={styles.line} />
-              <Text style={styles.orText}>or continue with</Text>
-              <View style={styles.line} />
-            </View>
-
-            <View style={styles.socialRow}>
-              <TouchableOpacity
-                style={[styles.socialBtn, { width: '100%', flexDirection: 'row', gap: 12 }]}
-                onPress={handleGoogleSignIn}
-                disabled={loading}
-              >
-                <Ionicons name="logo-google" size={20} color="#22271F" />
-                <Text style={{ fontFamily: 'Inter-Medium', fontSize: 15, color: '#22271F' }}>Sign in with Google</Text>
-              </TouchableOpacity>
-            </View>
-
-            {__DEV__ && (
-              <View style={{ marginTop: 12, padding: 12, backgroundColor: 'rgba(196,196,196,0.12)', borderRadius: 8 }}>
-                <Text style={{ fontFamily: 'Inter-Medium', fontSize: 12, color: 'rgba(34,39,31,0.4)', textAlign: 'center' }}>
-                  Dev: add this to Supabase Redirect URLs
-                </Text>
-                <Text style={{ fontFamily: 'Inter-Regular', fontSize: 11, color: '#2C7C96', textAlign: 'center', marginTop: 4 }}>
-                  {redirectUrl}
-                </Text>
-              </View>
-            )}
-
-            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
-              <Text style={styles.footerText}>Not registered yet? </Text>
-              <TouchableOpacity onPress={() => router.push({ pathname: '/(auth)/intake', params: { role, orgName, orgId, memberNoun, memberNounPlural } })}>
-                <Text style={styles.footerLink}>Create account</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity onPress={switchOrg} style={{ alignItems: 'center', marginTop: 4 }}>
+            <TouchableOpacity onPress={switchOrg} style={{ alignItems: 'center', marginTop: 12 }}>
               <Text style={styles.switchOrgTxt}>Join a different organization</Text>
             </TouchableOpacity>
           </View>
@@ -166,8 +97,8 @@ const styles = StyleSheet.create({
   backBtn: {
     position: 'absolute', top: 56, left: 20, zIndex: 20,
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.surfaceStrong,
-    borderWidth: 1, borderColor: colors.hairlineStrong,
+    overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.45)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.65)',
     alignItems: 'center', justifyContent: 'center',
   },
   scrollContent: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 60, justifyContent: 'center', paddingTop: 120 },
@@ -175,12 +106,15 @@ const styles = StyleSheet.create({
   subtitle: { fontFamily: font.regular, fontSize: 15, color: colors.textDim, lineHeight: 22 },
   errorBox: { backgroundColor: 'rgba(176,138,62,0.12)', borderRadius: radius.sm, padding: 14, borderWidth: 1, borderColor: 'rgba(176,138,62,0.3)' },
   errorText: { fontFamily: font.medium, fontSize: 13, color: colors.gold, textAlign: 'center' },
-  footerText: { fontFamily: font.regular, fontSize: 14, color: colors.textFaint },
-  footerLink: { fontFamily: font.bold, fontSize: 14, color: colors.silver },
+  modeRow: { flexDirection: 'row', backgroundColor: 'rgba(196,196,196,0.22)', borderRadius: 14, padding: 4, marginTop: 24 },
+  modeBtn: { flex: 1, alignItems: 'center', paddingVertical: 11, borderRadius: 11 },
+  modeBtnOn: { backgroundColor: '#165B74' },
+  modeTxtOn: { fontFamily: font.bold, fontSize: 14, color: '#F4F6F6' },
+  modeTxt: { fontFamily: font.semibold, fontSize: 14, color: 'rgba(34,39,31,0.6)' },
   switchOrgTxt: { fontFamily: font.medium, fontSize: 13, color: colors.textFaint, textDecorationLine: 'underline' },
   forgotTxt: { fontFamily: font.semibold, fontSize: 13, color: colors.silver },
-  orgChip: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, marginBottom: 14 },
-  orgChipTxt: { fontFamily: font.semibold, fontSize: 12, color: colors.silver, letterSpacing: 1 },
+  orgChip: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: 'rgba(197,100,45,0.10)', borderWidth: 1, borderColor: 'rgba(197,100,45,0.30)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, marginBottom: 14 },
+  orgChipTxt: { fontFamily: font.semibold, fontSize: 12, color: '#C5642D', letterSpacing: 1 },
 
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
   line: { flex: 1, height: 1, backgroundColor: colors.hairline },
