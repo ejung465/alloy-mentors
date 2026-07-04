@@ -48,3 +48,8 @@ app-example
 
 # supabase CLI local state (project refs, pooler URLs — not secrets, but local machine state)
 supabase/.temp/
+
+# personal scratch folder: downloaded .ipa builds, raw design source files,
+# and signing keys — never belongs in the repo (the .ipas alone are ~80MB
+# each and would bloat git history permanently once committed)
+/Personal Project Files/
