@@ -4,6 +4,8 @@ import {
   TouchableOpacity, TextInput, Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { GlassInput } from '@/components/ui/GlassInput';
 import { GlassButton } from '@/components/ui/GlassButton';
@@ -62,6 +64,8 @@ export default function IntakeScreen() {
   const { role, orgName, orgId, memberNoun } = useLocalSearchParams<{ role?: string; orgName?: string; orgId?: string; memberNoun?: string }>();
   const intakeNoun = role === 'student' ? 'Student' : (memberNoun || 'Tutor');
   const [phase, setPhase] = useState<Phase>('email');
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [arrivedAuthenticated, setArrivedAuthenticated] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -72,6 +76,28 @@ export default function IntakeScreen() {
   // identity
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+
+  // A social sign-in (Apple/Google/LinkedIn) lands here already authenticated
+  // with no profile row yet — skip straight to the form instead of asking for
+  // an email code they don't need, and prefill what the provider gave us.
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setEmail(user.email ?? '');
+        const meta: any = user.user_metadata ?? {};
+        const full = (meta.full_name || meta.name || '').trim();
+        if (full) {
+          const parts = full.split(' ');
+          setFirstName(parts[0] ?? '');
+          setLastName(parts.slice(1).join(' '));
+        }
+        setPhase('form');
+        setArrivedAuthenticated(true);
+      }
+      setCheckingSession(false);
+    })();
+  }, []);
   const [phone, setPhone] = useState('');
   const [birthday, setBirthday] = useState('');
   const [school, setSchool] = useState('');
@@ -172,10 +198,18 @@ export default function IntakeScreen() {
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
+  if (checkingSession) {
+    return (
+      <View style={styles.screen}>
+        <AuroraBackground variant="iris" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <AuroraBackground variant="iris" />
-      <TouchableOpacity onPress={() => (phase === 'form' ? setPhase('email') : router.back())} style={styles.backBtn}>
+      <TouchableOpacity onPress={() => (phase === 'form' && !arrivedAuthenticated ? setPhase('email') : router.back())} style={styles.backBtn}>
         <Ionicons name="chevron-back" size={22} color="#22271F" />
       </TouchableOpacity>
 

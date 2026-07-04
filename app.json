@@ -54,7 +54,8 @@
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true

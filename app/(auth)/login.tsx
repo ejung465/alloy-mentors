@@ -11,6 +11,10 @@ import { supabase } from '@/lib/supabase';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
+import {
+  signInWithApple, signInWithGoogle, signInWithLinkedIn,
+  appleAuthAvailable, googleAuthConfigured, hasExistingProfile,
+} from '@/lib/socialAuth';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -32,6 +36,23 @@ export default function LoginScreen() {
     setLoading(false);
     if (authError) setError(authError.message);
     else router.replace('/(tabs)');
+  };
+
+  const [socialBusy, setSocialBusy] = useState<'apple' | 'google' | 'linkedin' | null>(null);
+
+  // Existing member -> straight in. Brand-new person via a social button ->
+  // intake, carrying the same org context this screen already resolved.
+  const afterSocialAuth = async () => {
+    if (await hasExistingProfile()) router.replace('/(tabs)');
+    else router.replace({ pathname: '/(auth)/intake', params: { role, orgName, orgId, memberNoun, memberNounPlural } });
+  };
+
+  const runSocial = async (kind: 'apple' | 'google' | 'linkedin', fn: () => Promise<{ error: string | null }>) => {
+    setSocialBusy(kind); setError('');
+    const { error: authError } = await fn();
+    setSocialBusy(null);
+    if (authError) { setError(authError); return; }
+    await afterSocialAuth();
   };
 
   return (
@@ -82,6 +103,46 @@ export default function LoginScreen() {
 
             <GlassButton title={loading ? 'Signing in…' : 'Log In'} onPress={handleLogin} disabled={loading} />
 
+            <View style={styles.dividerRow}>
+              <View style={styles.line} />
+              <Text style={styles.orText}>or continue with</Text>
+              <View style={styles.line} />
+            </View>
+
+            <View style={styles.socialCol}>
+              {appleAuthAvailable && (
+                <TouchableOpacity
+                  style={styles.socialRow}
+                  activeOpacity={0.85}
+                  disabled={!!socialBusy}
+                  onPress={() => runSocial('apple', signInWithApple)}
+                >
+                  <Ionicons name="logo-apple" size={19} color="#22271F" />
+                  <Text style={styles.socialTxt}>{socialBusy === 'apple' ? 'Signing in…' : 'Continue with Apple'}</Text>
+                </TouchableOpacity>
+              )}
+              {googleAuthConfigured && (
+                <TouchableOpacity
+                  style={styles.socialRow}
+                  activeOpacity={0.85}
+                  disabled={!!socialBusy}
+                  onPress={() => runSocial('google', signInWithGoogle)}
+                >
+                  <Ionicons name="logo-google" size={18} color="#22271F" />
+                  <Text style={styles.socialTxt}>{socialBusy === 'google' ? 'Signing in…' : 'Continue with Google'}</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={styles.socialRow}
+                activeOpacity={0.85}
+                disabled={!!socialBusy}
+                onPress={() => runSocial('linkedin', signInWithLinkedIn)}
+              >
+                <Ionicons name="logo-linkedin" size={19} color="#0A66C2" />
+                <Text style={styles.socialTxt}>{socialBusy === 'linkedin' ? 'Signing in…' : 'Continue with LinkedIn'}</Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity onPress={switchOrg} style={{ alignItems: 'center', marginTop: 12 }}>
               <Text style={styles.switchOrgTxt}>Join a different organization</Text>
             </TouchableOpacity>
@@ -115,10 +176,11 @@ const styles = StyleSheet.create({
   forgotTxt: { fontFamily: font.semibold, fontSize: 13, color: colors.silver },
   orgChip: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: 'rgba(197,100,45,0.10)', borderWidth: 1, borderColor: 'rgba(197,100,45,0.30)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, marginBottom: 14 },
   orgChipTxt: { fontFamily: font.semibold, fontSize: 12, color: '#C5642D', letterSpacing: 1 },
+  socialCol: { gap: 10 },
+  socialTxt: { fontFamily: font.medium, fontSize: 15, color: '#22271F' },
 
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
   line: { flex: 1, height: 1, backgroundColor: colors.hairline },
   orText: { fontFamily: font.medium, fontSize: 13, color: colors.textGhost, marginHorizontal: 16, textTransform: 'lowercase' },
-  socialRow: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 8 },
-  socialBtn: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, alignItems: 'center', justifyContent: 'center' },
+  socialRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: colors.surfaceStrong, borderWidth: 1, borderColor: colors.hairlineStrong, borderRadius: 14, paddingVertical: 14 },
 });
