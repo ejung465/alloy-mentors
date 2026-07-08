@@ -6,6 +6,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useUser } from '@/contexts/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { GlassInput } from '@/components/ui/GlassInput';
 import { GlassButton } from '@/components/ui/GlassButton';
@@ -61,6 +62,7 @@ function Label({ children }: { children: React.ReactNode }) {
 
 export default function IntakeScreen() {
   const router = useRouter();
+  const { refresh } = useUser();
   const { role, orgName, orgId, memberNoun } = useLocalSearchParams<{ role?: string; orgName?: string; orgId?: string; memberNoun?: string }>();
   const intakeNoun = role === 'student' ? 'Student' : (memberNoun || 'Tutor');
   const [phase, setPhase] = useState<Phase>('email');
@@ -185,6 +187,11 @@ export default function IntakeScreen() {
     });
     setBusy(false);
     if (error) { Alert.alert('Could not finish', error.message); return; }
+
+    // Pull the freshly-created profile + org into context; onAuthStateChange
+    // fired before this row existed, so without this the dashboard loads with
+    // no org (feature gating + role actions misbehave until app relaunch).
+    await refresh();
 
     if (isMinor) {
       Alert.alert(

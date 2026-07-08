@@ -1,5 +1,26 @@
 # Alloy — Dev Log
 
+## Session 14 (2026-07-04) — Security hardening + social auth + legal drafts
+
+**Adversarial RLS review (Opus subagent) found a critical breach.** Migration `0023_security_hardening.sql` fixes it + 6 more:
+- **#1 CRITICAL — privilege escalation + cross-tenant PII breach.** `0020`'s `users_update_self` had no column restriction, so any user could `UPDATE users SET role='admin', organization_id='<any org uuid>'` (org UUIDs are handed out by `resolve_org_code`) → instant admin of any org + read of another program's **minor roster PII** (allergies, guardian contacts, medical notes). Fixed with a BEFORE UPDATE trigger that reverts self role/org changes unless the `app.allow_role_change` GUC is set; `create_organization` opts in for its txn only.
+- **#2** DM recipients could rewrite the sender's message content / un-delete (trigger now limits receiver to read-receipt columns).
+- **#3** students could `SELECT *` on every user row in their org (phones, guardian contacts) — `users_select` now excludes students from the directory.
+- **#4** `message_reports` had no org column → any admin read all tenants' reports; added `organization_id` + `is_leadership()`-scoped policies.
+- **#5** `blocks` select was blocker-only, so being-blocked never hid the blocker; now bidirectional.
+- **#8** group member counts always showed "1" (`gcm_select` only returned self); added `is_group_member()` SECURITY DEFINER helper.
+- **#10** reactions were `USING(true)` world-readable across tenants; scoped to visible messages.
+
+**#7 (client)** — new users landed post-intake with `org=null` (onAuthStateChange fired before the profile row existed); `intake.tsx` now `await refresh()`es context before navigating in.
+
+**Flagged, NOT auto-fixed (need Ethan's decision):**
+- **#6 child-safety** — nothing blocks member↔student 1:1 DMs, but intake consent promises "no unsupervised one-on-one contact in chat with students." Either enforce a DB guard blocking student↔non-student DMs, or stop presenting it as an accepted policy. Product decision.
+- **#9** — `send-push` is `--no-verify-jwt` with no shared secret, so the URL is spoofable (attacker → arbitrary push to any user). LOW (annoyance, no data leak). Fix needs a Vault secret + header check, similar setup to the Resend key.
+
+**Also this session:** social sign-in wired (Apple native + Google gated on client IDs + LinkedIn OIDC, `lib/socialAuth.ts`); Apple + LinkedIn configured in Supabase (Apple OAuth secret JWT expires ~2027-01-03); privacy policy + ToS drafts in `docs/legal/` (attorney review pending); fix batch (real Sessions Completed stat, palette rgba stragglers, dead signup screen removed, babel pinned to ~54).
+
+**Run in Supabase: `migrations/0023_security_hardening.sql` — this one is urgent, it's an active data-exposure fix.**
+
 ## Session 13 (2026-07-02) — Reliability loop, push activation, forgot-password
 
 **Push notifications activated.** `send-push` (existing, undeployed code) is now live — deployed via CLI, and migration `0021_push_notification_webhook.sql` wires the DB trigger declaratively (`supabase_functions.http_request` on `messages` INSERT) instead of a manual dashboard webhook.
