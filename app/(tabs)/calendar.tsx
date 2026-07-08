@@ -636,7 +636,7 @@ export default function CalendarScreen() {
                         ]}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.dayLetter, isSel && { color:'#B15A4E' }, !isSel && isTdy && { color:'rgba(245,239,227,0.75)' }]}>{getDayLetter(d)}</Text>
+                        <Text style={[styles.dayLetter, isSel && { color:'#B15A4E' }, !isSel && isTdy && { color:'rgba(244,246,246,0.75)' }]}>{getDayLetter(d)}</Text>
                         <Text style={[styles.dayNum,    isSel && { color:'#22271F' }, !isSel && isTdy && { color:'#F4F6F6' }]}>{d.getDate()}</Text>
                         {hasEvt && <View style={[styles.eventDot, (isSel || isTdy) && { backgroundColor: '#F7F8F8' }]} />}
                       </TouchableOpacity>

@@ -90,6 +90,7 @@ export default function ProfileScreen() {
   const [profile, setProfile]         = useState<any>(null);
   const [totalHours, setTotalHours]   = useState(0);
   const [studentsHelped, setStudents] = useState(0);
+  const [sessionsAttended, setSessionsAttended] = useState(0);
   const [streak, setStreak]           = useState(0); // consecutive weeks attended
   const [loadingPdf, setLoadingPdf]   = useState(false);
   const [showStats, setShowStats]     = useState(false);
@@ -118,6 +119,14 @@ export default function ProfileScreen() {
       .eq('kind', 'student')
       .eq('paired_volunteer_id', user.id);
     setStudents(new Set((pairRows || []).map((r: any) => r.student_id)).size);
+
+    // Sessions attended (as volunteer) — real count, not a derived estimate
+    const { count: attended } = await supabase
+      .from('session_attendance')
+      .select('*', { count: 'exact', head: true })
+      .eq('kind', 'volunteer')
+      .eq('volunteer_id', user.id);
+    setSessionsAttended(attended || 0);
 
     // Attendance streak — consecutive weeks showing up, not vanity hours
     setStreak(await getAttendanceStreak(user.id));
@@ -434,7 +443,7 @@ export default function ProfileScreen() {
               <View style={styles.statBarsWrapper}>
                 <StatBar label="Hours Contributed" value={totalHours} max={200} color="#2C7C96" />
                 <StatBar label="Students Helped"   value={studentsHelped} max={20} color="#2C7C96" />
-                <StatBar label="Sessions Completed" value={Math.ceil(totalHours / 2)} max={50} color="#7A7A7A" />
+                <StatBar label="Sessions Completed" value={sessionsAttended} max={50} color="#7A7A7A" />
               </View>
 
               {/* Next tier progress */}

@@ -139,7 +139,7 @@ export default function LogHoursModal() {
               return (
                 <TouchableOpacity key={d.ymd} onPress={() => setDateYMD(d.ymd)} activeOpacity={0.85}
                   style={[styles.dayChip, on && styles.dayChipOn]}>
-                  <Text style={[styles.dayChipLabel, on && { color: 'rgba(245,239,227,0.75)' }]}>{d.label}</Text>
+                  <Text style={[styles.dayChipLabel, on && { color: 'rgba(244,246,246,0.75)' }]}>{d.label}</Text>
                   <Text style={[styles.dayChipSub, on && { color: CREAM }]}>{d.sub}</Text>
                 </TouchableOpacity>
               );

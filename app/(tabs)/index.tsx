@@ -367,12 +367,12 @@ export default function DashboardScreen() {
                   <Text style={styles.heroTitle} numberOfLines={2}>{nextUpcomingSession.title}</Text>
 
                   <View style={styles.heroMetaRow}>
-                    <Ionicons name="time-outline" size={14} color="rgba(245,239,227,0.7)" />
+                    <Ionicons name="time-outline" size={14} color="rgba(244,246,246,0.7)" />
                     <Text style={styles.heroMetaTxt}>{nextUpcomingSession.time}</Text>
                     {nextUpcomingSession.location ? (
                       <>
                         <Text style={styles.heroMetaDot}>·</Text>
-                        <Ionicons name="location-outline" size={14} color="rgba(245,239,227,0.7)" />
+                        <Ionicons name="location-outline" size={14} color="rgba(244,246,246,0.7)" />
                         <Text style={styles.heroMetaTxt} numberOfLines={1}>{nextUpcomingSession.location}</Text>
                       </>
                     ) : null}
@@ -386,7 +386,7 @@ export default function DashboardScreen() {
                       style={[styles.rsvpPill, rsvpStatus === 'going' && styles.rsvpPillGoing]}
                     >
                       <Ionicons name="checkmark-circle" size={16}
-                        color={rsvpStatus === 'going' ? PINE_DEEP : 'rgba(245,239,227,0.85)'} />
+                        color={rsvpStatus === 'going' ? PINE_DEEP : 'rgba(244,246,246,0.85)'} />
                       <Text style={[styles.rsvpPillTxt, rsvpStatus === 'going' && { color: PINE_DEEP }]}>I'm going</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -713,29 +713,29 @@ const styles = StyleSheet.create({
   sectionTitle: { fontFamily: 'Inter-SemiBold', fontSize: 12.5, color: 'rgba(34,39,31,0.5)', letterSpacing: 1.2, marginBottom: 12, textTransform: 'uppercase' },
 
   // Hero pine block
-  heroPine: { overflow: 'hidden', borderRadius: 26, backgroundColor: PINE_DEEP, padding: 22, borderWidth: 1, borderColor: 'rgba(245,239,227,0.10)' },
-  heroBlob: { position: 'absolute', top: -70, right: -50, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(245,239,227,0.06)' },
+  heroPine: { overflow: 'hidden', borderRadius: 26, backgroundColor: PINE_DEEP, padding: 22, borderWidth: 1, borderColor: 'rgba(244,246,246,0.10)' },
+  heroBlob: { position: 'absolute', top: -70, right: -50, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(244,246,246,0.06)' },
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  heroEyebrow: { fontFamily: 'Inter-Bold', fontSize: 11, color: 'rgba(245,239,227,0.6)', letterSpacing: 2 },
-  whenChip: { backgroundColor: 'rgba(245,239,227,0.14)', borderRadius: 20, paddingHorizontal: 11, paddingVertical: 5 },
+  heroEyebrow: { fontFamily: 'Inter-Bold', fontSize: 11, color: 'rgba(244,246,246,0.6)', letterSpacing: 2 },
+  whenChip: { backgroundColor: 'rgba(244,246,246,0.14)', borderRadius: 20, paddingHorizontal: 11, paddingVertical: 5 },
   whenChipTxt: { fontFamily: 'Inter-Bold', fontSize: 11, color: CREAM, letterSpacing: 0.6 },
   heroTitle: { fontFamily: 'Inter-Bold', fontSize: 25, color: CREAM, letterSpacing: -0.5, lineHeight: 30, marginTop: 14 },
   heroMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, flexWrap: 'wrap' },
-  heroMetaTxt: { fontFamily: 'Inter-Medium', fontSize: 13.5, color: 'rgba(245,239,227,0.85)' },
-  heroMetaDot: { color: 'rgba(245,239,227,0.4)', fontSize: 14, marginHorizontal: 2 },
-  heroSub: { fontFamily: 'Inter-Regular', fontSize: 14, color: 'rgba(245,239,227,0.72)', lineHeight: 21, marginTop: 10 },
+  heroMetaTxt: { fontFamily: 'Inter-Medium', fontSize: 13.5, color: 'rgba(244,246,246,0.85)' },
+  heroMetaDot: { color: 'rgba(244,246,246,0.4)', fontSize: 14, marginHorizontal: 2 },
+  heroSub: { fontFamily: 'Inter-Regular', fontSize: 14, color: 'rgba(244,246,246,0.72)', lineHeight: 21, marginTop: 10 },
 
   heroBigNum: { fontFamily: 'Inter-Black', fontSize: 52, color: CREAM, letterSpacing: -2, lineHeight: 54 },
-  heroBigUnit: { fontFamily: 'Inter-SemiBold', fontSize: 16, color: 'rgba(245,239,227,0.7)', marginBottom: 8 },
-  heroGhostBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 18, backgroundColor: 'rgba(245,239,227,0.14)', paddingHorizontal: 16, paddingVertical: 11, borderRadius: 14 },
+  heroBigUnit: { fontFamily: 'Inter-SemiBold', fontSize: 16, color: 'rgba(244,246,246,0.7)', marginBottom: 8 },
+  heroGhostBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 18, backgroundColor: 'rgba(244,246,246,0.14)', paddingHorizontal: 16, paddingVertical: 11, borderRadius: 14 },
   heroGhostTxt: { fontFamily: 'Inter-SemiBold', fontSize: 14, color: CREAM },
 
   // Inline RSVP
   rsvpRow: { flexDirection: 'row', gap: 10, marginTop: 20 },
-  rsvpPill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 12, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(245,239,227,0.3)' },
+  rsvpPill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 12, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(244,246,246,0.3)' },
   rsvpPillGoing: { backgroundColor: CREAM, borderColor: CREAM },
   rsvpPillNo: { backgroundColor: CLAY, borderColor: CLAY },
-  rsvpPillTxt: { fontFamily: 'Inter-SemiBold', fontSize: 14, color: 'rgba(245,239,227,0.9)' },
+  rsvpPillTxt: { fontFamily: 'Inter-SemiBold', fontSize: 14, color: 'rgba(244,246,246,0.9)' },
 
   // Season card
   barChart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 52, gap: 8 },

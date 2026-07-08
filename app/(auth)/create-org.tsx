@@ -155,13 +155,13 @@ export default function CreateOrgScreen() {
                   return (
                     <TouchableOpacity key={t} onPress={() => setOrgType(t)} activeOpacity={0.85}
                       style={[styles.presetCard, on && styles.presetCardOn]}>
-                      <View style={[styles.presetIcon, on && { backgroundColor: 'rgba(245,239,227,0.16)', borderColor: 'rgba(245,239,227,0.3)' }]}>
+                      <View style={[styles.presetIcon, on && { backgroundColor: 'rgba(244,246,246,0.16)', borderColor: 'rgba(244,246,246,0.3)' }]}>
                         <Ionicons name={p.icon as any} size={19} color={on ? CREAM : PINE_MID} />
                       </View>
                       <View style={{ flex: 1, marginLeft: 12 }}>
                         <Text style={[styles.presetLabel, on && { color: CREAM }]}>{p.label}</Text>
-                        <Text style={[styles.presetBlurb, on && { color: 'rgba(245,239,227,0.75)' }]}>{p.blurb}</Text>
-                        <Text style={[styles.presetNouns, on && { color: 'rgba(245,239,227,0.6)' }]}>
+                        <Text style={[styles.presetBlurb, on && { color: 'rgba(244,246,246,0.75)' }]}>{p.blurb}</Text>
+                        <Text style={[styles.presetNouns, on && { color: 'rgba(244,246,246,0.6)' }]}>
                           {p.memberNounPlural} · {p.studentNounPlural}
                         </Text>
                       </View>
