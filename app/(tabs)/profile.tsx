@@ -173,9 +173,18 @@ export default function ProfileScreen() {
   const toggleNotif = async (v: boolean) => {
     setNotif(v);
     await AsyncStorage.setItem('alloy.notifEnabled', v ? '1' : '0');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await supabase.from('users').update({ notifications_enabled: v }).eq('id', user.id);
   };
   useEffect(() => {
     AsyncStorage.getItem('alloy.notifEnabled').then((v) => { if (v !== null) setNotif(v === '1'); });
+    // DB is the source of truth (server-enforced); local cache just avoids a flash on load.
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from('users').select('notifications_enabled').eq('id', user.id).maybeSingle();
+      if (data && typeof data.notifications_enabled === 'boolean') setNotif(data.notifications_enabled);
+    })();
   }, []);
 
   // App Store 5.1.1(v): account deletion must be available in-app.

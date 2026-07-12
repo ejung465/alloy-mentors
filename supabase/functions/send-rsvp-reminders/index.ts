@@ -39,7 +39,8 @@ Deno.serve(async () => {
   for (const session of sessions) {
     const [{ data: members }, { data: rsvps }] = await Promise.all([
       supabase.from('users').select('id, expo_push_token')
-        .eq('organization_id', session.organization_id).neq('role', 'student'),
+        .eq('organization_id', session.organization_id).neq('role', 'student')
+        .eq('notifications_enabled', true),
       supabase.from('session_rsvps').select('user_id').eq('session_id', session.id),
     ]);
 

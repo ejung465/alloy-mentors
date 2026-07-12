@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
     .from('users')
     .select('expo_push_token')
     .in('id', recipientIds)
+    .eq('notifications_enabled', true)
     .not('expo_push_token', 'is', null);
 
   const tokens = (users ?? []).map((u: any) => u.expo_push_token).filter(Boolean);

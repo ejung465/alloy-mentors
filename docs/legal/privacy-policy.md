@@ -2,7 +2,7 @@
 
 # Privacy Policy
 
-**Effective date:** [DATE]
+**Effective date:** July 11, 2026
 
 Alloy Mentors ("Alloy Mentors," "we," "us," or "our") operates the Alloy Mentors mobile application for iOS (the "App"). This Privacy Policy explains what information we collect, how we use it, who we share it with, and the choices and rights you have. We have written it in plain language so it is easy to understand.
 

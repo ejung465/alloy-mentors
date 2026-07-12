@@ -2,7 +2,7 @@
 
 # Terms of Service
 
-**Effective date:** [DATE]
+**Effective date:** July 11, 2026
 
 These Terms of Service ("Terms") are a legal agreement between you and Alloy Mentors ("Alloy Mentors," "we," "us," or "our") governing your use of the Alloy Mentors mobile application for iOS (the "App"). By creating an account or using the App, you agree to these Terms. If you do not agree, do not use the App.
 
@@ -84,7 +84,7 @@ Some jurisdictions do not allow the exclusion of certain warranties, so some of 
 
 ## 8. Limitation of Liability
 
-To the maximum extent permitted by law, Alloy Mentors and its developer will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of data, profits, revenue, or goodwill, arising out of or relating to your use of (or inability to use) the App.
+To the maximum extent permitted by law, Alloy Mentors and JPX Software Development Co. will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of data, profits, revenue, or goodwill, arising out of or relating to your use of (or inability to use) the App.
 
 To the maximum extent permitted by law, our total liability for all claims relating to the App will not exceed the greater of (a) the amount you paid us to use the App in the twelve months before the claim, or (b) one hundred U.S. dollars ($100).
 
@@ -94,13 +94,13 @@ Some jurisdictions do not allow certain limitations of liability, so some of the
 
 ## 9. Indemnification
 
-You agree to indemnify and hold harmless Alloy Mentors and its developer from any claims, damages, liabilities, and expenses (including reasonable legal fees) arising out of your use of the App, your content, your violation of these Terms, or — if you use the App on behalf of an organization — your organization's handling of participant information or failure to obtain required consents.
+You agree to indemnify and hold harmless Alloy Mentors and JPX Software Development Co. from any claims, damages, liabilities, and expenses (including reasonable legal fees) arising out of your use of the App, your content, your violation of these Terms, or — if you use the App on behalf of an organization — your organization's handling of participant information or failure to obtain required consents.
 
 ---
 
 ## 10. Governing Law
 
-These Terms are governed by the laws of the State of **[STATE]**, without regard to its conflict-of-laws rules. You agree that the state and federal courts located in **[STATE]** will have exclusive jurisdiction over any dispute arising out of or relating to these Terms or the App, and you consent to personal jurisdiction there.
+These Terms are governed by the laws of the State of **Illinois**, without regard to its conflict-of-laws rules. You agree that the state and federal courts located in **Illinois** will have exclusive jurisdiction over any dispute arising out of or relating to these Terms or the App, and you consent to personal jurisdiction there.
 
 ---
 
