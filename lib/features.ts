@@ -16,7 +16,10 @@ export type FeatureKey =
   | 'progress'         // student goals / skills / growth timeline
   | 'session_notes'    // per-student session notes
   | 'guardian_digests' // "how your child is doing" updates home
-  | 'gamification';    // ranks, tiers, streak flair
+  | 'gamification'     // ranks, tiers, streak flair
+  | 'student_feedback' // post-session student reactions/ratings
+  | 'student_self_view'// students see their own progress/goals/history
+  | 'resource_sharing';// mentors/admins share lesson materials in-app
 
 export const FEATURES: Record<FeatureKey, { label: string; description: string; icon: string; default: boolean }> = {
   hours: {
@@ -55,6 +58,24 @@ export const FEATURES: Record<FeatureKey, { label: string; description: string; 
     icon: 'trophy-outline',
     default: true,
   },
+  student_feedback: {
+    label: 'Student feedback',
+    description: 'Students react to each session ("I got it" / "still confused") — feeds the growth timeline.',
+    icon: 'happy-outline',
+    default: false,
+  },
+  student_self_view: {
+    label: 'Student self-view',
+    description: 'Students can see their own progress, goals, and attendance history in the app.',
+    icon: 'eye-outline',
+    default: false,
+  },
+  resource_sharing: {
+    label: 'Resource sharing',
+    description: 'Mentors and admins share lesson materials, worksheets, and documents in-app.',
+    icon: 'folder-open-outline',
+    default: false,
+  },
 };
 
 export const FEATURE_KEYS = Object.keys(FEATURES) as FeatureKey[];
@@ -76,7 +97,7 @@ export const ORG_PRESETS: Record<OrgType, {
     icon: 'heart-outline',
     memberNoun: 'Tutor', memberNounPlural: 'Tutors',
     studentNoun: 'Student', studentNounPlural: 'Students',
-    features: { hours: true, checkin: true, progress: true, session_notes: true, guardian_digests: true, gamification: true },
+    features: { hours: true, checkin: true, progress: true, session_notes: true, guardian_digests: true, gamification: true, student_feedback: true, student_self_view: true, resource_sharing: true },
   },
   paid_tutoring: {
     label: 'Tutoring business',
@@ -84,7 +105,7 @@ export const ORG_PRESETS: Record<OrgType, {
     icon: 'briefcase-outline',
     memberNoun: 'Tutor', memberNounPlural: 'Tutors',
     studentNoun: 'Student', studentNounPlural: 'Students',
-    features: { hours: false, checkin: true, progress: true, session_notes: true, guardian_digests: true, gamification: false },
+    features: { hours: false, checkin: true, progress: true, session_notes: true, guardian_digests: true, gamification: false, student_feedback: true, student_self_view: true, resource_sharing: true },
   },
   sports: {
     label: 'Sports coaching',
@@ -92,7 +113,7 @@ export const ORG_PRESETS: Record<OrgType, {
     icon: 'basketball-outline',
     memberNoun: 'Coach', memberNounPlural: 'Coaches',
     studentNoun: 'Athlete', studentNounPlural: 'Athletes',
-    features: { hours: false, checkin: true, progress: true, session_notes: true, guardian_digests: false, gamification: true },
+    features: { hours: false, checkin: true, progress: true, session_notes: true, guardian_digests: false, gamification: true, student_feedback: true, student_self_view: false, resource_sharing: true },
   },
   other: {
     label: 'Something else',
@@ -100,7 +121,7 @@ export const ORG_PRESETS: Record<OrgType, {
     icon: 'sparkles-outline',
     memberNoun: 'Mentor', memberNounPlural: 'Mentors',
     studentNoun: 'Mentee', studentNounPlural: 'Mentees',
-    features: { hours: false, checkin: false, progress: true, session_notes: true, guardian_digests: false, gamification: false },
+    features: { hours: false, checkin: false, progress: true, session_notes: true, guardian_digests: false, gamification: false, student_feedback: false, student_self_view: false, resource_sharing: false },
   },
 };
 

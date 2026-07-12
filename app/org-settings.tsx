@@ -33,6 +33,9 @@ export default function OrgSettingsScreen() {
   const [toggles, setToggles] = useState<Record<FeatureKey, boolean>>(
     Object.fromEntries(FEATURE_KEYS.map((k) => [k, featureEnabled(org, k)])) as Record<FeatureKey, boolean>
   );
+  const [atRiskWeeks, setAtRiskWeeks] = useState(0);
+  const [signerName, setSignerName] = useState('');
+  const [signerRole, setSignerRole] = useState('');
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
@@ -40,10 +43,13 @@ export default function OrgSettingsScreen() {
       if (!org?.id) return;
       const { data } = await supabase
         .from('organizations')
-        .select('member_code, student_code')
+        .select('member_code, student_code, at_risk_weeks, hours_signer_name, hours_signer_role')
         .eq('id', org.id)
         .maybeSingle();
       setCodes({ member: data?.member_code ?? null, student: data?.student_code ?? null });
+      setAtRiskWeeks(data?.at_risk_weeks ?? 0);
+      setSignerName(data?.hours_signer_name ?? '');
+      setSignerRole(data?.hours_signer_role ?? '');
       setLoading(false);
     })();
   }, [org?.id]);
@@ -86,6 +92,9 @@ export default function OrgSettingsScreen() {
         student_noun: studentNoun.trim(),
         student_noun_plural: studentNounPlural.trim(),
         features: toggles,
+        at_risk_weeks: atRiskWeeks,
+        hours_signer_name: signerName.trim() || null,
+        hours_signer_role: signerRole.trim() || null,
       })
       .eq('id', org.id);
     setSaving(false);
@@ -178,6 +187,57 @@ export default function OrgSettingsScreen() {
           ))}
         </View>
 
+        {/* ── At-risk alerts ── */}
+        <Text style={[styles.section, { marginTop: 26 }]}>AT-RISK ALERTS</Text>
+        <Text style={styles.sectionHelp}>
+          Notify a student and leadership when they haven't attended in a while. 0 turns this off.
+        </Text>
+        <View style={styles.stepperRow}>
+          <TouchableOpacity
+            style={styles.stepperBtn}
+            onPress={() => { setDirty(true); setAtRiskWeeks((w) => Math.max(0, w - 1)); }}
+          >
+            <Ionicons name="remove" size={18} color={PINE} />
+          </TouchableOpacity>
+          <Text style={styles.stepperVal}>
+            {atRiskWeeks === 0 ? 'Off' : `${atRiskWeeks} week${atRiskWeeks === 1 ? '' : 's'}`}
+          </Text>
+          <TouchableOpacity
+            style={styles.stepperBtn}
+            onPress={() => { setDirty(true); setAtRiskWeeks((w) => Math.min(12, w + 1)); }}
+          >
+            <Ionicons name="add" size={18} color={PINE} />
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Hour verification signer ── */}
+        <Text style={[styles.section, { marginTop: 26 }]}>HOUR VERIFICATION</Text>
+        <Text style={styles.sectionHelp}>
+          Whoever's named here signs off on every auto-generated volunteer hour certificate.
+        </Text>
+        <View style={styles.nounGrid}>
+          <View style={styles.nounCell}>
+            <Text style={styles.nounLabel}>SIGNER NAME</Text>
+            <TextInput
+              style={styles.nounInput}
+              value={signerName}
+              onChangeText={(t) => { setDirty(true); setSignerName(t); }}
+              placeholder="Your name"
+              maxLength={60}
+            />
+          </View>
+          <View style={styles.nounCell}>
+            <Text style={styles.nounLabel}>SIGNER ROLE</Text>
+            <TextInput
+              style={styles.nounInput}
+              value={signerRole}
+              onChangeText={(t) => { setDirty(true); setSignerRole(t); }}
+              placeholder="e.g. President"
+              maxLength={40}
+            />
+          </View>
+        </View>
+
         <TouchableOpacity onPress={save} disabled={saving || !dirty} style={[styles.saveBtn, (saving || !dirty) && { opacity: 0.5 }]} activeOpacity={0.9}>
           <Text style={styles.saveTxt}>{saving ? 'Saving…' : 'Save changes'}</Text>
         </TouchableOpacity>
@@ -214,6 +274,10 @@ const styles = StyleSheet.create({
   nounCell: { width: '48%', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 14, padding: 12 },
   nounLabel: { fontFamily: font.semibold, fontSize: 9.5, color: 'rgba(34,39,31,0.45)', letterSpacing: 1 },
   nounInput: { fontFamily: font.bold, fontSize: 17, color: INK, marginTop: 4, padding: 0 },
+
+  stepperRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 18, paddingVertical: 14 },
+  stepperBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(44,124,150,0.10)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', alignItems: 'center', justifyContent: 'center' },
+  stepperVal: { fontFamily: font.bold, fontSize: 16, color: INK, minWidth: 80, textAlign: 'center' },
 
   saveBtn: { backgroundColor: PINE, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 26 },
   saveTxt: { fontFamily: font.bold, fontSize: 15.5, color: CREAM },
