@@ -8,10 +8,11 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import '../global.css';
+import { IntroSplash } from '@/components/ui/IntroSplash';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,6 +26,7 @@ export default function RootLayout() {
     'Lato-Regular': Lato_400Regular,
     'Lato-Bold': Lato_700Bold,
   });
+  const [introDone, setIntroDone] = useState(false);
 
   useEffect(() => { if (fontsLoaded) SplashScreen.hideAsync(); }, [fontsLoaded]);
   if (!fontsLoaded) return null;
@@ -48,6 +50,10 @@ export default function RootLayout() {
           <Stack.Screen name="admin" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="dark" />
+        {/* Overlay ON TOP of the Stack: the real destination mounts and loads
+            underneath while the intro plays, so the flipboard reveal uncovers
+            a ready screen. Unmounts itself when the reveal completes. */}
+        {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}
       </UserProvider>
     </GestureHandlerRootView>
   );

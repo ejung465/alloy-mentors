@@ -1,33 +1,22 @@
-import { useState } from 'react';
 import { Redirect } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { useUser } from '@/contexts/UserContext';
-import { IntroSplash } from '@/components/ui/IntroSplash';
 
-const PINE = '#165B74';
-
+// The animated intro lives in the root layout as an overlay, so the real
+// destination mounts underneath it while the intro plays and the flipboard
+// reveal uncovers it. This screen just routes.
 export default function Index() {
   const { user, isLoading } = useUser();
-  const [introDone, setIntroDone] = useState(false);
 
-  if (!introDone || isLoading) {
-    return (
-      <View style={styles.loading}>
-        {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}
-      </View>
-    );
+  if (isLoading) {
+    return <View style={styles.loading} />;
   }
-
   if (user) {
     return <Redirect href="/(tabs)" />;
   }
-
   return <Redirect href="/(auth)/onboarding" />;
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    backgroundColor: PINE,
-  },
+  loading: { flex: 1, backgroundColor: '#165B74' },
 });
