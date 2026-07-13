@@ -1,14 +1,19 @@
+import { useState } from 'react';
 import { Redirect } from 'expo-router';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useUser } from '@/contexts/UserContext';
+import { IntroSplash } from '@/components/ui/IntroSplash';
+
+const PINE = '#165B74';
 
 export default function Index() {
   const { user, isLoading } = useUser();
+  const [introDone, setIntroDone] = useState(false);
 
-  if (isLoading) {
+  if (!introDone || isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#2C7C96" />
+        {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}
       </View>
     );
   }
@@ -23,8 +28,6 @@ export default function Index() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: PINE,
   },
 });

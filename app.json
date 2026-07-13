@@ -2,7 +2,7 @@
   "expo": {
     "name": "Alloy Mentors",
     "slug": "alloy-mentors",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "alloymentors",
@@ -55,7 +55,13 @@
           }
         }
       ],
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.522597731802-86cnctb33fio2uvju5441323nod853ij"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
