@@ -29,35 +29,44 @@ const MARK_BIG = 232;   // the big "A" the app opens on
 const MARK_FINAL = 150; // slightly smaller, settled size
 
 // Wordmark sizing, derived from the mark height so it always reads as one lockup.
-const LLOY_SIZE = Math.round(MARK_FINAL * 0.34);
-const ENTORS_SIZE = Math.round(MARK_FINAL * 0.42);
+const LLOY_SIZE = Math.round(MARK_FINAL * 0.3);
+const ENTORS_SIZE = Math.round(MARK_FINAL * 0.36);
 
 // Timeline (ms from mount).
-const HOLD_BIG = 500;      // hold the big centered "A"
-const RESOLVE = 1400;      // shrink + slide left, wordmark emerges
-const FLIP_START_MS = 4500; // background-load window before the reveal
-const FLIP_MS = 1300;      // flipboard reveal duration
+const HOLD_BIG = 1500;   // hold on just the big "A" before it moves
+const RESOLVE = 1700;    // shrink + slide, wordmark emerges — deliberately unhurried
+const SETTLE = 300;      // brief hold on the finished lockup before the reveal starts
+const FLIP_START_MS = HOLD_BIG + RESOLVE + SETTLE; // ~3.5s total, down from 4.5s
+const FLIP_MS = 1300;    // reveal duration
+const DECODE_GUARD_MS = 180; // lets the (identical, cached) tile snapshot decode before the wipe starts — see startFlip()
 
-// Flipboard grid — ~136 tiles (COLS*ROWS).
+// Reveal grid — ~136 tiles (COLS*ROWS). Kept even though the mechanic below
+// is now an opacity wipe, not a flip, so the sweep still reads as a grid.
 const COLS = 8;
 const ROWS = 17;
-const SPREAD = 0.6; // how much the diagonal stagger overlaps
+const SPREAD = 0.5; // how much the column stagger overlaps
 
 type Tile = { key: string; left: number; top: number; tw: number; th: number; sf: number };
 
 /**
  * Cold-launch brand moment.
  *
- * 1. Opens on the big "A" mark, dead-center.
- * 2. It shrinks slightly and slides left to a centered lockup while the
- *    wordmark resolves out of the mark — "lloy" (gray, off the upper A) and
- *    "entors" (orange, off the lower M) — so the mark reads as both letters.
- * 3. Holds ~4.5s (the app loads underneath the overlay).
- * 4. The whole screen splits into a grid of tiles that flip 180° in a
- *    diagonal wave — a split-flap board — revealing the ready home screen.
+ * 1. Opens on the big "A" mark, dead-center. Holds 1.5s.
+ * 2. It shrinks slightly and slides left into a centered lockup while the
+ *    wordmark resolves out of the mark — "lloy" (gray, continuing the upper
+ *    A) and "entors" (orange, continuing the lower M) — so the mark reads as
+ *    both letters at once, same idea as the reference mark.
+ * 3. Brief settle, then the whole screen sweeps away left → right: a grid of
+ *    tiles carrying a snapshot of the settled logo screen fade out on an
+ *    accelerating curve (slow at first, then rapidly transparent), uncovering
+ *    the already-loaded app underneath.
  *
- * The overlay lives above the router Stack (see app/_layout.tsx), so the tiles
- * uncover the real, already-mounted destination. Respects Reduce Motion.
+ * The overlay lives above the router Stack (see app/_layout.tsx), so the
+ * destination is real and ready by the time the wipe reaches it. Every tile
+ * always has an opaque pine base under its snapshot layer — regardless of
+ * exactly when the (identical, cached) snapshot image finishes decoding on
+ * the native side — so there is no frame where the app underneath can show
+ * through before the wipe actually reaches that tile. Respects Reduce Motion.
  */
 export function IntroSplash({ onDone }: { onDone: () => void }) {
   const { width: W, height: H } = useWindowDimensions();
@@ -74,23 +83,25 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const cy = H / 2;
   const ready = !!markImage && !!lloyFont && !!entorsFont;
 
-  const entorsW = entorsFont ? entorsFont.getTextWidth('entors') : MARK_FINAL * 1.2;
+  const entorsW = entorsFont ? entorsFont.getTextWidth('entors') : MARK_FINAL * 1.3;
 
-  // Final lockup geometry (mark just left of center, wordmark to its right).
-  const textStartOffset = MARK_FINAL * 0.6; // text tucks near the mark's right leg
-  const lockupW = Math.max(MARK_FINAL, textStartOffset + entorsW + 6);
-  const markCXFinal = cx - lockupW / 2 + MARK_FINAL / 2;
+  // Final lockup geometry. The mark's gray "A" occupies its upper-center
+  // portion (peaked, narrower) and the orange "M" spans its full width lower
+  // down — so "lloy" continues from the A's right leg (center-right of the
+  // mark) while "entors" continues from the M's left leg (left edge of the
+  // mark), sitting well below "lloy" with generous line gap.
+  const markCXFinal = cx - (MARK_FINAL * 0.5 + entorsW * 0.35) / 2; // mark nudged left of the combined lockup's center
   const markLeftFinal = markCXFinal - MARK_FINAL / 2;
-  const lloyXFinal = markLeftFinal + MARK_FINAL * 0.6;
-  const entorsXFinal = markLeftFinal + MARK_FINAL * 0.64;
-  const lloyBaseline = cy - MARK_FINAL * 0.05; // upper (gray A) line
-  const entorsBaseline = cy + MARK_FINAL * 0.42; // lower (orange M) line
+  const lloyXFinal = markCXFinal + MARK_FINAL * 0.1;
+  const entorsXFinal = markLeftFinal + MARK_FINAL * 0.06;
+  const lloyBaseline = cy - MARK_FINAL * 0.22;   // upper (gray A) line — well clear of entors
+  const entorsBaseline = cy + MARK_FINAL * 0.62; // lower (orange M) line
 
   const markSize = useSharedValue(MARK_BIG);
   const markCX = useSharedValue(cx);
   const textOpacity = useSharedValue(0);
   const textDX = useSharedValue(-16);
-  const flip = useSharedValue(0);
+  const wipe = useSharedValue(0);
 
   const finish = () => {
     if (calledDone.current) return;
@@ -99,16 +110,14 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   };
 
   const startFlip = () => {
-    // Snapshot the settled logo screen so the tiles carry its pixels as they
-    // flip. Falls back to solid pine tiles if the snapshot is unavailable.
+    setPhase('flip');
     try {
       const img = canvasRef.current?.makeImageSnapshot();
       const b64 = img?.encodeToBase64();
       if (b64) setSnapshot(`data:image/png;base64,${b64}`);
     } catch {
-      /* fall through to solid-pine tiles */
+      /* tiles fall back to a solid pine base — see FlipTile */
     }
-    setPhase('flip');
   };
 
   // Logo choreography.
@@ -125,15 +134,15 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
         markCX.value = markCXFinal;
         textOpacity.value = 1;
         textDX.value = 0;
-        timer = setTimeout(startFlip, 1400);
+        timer = setTimeout(startFlip, 900);
         return;
       }
 
       const ease = Easing.out(Easing.cubic);
       markSize.value = withDelay(HOLD_BIG, withTiming(MARK_FINAL, { duration: RESOLVE, easing: ease }));
       markCX.value = withDelay(HOLD_BIG, withTiming(markCXFinal, { duration: RESOLVE, easing: ease }));
-      textOpacity.value = withDelay(HOLD_BIG + 300, withTiming(1, { duration: RESOLVE - 200, easing: ease }));
-      textDX.value = withDelay(HOLD_BIG + 300, withTiming(0, { duration: RESOLVE - 200, easing: ease }));
+      textOpacity.value = withDelay(HOLD_BIG + 350, withTiming(1, { duration: RESOLVE - 250, easing: ease }));
+      textDX.value = withDelay(HOLD_BIG + 350, withTiming(0, { duration: RESOLVE - 250, easing: ease }));
 
       timer = setTimeout(startFlip, FLIP_START_MS);
     });
@@ -145,12 +154,17 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 
-  // Flipboard reveal.
+  // Reveal wipe — delayed a beat past the snapshot capture so the (identical,
+  // cached) tile images have time to decode before any tile starts fading;
+  // every tile also has an opaque pine base regardless, as a second guard.
   useEffect(() => {
     if (phase !== 'flip') return;
-    flip.value = withTiming(1, { duration: FLIP_MS, easing: Easing.inOut(Easing.cubic) }, (d) => {
-      if (d) runOnJS(finish)();
-    });
+    const t = setTimeout(() => {
+      wipe.value = withTiming(1, { duration: FLIP_MS, easing: Easing.linear }, (d) => {
+        if (d) runOnJS(finish)();
+      });
+    }, DECODE_GUARD_MS);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
@@ -165,11 +179,10 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const tiles = useMemo<Tile[]>(() => {
     const tw = W / COLS;
     const th = H / ROWS;
-    const denom = (ROWS - 1) + (COLS - 1);
     const arr: Tile[] = [];
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
-        arr.push({ key: `${r}-${c}`, left: c * tw, top: r * th, tw, th, sf: (r + c) / denom });
+        arr.push({ key: `${r}-${c}`, left: c * tw, top: r * th, tw, th, sf: c / (COLS - 1) });
       }
     }
     return arr;
@@ -199,23 +212,26 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   return (
     <View style={[StyleSheet.absoluteFill, styles.overlay]} pointerEvents="none">
       {tiles.map((t) => (
-        <FlipTile key={t.key} tile={t} flip={flip} snapshot={snapshot} W={W} H={H} />
+        <WipeTile key={t.key} tile={t} wipe={wipe} snapshot={snapshot} W={W} H={H} />
       ))}
     </View>
   );
 }
 
-/** One flipping tile of the board. Front carries its slice of the logo screen;
- *  once it rotates past edge-on it hides, revealing the app underneath. */
-const FlipTile = React.memo(function FlipTile({
+/** One tile of the reveal sweep. Always has an opaque pine base — the
+ *  snapshot slice layers on top of it once decoded, never instead of it —
+ *  so there is no frame where a not-yet-decoded tile lets the app underneath
+ *  show through. Fades out left → right on an accelerating (ease-in) curve:
+ *  holds near-opaque, then rapidly clears. */
+const WipeTile = React.memo(function WipeTile({
   tile,
-  flip,
+  wipe,
   snapshot,
   W,
   H,
 }: {
   tile: Tile;
-  flip: SharedValue<number>;
+  wipe: SharedValue<number>;
   snapshot: string | null;
   W: number;
   H: number;
@@ -223,12 +239,9 @@ const FlipTile = React.memo(function FlipTile({
   const { left, top, tw, th, sf } = tile;
   const style = useAnimatedStyle(() => {
     'worklet';
-    const local = Math.max(0, Math.min(1, flip.value * (1 + SPREAD) - sf * SPREAD));
-    const deg = local * 100; // past 90° so the back face is hidden
-    return {
-      opacity: local >= 1 ? 0 : 1,
-      transform: [{ perspective: 700 }, { rotateX: `${deg}deg` }],
-    };
+    const local = Math.max(0, Math.min(1, wipe.value * (1 + SPREAD) - sf * SPREAD));
+    const opacity = 1 - Math.pow(local, 2.4); // accelerating fade
+    return { opacity };
   });
   return (
     <Animated.View
@@ -240,15 +253,13 @@ const FlipTile = React.memo(function FlipTile({
           width: tw + 0.6, // tiny overlap kills subpixel seams
           height: th + 0.6,
           overflow: 'hidden',
-          backfaceVisibility: 'hidden',
+          backgroundColor: PINE, // always-present opaque base
         },
         style,
       ]}
     >
-      {snapshot ? (
+      {snapshot && (
         <Image source={{ uri: snapshot }} style={{ position: 'absolute', left: -left, top: -top, width: W, height: H }} />
-      ) : (
-        <View style={{ width: tw + 0.6, height: th + 0.6, backgroundColor: PINE }} />
       )}
     </Animated.View>
   );
