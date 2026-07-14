@@ -107,8 +107,10 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const markCXFinal = markLeftRel + MARK_FINAL / 2 + offsetX;
   const lloyXFinal = lloyXRel + offsetX;
   const entorsXFinal = entorsXRel + offsetX;
-  const lloyBaseline = cy - MARK_FINAL * 0.22;   // upper (gray A) line — unchanged
-  const entorsBaseline = cy + MARK_FINAL * 0.62; // lower (orange M) line — unchanged
+  const lloyBaseline = cy - MARK_FINAL * 0.22;    // sits at the gray A's vertical center
+  const entorsBaseline = cy + MARK_FINAL * 0.166; // sits at the orange M's vertical center — mirrors lloy's
+                                                  // offset from the A, so "entors" is BESIDE the M (to the
+                                                  // right of the mark) instead of dangling below it
 
   // ---- Animated state -----------------------------------------------------
   const markSize = useSharedValue(MARK_BIG);
