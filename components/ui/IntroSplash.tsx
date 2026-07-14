@@ -78,26 +78,37 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const lloyW = lloyFont ? lloyFont.getTextWidth('lloy') : MARK_FINAL * 0.7;
   const entorsW = entorsFont ? entorsFont.getTextWidth('entors') : MARK_FINAL * 1.3;
 
-  // ---- Group-centered geometry -------------------------------------------
-  // Everything below is computed relative to an arbitrary reference origin
-  // (the mark's un-shifted left edge = 0), then the WHOLE group (mark +
-  // both text lines) is shifted by one offset so its true combined bounding
-  // box lands centered on screen — not just the mark by itself.
-  const markLeftRel = 0;
-  const markRightRel = MARK_FINAL;
-  const lloyXRel = MARK_FINAL * 0.42;   // starts near the mark's center-right, off the A's peak
-  const entorsXRel = -MARK_FINAL * 0.05; // starts just left of the mark's edge, off the M's base
+  // ---- Group-centered geometry (measured from splash-icon.png) -----------
+  // The mark art does NOT fill its MARK_FINAL box — its opaque content sits
+  // at x∈[0.16, 0.839] of the box; the gray "A" strokes reach ~0.62 of the
+  // box at the "lloy" baseline height, and the orange "M" right leg reaches
+  // ~0.839. So each line is placed just RIGHT of the actual stroke it
+  // continues from (A→lloy, M→entors) with a fixed tuck. That clearance is
+  // `textXRel − strokeRight` (= TUCK) and is independent of font metrics AND
+  // of the centering offset — text and mark both shift by the same offsetX —
+  // so the letters are guaranteed clear of the mark no matter the measured
+  // text width. The group's REAL visual bounding box (mark content-left →
+  // widest text-right) is then centered on screen.
+  const MARK_CONTENT_L = MARK_FINAL * 0.16;
+  const MARK_CONTENT_R = MARK_FINAL * 0.839;
+  const A_RIGHT_AT_LLOY = MARK_FINAL * 0.62; // gray A's right edge at the lloy line
+  const M_RIGHT = MARK_FINAL * 0.839;        // orange M's right leg
+  const TUCK = 12;                            // gap from stroke edge to text
 
-  const groupLeft = Math.min(markLeftRel, entorsXRel);
-  const groupRight = Math.max(markRightRel, lloyXRel + lloyW, entorsXRel + entorsW);
+  const markLeftRel = 0;
+  const lloyXRel = A_RIGHT_AT_LLOY + TUCK;   // "lloy" begins just right of the A
+  const entorsXRel = M_RIGHT + TUCK;         // "entors" begins just right of the M
+
+  const groupLeft = MARK_CONTENT_L; // leftmost visible thing is the mark art
+  const groupRight = Math.max(MARK_CONTENT_R, lloyXRel + lloyW, entorsXRel + entorsW);
   const groupCenterRel = (groupLeft + groupRight) / 2;
   const offsetX = cx - groupCenterRel;
 
   const markCXFinal = markLeftRel + MARK_FINAL / 2 + offsetX;
   const lloyXFinal = lloyXRel + offsetX;
   const entorsXFinal = entorsXRel + offsetX;
-  const lloyBaseline = cy - MARK_FINAL * 0.22;   // upper (gray A) line
-  const entorsBaseline = cy + MARK_FINAL * 0.62; // lower (orange M) line
+  const lloyBaseline = cy - MARK_FINAL * 0.22;   // upper (gray A) line — unchanged
+  const entorsBaseline = cy + MARK_FINAL * 0.62; // lower (orange M) line — unchanged
 
   // ---- Animated state -----------------------------------------------------
   const markSize = useSharedValue(MARK_BIG);
