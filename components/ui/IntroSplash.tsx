@@ -1,12 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Image, StyleSheet, useWindowDimensions, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { AccessibilityInfo, StyleSheet, useWindowDimensions } from 'react-native';
 import {
   Canvas,
   Group,
   Image as SkiaImage,
   Rect,
   Text as SkiaText,
-  useCanvasRef,
   useFont,
   useImage,
 } from '@shopify/react-native-skia';
@@ -18,7 +17,6 @@ import Animated, {
   useSharedValue,
   withDelay,
   withTiming,
-  type SharedValue,
 } from 'react-native-reanimated';
 
 const PINE = '#165B74';
@@ -26,54 +24,48 @@ const SILVER = '#C4C4C4'; // gray of the logo's upper "A" → "lloy"
 const CLAY = '#C5642D';   // orange of the logo's lower "M" → "entors"
 
 const MARK_BIG = 232;   // the big "A" the app opens on
-const MARK_FINAL = 150; // slightly smaller, settled size
+const MARK_FINAL = 150; // settled size
 
-// Wordmark sizing, derived from the mark height so it always reads as one lockup.
 const LLOY_SIZE = Math.round(MARK_FINAL * 0.3);
 const ENTORS_SIZE = Math.round(MARK_FINAL * 0.36);
 
-// Timeline (ms from mount).
-const HOLD_BIG = 1500;   // hold on just the big "A" before it moves
-const RESOLVE = 1700;    // shrink + slide, wordmark emerges — deliberately unhurried
-const SETTLE = 300;      // brief hold on the finished lockup before the reveal starts
-const FLIP_START_MS = HOLD_BIG + RESOLVE + SETTLE; // ~3.5s total, down from 4.5s
-const FLIP_MS = 1300;    // reveal duration
-const DECODE_GUARD_MS = 180; // lets the (identical, cached) tile snapshot decode before the wipe starts — see startFlip()
-
-// Reveal grid — ~136 tiles (COLS*ROWS). Kept even though the mechanic below
-// is now an opacity wipe, not a flip, so the sweep still reads as a grid.
-const COLS = 8;
-const ROWS = 17;
-const SPREAD = 0.5; // how much the column stagger overlaps
-
-type Tile = { key: string; left: number; top: number; tw: number; th: number; sf: number };
+// Timeline (ms from mount) — four sequential beats, not overlapping:
+const HOLD_BIG = 1500;  // 1. hold on the big, centered "A"
+const SHRINK_MS = 700;  // 2. shrinks in place (still centered) — no horizontal motion yet
+const MOVE_MS = 1000;   // 3. THEN slides left while the wordmark slides out from the mark
+const SETTLE_TEXT = 250; // 4. brief hold on the finished, centered lockup (cut ~0.75s from the previous pass)
+const FADE_MS = 900;    // uniform fade of the whole overlay to reveal the app — no sweep, no stagger
 
 /**
- * Cold-launch brand moment.
+ * Cold-launch brand moment — four sequential beats:
  *
  * 1. Opens on the big "A" mark, dead-center. Holds 1.5s.
- * 2. It shrinks slightly and slides left into a centered lockup while the
- *    wordmark resolves out of the mark — "lloy" (gray, continuing the upper
- *    A) and "entors" (orange, continuing the lower M) — so the mark reads as
- *    both letters at once, same idea as the reference mark.
- * 3. Brief settle, then the whole screen sweeps away left → right: a grid of
- *    tiles carrying a snapshot of the settled logo screen fade out on an
- *    accelerating curve (slow at first, then rapidly transparent), uncovering
- *    the already-loaded app underneath.
+ * 2. The mark shrinks in place (still centered) — no lateral motion during
+ *    the shrink itself.
+ * 3. Only once shrunk does it slide left; the wordmark slides out from the
+ *    mark's position at the same time — "lloy" (gray, continuing the upper
+ *    A) and "entors" (orange, continuing the lower M). The mark + both text
+ *    lines are laid out as ONE bounding-box group and that whole group is
+ *    what's centered on screen (not just the mark) — the group's combined
+ *    left/right extent is computed from the actual measured text widths, so
+ *    it's centered regardless of exact font metrics.
+ * 4. Brief settle, then the ENTIRE overlay (background + mark + text as one
+ *    unit — a single live Skia canvas, not a captured picture) fades
+ *    uniformly to reveal the app underneath. No spatial sweep/stagger.
  *
- * The overlay lives above the router Stack (see app/_layout.tsx), so the
- * destination is real and ready by the time the wipe reaches it. Every tile
- * always has an opaque pine base under its snapshot layer — regardless of
- * exactly when the (identical, cached) snapshot image finishes decoding on
- * the native side — so there is no frame where the app underneath can show
- * through before the wipe actually reaches that tile. Respects Reduce Motion.
+ * Rendering a single persistent Canvas for the whole sequence (rather than
+ * swapping to a captured-snapshot tile grid at the end) removes the earlier
+ * flicker at its root: there is no unmount/remount transition and nothing to
+ * decode asynchronously — the same canvas that has been painting the settled
+ * lockup simply becomes transparent.
+ *
+ * Lives above the router Stack (see app/_layout.tsx) so the destination is
+ * real and already loaded by the time the fade reaches it. Respects Reduce
+ * Motion.
  */
 export function IntroSplash({ onDone }: { onDone: () => void }) {
   const { width: W, height: H } = useWindowDimensions();
-  const canvasRef = useCanvasRef();
   const calledDone = useRef(false);
-  const [phase, setPhase] = useState<'logo' | 'flip'>('logo');
-  const [snapshot, setSnapshot] = useState<string | null>(null);
 
   const markImage = useImage(require('@/assets/images/splash-icon.png'));
   const lloyFont = useFont(require('@expo-google-fonts/inter/900Black/Inter_900Black.ttf'), LLOY_SIZE);
@@ -83,25 +75,37 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const cy = H / 2;
   const ready = !!markImage && !!lloyFont && !!entorsFont;
 
+  const lloyW = lloyFont ? lloyFont.getTextWidth('lloy') : MARK_FINAL * 0.7;
   const entorsW = entorsFont ? entorsFont.getTextWidth('entors') : MARK_FINAL * 1.3;
 
-  // Final lockup geometry. The mark's gray "A" occupies its upper-center
-  // portion (peaked, narrower) and the orange "M" spans its full width lower
-  // down — so "lloy" continues from the A's right leg (center-right of the
-  // mark) while "entors" continues from the M's left leg (left edge of the
-  // mark), sitting well below "lloy" with generous line gap.
-  const markCXFinal = cx - (MARK_FINAL * 0.5 + entorsW * 0.35) / 2; // mark nudged left of the combined lockup's center
-  const markLeftFinal = markCXFinal - MARK_FINAL / 2;
-  const lloyXFinal = markCXFinal + MARK_FINAL * 0.1;
-  const entorsXFinal = markLeftFinal + MARK_FINAL * 0.06;
-  const lloyBaseline = cy - MARK_FINAL * 0.22;   // upper (gray A) line — well clear of entors
+  // ---- Group-centered geometry -------------------------------------------
+  // Everything below is computed relative to an arbitrary reference origin
+  // (the mark's un-shifted left edge = 0), then the WHOLE group (mark +
+  // both text lines) is shifted by one offset so its true combined bounding
+  // box lands centered on screen — not just the mark by itself.
+  const markLeftRel = 0;
+  const markRightRel = MARK_FINAL;
+  const lloyXRel = MARK_FINAL * 0.42;   // starts near the mark's center-right, off the A's peak
+  const entorsXRel = -MARK_FINAL * 0.05; // starts just left of the mark's edge, off the M's base
+
+  const groupLeft = Math.min(markLeftRel, entorsXRel);
+  const groupRight = Math.max(markRightRel, lloyXRel + lloyW, entorsXRel + entorsW);
+  const groupCenterRel = (groupLeft + groupRight) / 2;
+  const offsetX = cx - groupCenterRel;
+
+  const markCXFinal = markLeftRel + MARK_FINAL / 2 + offsetX;
+  const lloyXFinal = lloyXRel + offsetX;
+  const entorsXFinal = entorsXRel + offsetX;
+  const lloyBaseline = cy - MARK_FINAL * 0.22;   // upper (gray A) line
   const entorsBaseline = cy + MARK_FINAL * 0.62; // lower (orange M) line
 
+  // ---- Animated state -----------------------------------------------------
   const markSize = useSharedValue(MARK_BIG);
   const markCX = useSharedValue(cx);
+  const lloyX = useSharedValue(cx);   // text starts AT the mark's (pre-move) position — "slides out from the logo"
+  const entorsX = useSharedValue(cx);
   const textOpacity = useSharedValue(0);
-  const textDX = useSharedValue(-16);
-  const wipe = useSharedValue(0);
+  const overlayOpacity = useSharedValue(1);
 
   const finish = () => {
     if (calledDone.current) return;
@@ -109,22 +113,9 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
     onDone();
   };
 
-  const startFlip = () => {
-    setPhase('flip');
-    try {
-      const img = canvasRef.current?.makeImageSnapshot();
-      const b64 = img?.encodeToBase64();
-      if (b64) setSnapshot(`data:image/png;base64,${b64}`);
-    } catch {
-      /* tiles fall back to a solid pine base — see FlipTile */
-    }
-  };
-
-  // Logo choreography.
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
 
     AccessibilityInfo.isReduceMotionEnabled?.().then((reduced) => {
       if (cancelled) return;
@@ -132,139 +123,75 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       if (reduced) {
         markSize.value = MARK_FINAL;
         markCX.value = markCXFinal;
+        lloyX.value = lloyXFinal;
+        entorsX.value = entorsXFinal;
         textOpacity.value = 1;
-        textDX.value = 0;
-        timer = setTimeout(startFlip, 900);
+        overlayOpacity.value = withDelay(700, withTiming(0, { duration: 400 }, (d) => {
+          if (d) runOnJS(finish)();
+        }));
         return;
       }
 
       const ease = Easing.out(Easing.cubic);
-      markSize.value = withDelay(HOLD_BIG, withTiming(MARK_FINAL, { duration: RESOLVE, easing: ease }));
-      markCX.value = withDelay(HOLD_BIG, withTiming(markCXFinal, { duration: RESOLVE, easing: ease }));
-      textOpacity.value = withDelay(HOLD_BIG + 350, withTiming(1, { duration: RESOLVE - 250, easing: ease }));
-      textDX.value = withDelay(HOLD_BIG + 350, withTiming(0, { duration: RESOLVE - 250, easing: ease }));
 
-      timer = setTimeout(startFlip, FLIP_START_MS);
+      // Beat 2 — shrink in place (markCX untouched, stays at cx).
+      markSize.value = withDelay(HOLD_BIG, withTiming(MARK_FINAL, { duration: SHRINK_MS, easing: ease }));
+
+      // Beat 3 — only after the shrink completes: slide left while the
+      // wordmark slides out from the mark's position, in sync.
+      const moveDelay = HOLD_BIG + SHRINK_MS;
+      markCX.value = withDelay(moveDelay, withTiming(markCXFinal, { duration: MOVE_MS, easing: ease }));
+      lloyX.value = withDelay(moveDelay, withTiming(lloyXFinal, { duration: MOVE_MS, easing: ease }));
+      entorsX.value = withDelay(moveDelay, withTiming(entorsXFinal, { duration: MOVE_MS, easing: ease }));
+      textOpacity.value = withDelay(moveDelay, withTiming(1, { duration: MOVE_MS, easing: ease }));
+
+      // Beat 4 — settle, then a single uniform fade (no sweep/stagger).
+      const fadeDelay = moveDelay + MOVE_MS + SETTLE_TEXT;
+      overlayOpacity.value = withDelay(
+        fadeDelay,
+        withTiming(0, { duration: FADE_MS, easing: Easing.in(Easing.cubic) }, (d) => {
+          if (d) runOnJS(finish)();
+        })
+      );
     });
 
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
-
-  // Reveal wipe — delayed a beat past the snapshot capture so the (identical,
-  // cached) tile images have time to decode before any tile starts fading;
-  // every tile also has an opaque pine base regardless, as a second guard.
-  useEffect(() => {
-    if (phase !== 'flip') return;
-    const t = setTimeout(() => {
-      wipe.value = withTiming(1, { duration: FLIP_MS, easing: Easing.linear }, (d) => {
-        if (d) runOnJS(finish)();
-      });
-    }, DECODE_GUARD_MS);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
 
   // Skia-driven props.
   const mSize = useDerivedValue(() => markSize.value);
   const mX = useDerivedValue(() => markCX.value - markSize.value / 2);
   const mY = useDerivedValue(() => cy - markSize.value / 2);
-  const lloyX = useDerivedValue(() => lloyXFinal + textDX.value);
-  const entorsX = useDerivedValue(() => entorsXFinal + textDX.value);
+  const lloyXd = useDerivedValue(() => lloyX.value);
+  const entorsXd = useDerivedValue(() => entorsX.value);
   const textOp = useDerivedValue(() => textOpacity.value);
 
-  const tiles = useMemo<Tile[]>(() => {
-    const tw = W / COLS;
-    const th = H / ROWS;
-    const arr: Tile[] = [];
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        arr.push({ key: `${r}-${c}`, left: c * tw, top: r * th, tw, th, sf: c / (COLS - 1) });
-      }
-    }
-    return arr;
-  }, [W, H]);
+  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
-  if (!ready) {
-    return (
-      <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Rect x={0} y={0} width={W} height={H} color={PINE} />
-      </Canvas>
-    );
-  }
-
-  if (phase === 'logo') {
-    return (
-      <Canvas ref={canvasRef} style={[StyleSheet.absoluteFill, styles.overlay]} pointerEvents="none">
-        <Rect x={0} y={0} width={W} height={H} color={PINE} />
-        <SkiaImage image={markImage} x={mX} y={mY} width={mSize} height={mSize} fit="contain" />
-        <Group opacity={textOp}>
-          <SkiaText text="lloy" x={lloyX} y={lloyBaseline} font={lloyFont} color={SILVER} />
-          <SkiaText text="entors" x={entorsX} y={entorsBaseline} font={entorsFont} color={CLAY} />
-        </Group>
-      </Canvas>
-    );
-  }
-
+  // Always the same shell — Animated.View wrapping one Canvas — for the
+  // entire lifetime of the component, including before assets finish
+  // loading. Only the Canvas's CHILDREN differ (just the pine background
+  // until ready), so there is genuinely no unmount/remount at any point in
+  // the sequence, not even at the loading→ready handoff.
   return (
-    <View style={[StyleSheet.absoluteFill, styles.overlay]} pointerEvents="none">
-      {tiles.map((t) => (
-        <WipeTile key={t.key} tile={t} wipe={wipe} snapshot={snapshot} W={W} H={H} />
-      ))}
-    </View>
+    <Animated.View style={[StyleSheet.absoluteFill, styles.overlay, overlayStyle]} pointerEvents="none">
+      <Canvas style={StyleSheet.absoluteFill}>
+        <Rect x={0} y={0} width={W} height={H} color={PINE} />
+        {ready && (
+          <>
+            <SkiaImage image={markImage} x={mX} y={mY} width={mSize} height={mSize} fit="contain" />
+            <Group opacity={textOp}>
+              <SkiaText text="lloy" x={lloyXd} y={lloyBaseline} font={lloyFont} color={SILVER} />
+              <SkiaText text="entors" x={entorsXd} y={entorsBaseline} font={entorsFont} color={CLAY} />
+            </Group>
+          </>
+        )}
+      </Canvas>
+    </Animated.View>
   );
 }
 
-/** One tile of the reveal sweep. Always has an opaque pine base — the
- *  snapshot slice layers on top of it once decoded, never instead of it —
- *  so there is no frame where a not-yet-decoded tile lets the app underneath
- *  show through. Fades out left → right on an accelerating (ease-in) curve:
- *  holds near-opaque, then rapidly clears. */
-const WipeTile = React.memo(function WipeTile({
-  tile,
-  wipe,
-  snapshot,
-  W,
-  H,
-}: {
-  tile: Tile;
-  wipe: SharedValue<number>;
-  snapshot: string | null;
-  W: number;
-  H: number;
-}) {
-  const { left, top, tw, th, sf } = tile;
-  const style = useAnimatedStyle(() => {
-    'worklet';
-    const local = Math.max(0, Math.min(1, wipe.value * (1 + SPREAD) - sf * SPREAD));
-    const opacity = 1 - Math.pow(local, 2.4); // accelerating fade
-    return { opacity };
-  });
-  return (
-    <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          left,
-          top,
-          width: tw + 0.6, // tiny overlap kills subpixel seams
-          height: th + 0.6,
-          overflow: 'hidden',
-          backgroundColor: PINE, // always-present opaque base
-        },
-        style,
-      ]}
-    >
-      {snapshot && (
-        <Image source={{ uri: snapshot }} style={{ position: 'absolute', left: -left, top: -top, width: W, height: H }} />
-      )}
-    </Animated.View>
-  );
-});
-
 const styles = StyleSheet.create({
-  overlay: { zIndex: 999, elevation: 999, backgroundColor: 'transparent' },
+  overlay: { zIndex: 999, elevation: 999 },
 });
