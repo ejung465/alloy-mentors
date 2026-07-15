@@ -394,8 +394,8 @@ export default function ProfileScreen() {
         {/* ── Legal ───────────────────────────────── */}
         <Text style={styles.sectionLabel}>LEGAL</Text>
         <GlassCard style={styles.settingsCard} contentStyle={{ padding: 0 }}>
-          <SettingRow icon="shield-outline" label="Privacy Policy" color="#7A7A7A" onPress={() => openURL('https://alloy.app/privacy')} />
-          <SettingRow icon="document-outline" label="Terms of Service" color="#7A7A7A" onPress={() => openURL('https://alloy.app/terms')} last />
+          <SettingRow icon="shield-outline" label="Privacy Policy" color="#7A7A7A" onPress={() => openURL('https://alloymentors.com/privacy')} />
+          <SettingRow icon="document-outline" label="Terms of Service" color="#7A7A7A" onPress={() => openURL('https://alloymentors.com/tos')} last />
         </GlassCard>
 
         {/* ── Sign Out ─────────────────────────────── */}

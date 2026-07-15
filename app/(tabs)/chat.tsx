@@ -106,18 +106,23 @@ export default function ChatScreen() {
       .eq('user_id', user.id);
 
     if (membership) {
-      const groups: (GroupChat | null)[] = await Promise.all(
-        membership.map(async (m: any) => {
+      const groupIds = membership.map((m: any) => m.group_chats?.id).filter(Boolean);
+      // One query for all member rows across every group, counted client-side —
+      // avoids firing a separate count query per group chat.
+      const { data: allMembers } = groupIds.length
+        ? await supabase.from('group_chat_members').select('group_chat_id').in('group_chat_id', groupIds)
+        : { data: [] as { group_chat_id: string }[] };
+      const counts = new Map<string, number>();
+      (allMembers || []).forEach((r: any) => counts.set(r.group_chat_id, (counts.get(r.group_chat_id) ?? 0) + 1));
+
+      const groups = membership
+        .map((m: any) => {
           const gc = m.group_chats;
           if (!gc) return null;
-          const { count } = await supabase
-            .from('group_chat_members')
-            .select('*', { count: 'exact', head: true })
-            .eq('group_chat_id', gc.id);
-          return { id: gc.id, name: gc.name, created_by: gc.created_by, memberCount: count ?? 0 };
+          return { id: gc.id, name: gc.name, created_by: gc.created_by, memberCount: counts.get(gc.id) ?? 0 };
         })
-      );
-      setGroupChats(groups.filter(Boolean) as GroupChat[]);
+        .filter(Boolean) as GroupChat[];
+      setGroupChats(groups);
     }
   }, [profile?.organization_id]);
 

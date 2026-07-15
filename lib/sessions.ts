@@ -166,16 +166,6 @@ export async function setMyRsvp(sessionId: string, userId: string, status: 'goin
     );
 }
 
-/** Count of "going" RSVPs for a session. */
-export async function getGoingCount(sessionId: string): Promise<number> {
-  const { count } = await supabase
-    .from('session_rsvps')
-    .select('*', { count: 'exact', head: true })
-    .eq('session_id', sessionId)
-    .eq('status', 'going');
-  return count ?? 0;
-}
-
 export type RsvpCoverage = { going: number; notGoing: number; noResponse: number; total: number };
 
 /**

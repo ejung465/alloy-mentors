@@ -278,8 +278,10 @@ export async function getAttendanceStreak(userId: string): Promise<number> {
 
   let streak = 1;
   const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  // Rounded, not exact-equality: a week spanning a DST transition is
+  // WEEK_MS ± 1hr since weekStart() uses local-midnight, not UTC.
   for (let i = 1; i < weeks.length; i++) {
-    if (weeks[i - 1] - weeks[i] === WEEK_MS) streak++;
+    if (Math.round((weeks[i - 1] - weeks[i]) / WEEK_MS) === 1) streak++;
     else break;
   }
   return streak;

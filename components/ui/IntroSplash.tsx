@@ -20,44 +20,40 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const PINE = '#165B74';
-const SILVER = '#C4C4C4'; // gray of the logo's upper "A" → "lloy"
-const CLAY = '#C5642D';   // orange of the logo's lower "M" → "entors"
+const SILVER = '#C4C4C4'; // matches the mark's gray "A"
+const CLAY = '#C5642D';   // matches the mark's orange "M"
 
-const MARK_BIG = 232;   // the big "A" the app opens on
-const MARK_FINAL = 150; // settled size
+const MARK_BIG = 232; // the big "A" the app opens on
 
-const LLOY_SIZE = Math.round(MARK_FINAL * 0.3);
-const ENTORS_SIZE = Math.round(MARK_FINAL * 0.36);
+// Wordmark sized to match the big mark's own letterforms (cap-height of the A
+// on the opening screen), since there's no icon left on screen to key off of.
+const WORD_SIZE = Math.round(MARK_BIG * 0.4);
+const LINE_GAP = Math.round(WORD_SIZE * 0.18);
 
-// Timeline (ms from mount) — four sequential beats, not overlapping:
-const HOLD_BIG = 1500;  // 1. hold on the big, centered "A"
-const SHRINK_MS = 700;  // 2. shrinks in place (still centered) — no horizontal motion yet
-const MOVE_MS = 1000;   // 3. THEN slides left while the wordmark slides out from the mark
-const SETTLE_TEXT = 250; // 4. brief hold on the finished, centered lockup (cut ~0.75s from the previous pass)
-const FADE_MS = 900;    // uniform fade of the whole overlay to reveal the app — no sweep, no stagger
+// Timeline (ms from mount) — three beats:
+const HOLD_BIG = 1800;    // 1. hold on the big, centered "A" (+0.3s per user testing)
+const CROSSFADE_MS = 800; // 2. the mark dissolves as "Alloy" / "Mentors" fades in, in place — no icon lockup
+const SETTLE_TEXT = 550;  // 3. brief hold on the finished wordmark before the reveal
+const FADE_MS = 900;      // uniform fade of the whole overlay to reveal the app — no sweep, no stagger
 
 /**
- * Cold-launch brand moment — four sequential beats:
+ * Cold-launch brand moment — three beats:
  *
- * 1. Opens on the big "A" mark, dead-center. Holds 1.5s.
- * 2. The mark shrinks in place (still centered) — no lateral motion during
- *    the shrink itself.
- * 3. Only once shrunk does it slide left; the wordmark slides out from the
- *    mark's position at the same time — "lloy" (gray, continuing the upper
- *    A) and "entors" (orange, continuing the lower M). The mark + both text
- *    lines are laid out as ONE bounding-box group and that whole group is
- *    what's centered on screen (not just the mark) — the group's combined
- *    left/right extent is computed from the actual measured text widths, so
- *    it's centered regardless of exact font metrics.
- * 4. Brief settle, then the ENTIRE overlay (background + mark + text as one
- *    unit — a single live Skia canvas, not a captured picture) fades
- *    uniformly to reveal the app underneath. No spatial sweep/stagger.
+ * 1. Opens on the big "A" mark, dead-center. Holds 1.8s.
+ * 2. The mark crossfades directly into plain two-line wordmark text —
+ *    "Alloy" (gray) over "Mentors" (orange), both spelled out in full,
+ *    left-aligned to each other, sized to match the mark's own letterforms.
+ *    No icon remains on screen — user testing found the icon+wordmark/letter-
+ *    continuation reads as confusing; plain text alone is clearer.
+ * 3. Brief settle, then the ENTIRE overlay (background + text as one unit —
+ *    a single live Skia canvas, not a captured picture) fades uniformly to
+ *    reveal the app underneath. No spatial sweep/stagger.
  *
  * Rendering a single persistent Canvas for the whole sequence (rather than
- * swapping to a captured-snapshot tile grid at the end) removes the earlier
- * flicker at its root: there is no unmount/remount transition and nothing to
- * decode asynchronously — the same canvas that has been painting the settled
- * lockup simply becomes transparent.
+ * swapping to a captured-snapshot tile grid at the end) avoids any
+ * unmount/remount transition and nothing to decode asynchronously — the same
+ * canvas that has been painting the settled wordmark simply becomes
+ * transparent.
  *
  * Lives above the router Stack (see app/_layout.tsx) so the destination is
  * real and already loaded by the time the fade reaches it. Respects Reduce
@@ -68,55 +64,30 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const calledDone = useRef(false);
 
   const markImage = useImage(require('@/assets/images/splash-icon.png'));
-  const lloyFont = useFont(require('@expo-google-fonts/inter/900Black/Inter_900Black.ttf'), LLOY_SIZE);
-  const entorsFont = useFont(require('@expo-google-fonts/inter/900Black/Inter_900Black.ttf'), ENTORS_SIZE);
+  const alloyFont = useFont(require('@expo-google-fonts/inter/900Black/Inter_900Black.ttf'), WORD_SIZE);
+  const mentorsFont = useFont(require('@expo-google-fonts/inter/900Black/Inter_900Black.ttf'), WORD_SIZE);
 
   const cx = W / 2;
   const cy = H / 2;
-  const ready = !!markImage && !!lloyFont && !!entorsFont;
+  const ready = !!markImage && !!alloyFont && !!mentorsFont;
 
-  const lloyW = lloyFont ? lloyFont.getTextWidth('lloy') : MARK_FINAL * 0.7;
-  const entorsW = entorsFont ? entorsFont.getTextWidth('entors') : MARK_FINAL * 1.3;
+  const alloyW = alloyFont ? alloyFont.getTextWidth('Alloy') : WORD_SIZE * 2.1;
+  const mentorsW = mentorsFont ? mentorsFont.getTextWidth('Mentors') : WORD_SIZE * 3.1;
 
-  // ---- Group-centered geometry (measured from splash-icon.png) -----------
-  // The mark art does NOT fill its MARK_FINAL box — its opaque content sits
-  // at x∈[0.16, 0.839] of the box; the gray "A" strokes reach ~0.62 of the
-  // box at the "lloy" baseline height, and the orange "M" right leg reaches
-  // ~0.839. So each line is placed just RIGHT of the actual stroke it
-  // continues from (A→lloy, M→entors) with a fixed tuck. That clearance is
-  // `textXRel − strokeRight` (= TUCK) and is independent of font metrics AND
-  // of the centering offset — text and mark both shift by the same offsetX —
-  // so the letters are guaranteed clear of the mark no matter the measured
-  // text width. The group's REAL visual bounding box (mark content-left →
-  // widest text-right) is then centered on screen.
-  const MARK_CONTENT_L = MARK_FINAL * 0.16;
-  const MARK_CONTENT_R = MARK_FINAL * 0.839;
-  const A_RIGHT_AT_LLOY = MARK_FINAL * 0.62; // gray A's right edge at the lloy line
-  const M_RIGHT = MARK_FINAL * 0.839;        // orange M's right leg
-  const TUCK = 12;                            // gap from stroke edge to text
+  // Two lines, left-aligned to EACH OTHER (not to center), the pair centered
+  // as one block on screen — matches the mockup exactly.
+  const blockW = Math.max(alloyW, mentorsW);
+  const textLeft = cx - blockW / 2;
 
-  const markLeftRel = 0;
-  const lloyXRel = A_RIGHT_AT_LLOY + TUCK;   // "lloy" begins just right of the A
-  const entorsXRel = M_RIGHT + TUCK;         // "entors" begins just right of the M
-
-  const groupLeft = MARK_CONTENT_L; // leftmost visible thing is the mark art
-  const groupRight = Math.max(MARK_CONTENT_R, lloyXRel + lloyW, entorsXRel + entorsW);
-  const groupCenterRel = (groupLeft + groupRight) / 2;
-  const offsetX = cx - groupCenterRel;
-
-  const markCXFinal = markLeftRel + MARK_FINAL / 2 + offsetX;
-  const lloyXFinal = lloyXRel + offsetX;
-  const entorsXFinal = entorsXRel + offsetX;
-  const lloyBaseline = cy - MARK_FINAL * 0.22;    // sits at the gray A's vertical center
-  const entorsBaseline = cy + MARK_FINAL * 0.166; // sits at the orange M's vertical center — mirrors lloy's
-                                                  // offset from the A, so "entors" is BESIDE the M (to the
-                                                  // right of the mark) instead of dangling below it
+  // Standard Inter Black ascent ratio (~0.78 of the em) to vertically center
+  // the two-line block around cy using baseline coordinates.
+  const totalH = WORD_SIZE * 2 + LINE_GAP;
+  const blockTop = cy - totalH / 2;
+  const alloyBaseline = blockTop + WORD_SIZE * 0.78;
+  const mentorsBaseline = alloyBaseline + WORD_SIZE + LINE_GAP;
 
   // ---- Animated state -----------------------------------------------------
-  const markSize = useSharedValue(MARK_BIG);
-  const markCX = useSharedValue(cx);
-  const lloyX = useSharedValue(cx);   // text starts AT the mark's (pre-move) position — "slides out from the logo"
-  const entorsX = useSharedValue(cx);
+  const markOpacity = useSharedValue(1);
   const textOpacity = useSharedValue(0);
   const overlayOpacity = useSharedValue(1);
 
@@ -134,10 +105,7 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       if (cancelled) return;
 
       if (reduced) {
-        markSize.value = MARK_FINAL;
-        markCX.value = markCXFinal;
-        lloyX.value = lloyXFinal;
-        entorsX.value = entorsXFinal;
+        markOpacity.value = 0;
         textOpacity.value = 1;
         overlayOpacity.value = withDelay(700, withTiming(0, { duration: 400 }, (d) => {
           if (d) runOnJS(finish)();
@@ -147,19 +115,12 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
 
       const ease = Easing.out(Easing.cubic);
 
-      // Beat 2 — shrink in place (markCX untouched, stays at cx).
-      markSize.value = withDelay(HOLD_BIG, withTiming(MARK_FINAL, { duration: SHRINK_MS, easing: ease }));
+      // Beat 2 — crossfade: mark dissolves, wordmark fades in, in place.
+      markOpacity.value = withDelay(HOLD_BIG, withTiming(0, { duration: CROSSFADE_MS, easing: ease }));
+      textOpacity.value = withDelay(HOLD_BIG, withTiming(1, { duration: CROSSFADE_MS, easing: ease }));
 
-      // Beat 3 — only after the shrink completes: slide left while the
-      // wordmark slides out from the mark's position, in sync.
-      const moveDelay = HOLD_BIG + SHRINK_MS;
-      markCX.value = withDelay(moveDelay, withTiming(markCXFinal, { duration: MOVE_MS, easing: ease }));
-      lloyX.value = withDelay(moveDelay, withTiming(lloyXFinal, { duration: MOVE_MS, easing: ease }));
-      entorsX.value = withDelay(moveDelay, withTiming(entorsXFinal, { duration: MOVE_MS, easing: ease }));
-      textOpacity.value = withDelay(moveDelay, withTiming(1, { duration: MOVE_MS, easing: ease }));
-
-      // Beat 4 — settle, then a single uniform fade (no sweep/stagger).
-      const fadeDelay = moveDelay + MOVE_MS + SETTLE_TEXT;
+      // Beat 3 — settle, then a single uniform fade (no sweep/stagger).
+      const fadeDelay = HOLD_BIG + CROSSFADE_MS + SETTLE_TEXT;
       overlayOpacity.value = withDelay(
         fadeDelay,
         withTiming(0, { duration: FADE_MS, easing: Easing.in(Easing.cubic) }, (d) => {
@@ -173,12 +134,8 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   }, [ready]);
 
   // Skia-driven props.
-  const mSize = useDerivedValue(() => markSize.value);
-  const mX = useDerivedValue(() => markCX.value - markSize.value / 2);
-  const mY = useDerivedValue(() => cy - markSize.value / 2);
-  const lloyXd = useDerivedValue(() => lloyX.value);
-  const entorsXd = useDerivedValue(() => entorsX.value);
-  const textOp = useDerivedValue(() => textOpacity.value);
+  const mOp = useDerivedValue(() => markOpacity.value);
+  const tOp = useDerivedValue(() => textOpacity.value);
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
@@ -193,10 +150,19 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
         <Rect x={0} y={0} width={W} height={H} color={PINE} />
         {ready && (
           <>
-            <SkiaImage image={markImage} x={mX} y={mY} width={mSize} height={mSize} fit="contain" />
-            <Group opacity={textOp}>
-              <SkiaText text="lloy" x={lloyXd} y={lloyBaseline} font={lloyFont} color={SILVER} />
-              <SkiaText text="entors" x={entorsXd} y={entorsBaseline} font={entorsFont} color={CLAY} />
+            <Group opacity={mOp}>
+              <SkiaImage
+                image={markImage}
+                x={cx - MARK_BIG / 2}
+                y={cy - MARK_BIG / 2}
+                width={MARK_BIG}
+                height={MARK_BIG}
+                fit="contain"
+              />
+            </Group>
+            <Group opacity={tOp}>
+              <SkiaText text="Alloy" x={textLeft} y={alloyBaseline} font={alloyFont} color={SILVER} />
+              <SkiaText text="Mentors" x={textLeft} y={mentorsBaseline} font={mentorsFont} color={CLAY} />
             </Group>
           </>
         )}

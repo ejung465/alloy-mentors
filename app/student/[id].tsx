@@ -224,7 +224,7 @@ export default function StudentProgressScreen() {
   const initials = name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
   const age = ageFrom(student?.birthday);
   const hasAllergy = student?.allergies && String(student.allergies).toLowerCase() !== 'none';
-  const goalPct = goal ? Math.round((goal.completed_checkpoints / goal.target_checkpoints) * 100) : 0;
+  const goalPct = goal && goal.target_checkpoints > 0 ? Math.round((goal.completed_checkpoints / goal.target_checkpoints) * 100) : 0;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>

@@ -464,7 +464,7 @@ export default function DashboardScreen() {
                 <View style={{ marginBottom: 24, gap: 10 }}>
                   {myStudents.map(({ student, goal }) => {
                     const initials = student.full_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
-                    const pct = goal ? Math.round((goal.completed_checkpoints / goal.target_checkpoints) * 100) : 0;
+                    const pct = goal && goal.target_checkpoints > 0 ? Math.round((goal.completed_checkpoints / goal.target_checkpoints) * 100) : 0;
                     return (
                       <AnimPress key={student.id} onPress={() => router.push(`/student/${student.id}`)}>
                         <View style={styles.studentRow}>
