@@ -30,13 +30,12 @@ const WORD_SIZE = Math.round(MARK_FINAL * 0.34); // BOTH lines the same size now
 const LINE_PITCH = Math.round(WORD_SIZE * 1.08);  // baseline-to-baseline distance
 const ICON_GAP = 14; // gap between the mark's content edge and the wordmark block
 
-// Timeline (ms from mount) — five sequential beats, not overlapping:
-const HOLD_BIG = 1800;    // 1. hold on the big, centered "A" (+0.3s per user testing)
-const SHRINK_MS = 700;    // 2. shrinks in place (still centered) — no horizontal motion yet
-const MOVE_MS = 1000;     // 3. THEN slides left while the wordmark slides out from the mark
-const SETTLE_TEXT = 250;  // 4. brief hold on the finished, centered lockup
-const SLIDE_OUT_MS = 550; // 5a. EXPERIMENT: the settled lockup slides right first...
-const FADE_MS = 700;      // 5b. ...THEN fades to reveal the app (sequential, not concurrent)
+// Timeline (ms from mount) — four sequential beats, not overlapping:
+const HOLD_BIG = 1800;   // 1. hold on the big, centered "A" (+0.3s per user testing)
+const SHRINK_MS = 700;   // 2. shrinks in place (still centered) — no horizontal motion yet
+const MOVE_MS = 1000;    // 3. THEN slides left while the wordmark slides out from the mark
+const SETTLE_TEXT = 250; // 4. brief hold on the finished, centered lockup
+const FADE_MS = 900;     // uniform fade of the whole overlay to reveal the app
 
 /**
  * Cold-launch brand moment — five sequential beats:
@@ -51,11 +50,9 @@ const FADE_MS = 700;      // 5b. ...THEN fades to reveal the app (sequential, no
  *    group (both horizontally AND vertically) and that whole group is what's
  *    centered on screen — computed from actual measured text metrics, so it
  *    holds regardless of exact font metrics.
- * 4. Brief settle on the finished lockup.
- * 5. EXPERIMENT (per user request): instead of dissolving in place, the
- *    whole overlay first slides right (opacity held at 1 throughout the
- *    slide — nothing fades yet), and only once that slide finishes does the
- *    reveal fade begin. Two sequential motions, not simultaneous.
+ * 4. Brief settle, then the ENTIRE overlay (background + mark + text as one
+ *    unit — a single live Skia canvas, not a captured picture) fades
+ *    uniformly to reveal the app underneath.
  *
  * Rendering a single persistent Canvas for the whole sequence (rather than
  * swapping to a captured-snapshot tile grid at the end) removes an earlier
@@ -116,7 +113,6 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const markCX = useSharedValue(cx);
   const textX = useSharedValue(cx); // both lines slide out together from the mark's (pre-move) position
   const textOpacity = useSharedValue(0);
-  const overlayTX = useSharedValue(0);
   const overlayOpacity = useSharedValue(1);
 
   const finish = () => {
@@ -155,17 +151,12 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       textX.value = withDelay(moveDelay, withTiming(textXFinal, { duration: MOVE_MS, easing: ease }));
       textOpacity.value = withDelay(moveDelay, withTiming(1, { duration: MOVE_MS, easing: ease }));
 
-      // Beat 5 — EXPERIMENT: slide the whole settled lockup right (opacity
-      // stays at 1 the entire slide), and only once that finishes start the
-      // fade. Sequential — not blended together.
-      const slideDelay = moveDelay + MOVE_MS + SETTLE_TEXT;
-      overlayTX.value = withDelay(
-        slideDelay,
-        withTiming(W * 0.6, { duration: SLIDE_OUT_MS, easing: Easing.in(Easing.cubic) }, (slid) => {
-          if (!slid) return;
-          overlayOpacity.value = withTiming(0, { duration: FADE_MS, easing: Easing.in(Easing.cubic) }, (faded) => {
-            if (faded) runOnJS(finish)();
-          });
+      // Beat 4 — settle, then a single uniform fade.
+      const fadeDelay = moveDelay + MOVE_MS + SETTLE_TEXT;
+      overlayOpacity.value = withDelay(
+        fadeDelay,
+        withTiming(0, { duration: FADE_MS, easing: Easing.in(Easing.cubic) }, (d) => {
+          if (d) runOnJS(finish)();
         })
       );
     });
@@ -181,10 +172,7 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const textXd = useDerivedValue(() => textX.value);
   const textOp = useDerivedValue(() => textOpacity.value);
 
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: overlayOpacity.value,
-    transform: [{ translateX: overlayTX.value }],
-  }));
+  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
   // Always the same shell — Animated.View wrapping one Canvas — for the
   // entire lifetime of the component, including before assets finish
