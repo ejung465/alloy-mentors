@@ -15,6 +15,12 @@ import { useUser } from '@/contexts/UserContext';
 import {
   roleLabel, roleColor, canManageOrg, canCreateEvents, VOLUNTEER_ROLES, ASSIGNABLE_ROLES, type UserRole,
 } from '@/lib/roles';
+import { checkAndAwardBadges } from '@/lib/badges';
+
+const logAudit = (organizationId: string | null | undefined, actorId: string | undefined, action: string, targetType: string, targetId: string, details?: Record<string, any>) => {
+  if (!organizationId || !actorId) return;
+  supabase.from('audit_log').insert({ organization_id: organizationId, actor_id: actorId, action, target_type: targetType, target_id: targetId, details: details ?? {} }).then(() => {});
+};
 
 // Animated press
 function AnimPress({ children, onPress, style }: any) {
@@ -111,6 +117,9 @@ export default function AdminDashboard() {
     } else {
       // Reflect immediately, then reconcile all stats (incl. Total Hrs) from source.
       setLogs(prev => prev.map(l => l.id === logId ? { ...l, status: decision } : l));
+      const log = logs.find(l => l.id === logId);
+      logAudit(org?.id, user?.id, `hours.${decision}`, 'hours_log', logId, { mentor_id: log?.mentor_id, hours: log?.hours });
+      if (decision === 'approved' && log?.mentor_id) checkAndAwardBadges(log.mentor_id).catch(() => {});
       await fetchData();
     }
     setUpdating(null);
@@ -153,6 +162,7 @@ export default function AdminDashboard() {
     setSavingRole(false);
     if (error) { Alert.alert('Error', error.message); return; }
     setAllUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, ...patch } : u));
+    logAudit(org?.id, profile?.id, 'user.role_changed', 'user', editUser.id, { from: editUser.role, to: newRole });
     setEditUser(null);
   };
 

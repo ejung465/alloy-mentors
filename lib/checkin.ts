@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { VOLUNTEER_ROLES } from '@/lib/roles';
+import { checkAndAwardBadges } from '@/lib/badges';
 
 export type Student = {
   id: string;
@@ -208,10 +209,12 @@ export async function listSessionAttendance(sessionId: string): Promise<Attendan
 }
 
 export async function checkInVolunteer(sessionId: string, volunteerId: string, by?: string | null) {
-  return supabase.from('session_attendance').upsert(
+  const result = await supabase.from('session_attendance').upsert(
     { session_id: sessionId, kind: 'volunteer', volunteer_id: volunteerId, checked_in_by: by ?? null },
     { onConflict: 'session_id,volunteer_id' }
   );
+  if (!result.error) checkAndAwardBadges(volunteerId).catch(() => {});
+  return result;
 }
 
 /**

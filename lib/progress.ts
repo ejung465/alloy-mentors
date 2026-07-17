@@ -114,6 +114,9 @@ export async function upsertSkill(input: {
 // ── Growth timeline (enriched session notes) ──────────────────────────────────
 export type Marker = 'breakthrough' | 'progress' | 'struggled' | 'milestone';
 
+/** A student's self-reported reaction to a timeline entry (student_feedback). */
+export type StudentReaction = 'got_it' | 'confused' | 'in_between';
+
 export type TimelineEntry = {
   id: string;
   student_id: string;
@@ -125,15 +128,25 @@ export type TimelineEntry = {
   marker: Marker | null;
   goal_id: string | null;
   created_at: string;
+  student_reaction: StudentReaction | null;
 };
 
 export async function listTimeline(studentId: string): Promise<TimelineEntry[]> {
   const { data } = await supabase
     .from('student_notes')
-    .select('id, student_id, session_id, author_id, author_name, title, content, marker, goal_id, created_at')
+    .select('id, student_id, session_id, author_id, author_name, title, content, marker, goal_id, created_at, student_reaction')
     .eq('student_id', studentId)
     .order('created_at', { ascending: false });
   return (data as TimelineEntry[]) ?? [];
+}
+
+/**
+ * Record (or clear, with null) the student's reaction to a timeline entry.
+ * Goes through a SECURITY DEFINER RPC (migration 0028) because the student is
+ * not the note's author and RLS blocks a direct update.
+ */
+export async function setStudentReaction(noteId: string, reaction: StudentReaction | null) {
+  return supabase.rpc('set_student_reaction', { p_note_id: noteId, p_reaction: reaction });
 }
 
 /**
@@ -167,6 +180,20 @@ export async function logProgress(input: {
     if (gErr) return { error: gErr };
   }
   return { error: null };
+}
+
+// ── Attendance history (for the student self-view) ────────────────────────────
+export type AttendanceVisit = { id: string; checked_in_at: string; session_id: string | null };
+
+/** A student's own check-in history, most-recent first (RLS: linked student only). */
+export async function listStudentAttendance(studentId: string): Promise<AttendanceVisit[]> {
+  const { data } = await supabase
+    .from('session_attendance')
+    .select('id, checked_in_at, session_id')
+    .eq('kind', 'student')
+    .eq('student_id', studentId)
+    .order('checked_in_at', { ascending: false });
+  return (data as AttendanceVisit[]) ?? [];
 }
 
 // ── Single student loader ─────────────────────────────────────────────────────

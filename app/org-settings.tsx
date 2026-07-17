@@ -12,11 +12,15 @@ import { supabase } from '@/lib/supabase';
 import { useUser } from '@/contexts/UserContext';
 import { canManageOrg } from '@/lib/roles';
 import { FEATURES, FEATURE_KEYS, featureEnabled, type FeatureKey } from '@/lib/features';
+import { suggestHarmonies, checkAccessibility, normalizeHex, type HarmonySuggestion } from '@/lib/colorHarmony';
 
 const PINE = '#165B74';
 const PINE_MID = '#2C7C96';
 const CREAM = '#F4F6F6';
 const INK = '#22271F';
+const GOLD = '#B08A3E';
+const DEFAULT_PRIMARY = '#165B74';
+const DEFAULT_SECONDARY = '#C5642D';
 
 export default function OrgSettingsScreen() {
   const router = useRouter();
@@ -36,6 +40,9 @@ export default function OrgSettingsScreen() {
   const [atRiskWeeks, setAtRiskWeeks] = useState(0);
   const [signerName, setSignerName] = useState('');
   const [signerRole, setSignerRole] = useState('');
+  const [primaryColor, setPrimaryColor] = useState(DEFAULT_PRIMARY);
+  const [secondaryColor, setSecondaryColor] = useState(DEFAULT_SECONDARY);
+  const [harmonies, setHarmonies] = useState<HarmonySuggestion[]>(() => suggestHarmonies(DEFAULT_PRIMARY));
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
@@ -43,13 +50,18 @@ export default function OrgSettingsScreen() {
       if (!org?.id) return;
       const { data } = await supabase
         .from('organizations')
-        .select('member_code, student_code, at_risk_weeks, hours_signer_name, hours_signer_role')
+        .select('member_code, student_code, at_risk_weeks, hours_signer_name, hours_signer_role, primary_color, secondary_color')
         .eq('id', org.id)
         .maybeSingle();
       setCodes({ member: data?.member_code ?? null, student: data?.student_code ?? null });
       setAtRiskWeeks(data?.at_risk_weeks ?? 0);
       setSignerName(data?.hours_signer_name ?? '');
       setSignerRole(data?.hours_signer_role ?? '');
+      const loadedPrimary = data?.primary_color ?? DEFAULT_PRIMARY;
+      const loadedSecondary = data?.secondary_color ?? DEFAULT_SECONDARY;
+      setPrimaryColor(loadedPrimary);
+      setSecondaryColor(loadedSecondary);
+      setHarmonies(suggestHarmonies(loadedPrimary));
       setLoading(false);
     })();
   }, [org?.id]);
@@ -95,6 +107,8 @@ export default function OrgSettingsScreen() {
         at_risk_weeks: atRiskWeeks,
         hours_signer_name: signerName.trim() || null,
         hours_signer_role: signerRole.trim() || null,
+        primary_color: primaryColor,
+        secondary_color: secondaryColor,
       })
       .eq('id', org.id);
     setSaving(false);
@@ -105,6 +119,23 @@ export default function OrgSettingsScreen() {
   };
 
   const flip = (k: FeatureKey) => { setDirty(true); setToggles((t) => ({ ...t, [k]: !t[k] })); };
+
+  const onPrimaryChange = (text: string) => {
+    setDirty(true);
+    setPrimaryColor(text);
+    const norm = normalizeHex(text);
+    if (norm) setHarmonies(suggestHarmonies(norm));
+  };
+
+  const applyHarmony = (h: HarmonySuggestion) => {
+    setDirty(true);
+    setPrimaryColor(h.primary);
+    setSecondaryColor(h.secondary);
+  };
+
+  const primaryValid = normalizeHex(primaryColor);
+  const secondaryValid = normalizeHex(secondaryColor);
+  const a11y = checkAccessibility(primaryColor, secondaryColor);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -141,6 +172,27 @@ export default function OrgSettingsScreen() {
             ))}
           </>
         )}
+
+        {/* ── Admin tools ── */}
+        <Text style={[styles.section, { marginTop: 26 }]}>ADMIN TOOLS</Text>
+        <Text style={styles.sectionHelp}>Oversight, imports, and reporting for leadership.</Text>
+        <View style={styles.toolGrid}>
+          {([
+            ['shield-checkmark-outline', 'Chat oversight', 'Review reports & DMs', '/admin-chat-viewer'],
+            ['bar-chart-outline', 'Analytics', 'Hours, retention & trends', '/admin-analytics'],
+            ['cloud-upload-outline', 'Import roster', 'Bulk-add students via CSV', '/import-students'],
+            ['list-outline', 'Audit log', 'Who changed what, when', '/audit-log'],
+            ['star-outline', 'Upgrade to Pro', 'Manage your subscription', '/upgrade'],
+          ] as const).map(([icon, label, sub, href]) => (
+            <TouchableOpacity key={href} style={styles.toolCell} activeOpacity={0.85} onPress={() => router.push(href as any)}>
+              <View style={styles.toolIcon}>
+                <Ionicons name={icon as any} size={17} color={PINE_MID} />
+              </View>
+              <Text style={styles.toolLabel}>{label}</Text>
+              <Text style={styles.toolSub}>{sub}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* ── Features ── */}
         <Text style={[styles.section, { marginTop: 26 }]}>FEATURES</Text>
@@ -238,6 +290,66 @@ export default function OrgSettingsScreen() {
           </View>
         </View>
 
+        {/* ── Branding ── */}
+        <Text style={[styles.section, { marginTop: 26 }]}>BRANDING</Text>
+        <Text style={styles.sectionHelp}>
+          Your organization's colors. Type a hex value, or tap a suggested pairing to fill both at once.
+        </Text>
+        <View style={styles.nounGrid}>
+          {([
+            ['PRIMARY', primaryColor, onPrimaryChange, primaryValid],
+            ['SECONDARY', secondaryColor, (t: string) => { setDirty(true); setSecondaryColor(t); }, secondaryValid],
+          ] as const).map(([label, value, setter, valid], i) => (
+            <View key={i} style={styles.nounCell}>
+              <Text style={styles.nounLabel}>{label}</Text>
+              <View style={styles.colorRow}>
+                <View style={[styles.swatch, { backgroundColor: valid ?? 'transparent', borderColor: valid ? 'rgba(34,39,31,0.12)' : GOLD }]} />
+                <TextInput
+                  style={styles.colorInput}
+                  value={value}
+                  onChangeText={setter}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  placeholder="#000000"
+                  maxLength={7}
+                />
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.chipRow}>
+          {harmonies.map((h) => (
+            <TouchableOpacity key={h.label} style={styles.chip} onPress={() => applyHarmony(h)} activeOpacity={0.85}>
+              <View style={styles.chipSwatches}>
+                <View style={[styles.chipSwatch, { backgroundColor: h.primary }]} />
+                <View style={[styles.chipSwatch, { backgroundColor: h.secondary, marginLeft: -6 }]} />
+              </View>
+              <Text style={styles.chipTxt}>{h.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {!a11y.ok && (
+          <View style={styles.warnBanner}>
+            <Ionicons name="alert-circle-outline" size={18} color={GOLD} style={{ marginTop: 1 }} />
+            <View style={{ flex: 1 }}>
+              {a11y.warnings.map((w, i) => (
+                <Text key={i} style={styles.warnTxt}>{w}</Text>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Contained preview — does not re-theme the rest of the app. */}
+        <View style={[styles.previewCard, { backgroundColor: primaryValid ?? DEFAULT_PRIMARY }]}>
+          <Text style={styles.previewEyebrow}>{(org?.name ?? 'Your org').toUpperCase()}</Text>
+          <Text style={styles.previewTitle}>Preview</Text>
+          <View style={[styles.previewBtn, { backgroundColor: secondaryValid ?? DEFAULT_SECONDARY }]}>
+            <Text style={styles.previewBtnTxt}>Primary action</Text>
+          </View>
+        </View>
+
         <TouchableOpacity onPress={save} disabled={saving || !dirty} style={[styles.saveBtn, (saving || !dirty) && { opacity: 0.5 }]} activeOpacity={0.9}>
           <Text style={styles.saveTxt}>{saving ? 'Saving…' : 'Save changes'}</Text>
         </TouchableOpacity>
@@ -270,6 +382,12 @@ const styles = StyleSheet.create({
   featureLabel: { fontFamily: font.semibold, fontSize: 14.5, color: INK },
   featureDesc: { fontFamily: font.regular, fontSize: 12, color: 'rgba(34,39,31,0.5)', lineHeight: 17, marginTop: 2 },
 
+  toolGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  toolCell: { width: '48%', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 14, padding: 12 },
+  toolIcon: { width: 30, height: 30, borderRadius: 10, backgroundColor: 'rgba(44,124,150,0.10)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.22)', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  toolLabel: { fontFamily: font.semibold, fontSize: 13.5, color: INK },
+  toolSub: { fontFamily: font.regular, fontSize: 11, color: 'rgba(34,39,31,0.45)', marginTop: 2, lineHeight: 15 },
+
   nounGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   nounCell: { width: '48%', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 14, padding: 12 },
   nounLabel: { fontFamily: font.semibold, fontSize: 9.5, color: 'rgba(34,39,31,0.45)', letterSpacing: 1 },
@@ -278,6 +396,25 @@ const styles = StyleSheet.create({
   stepperRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 18, paddingVertical: 14 },
   stepperBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(44,124,150,0.10)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', alignItems: 'center', justifyContent: 'center' },
   stepperVal: { fontFamily: font.bold, fontSize: 16, color: INK, minWidth: 80, textAlign: 'center' },
+
+  colorRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 10 },
+  swatch: { width: 26, height: 26, borderRadius: 8, borderWidth: 1 },
+  colorInput: { flex: 1, fontFamily: font.bold, fontSize: 16, color: INK, padding: 0, letterSpacing: 0.5 },
+
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', borderRadius: 999, paddingLeft: 8, paddingRight: 14, paddingVertical: 7 },
+  chipSwatches: { flexDirection: 'row', alignItems: 'center' },
+  chipSwatch: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: '#FFFFFF' },
+  chipTxt: { fontFamily: font.semibold, fontSize: 12.5, color: INK },
+
+  warnBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: 'rgba(176,138,62,0.10)', borderWidth: 1, borderColor: 'rgba(176,138,62,0.32)', borderRadius: 14, padding: 14, marginTop: 12 },
+  warnTxt: { fontFamily: font.medium, fontSize: 12.5, color: GOLD, lineHeight: 18 },
+
+  previewCard: { borderRadius: 18, padding: 18, marginTop: 14 },
+  previewEyebrow: { fontFamily: font.bold, fontSize: 10, color: 'rgba(255,255,255,0.7)', letterSpacing: 2 },
+  previewTitle: { fontFamily: font.black, fontSize: 22, color: '#FFFFFF', letterSpacing: -0.6, marginTop: 4 },
+  previewBtn: { alignSelf: 'flex-start', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, marginTop: 14 },
+  previewBtnTxt: { fontFamily: font.bold, fontSize: 13.5, color: '#FFFFFF' },
 
   saveBtn: { backgroundColor: PINE, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 26 },
   saveTxt: { fontFamily: font.bold, fontSize: 15.5, color: CREAM },

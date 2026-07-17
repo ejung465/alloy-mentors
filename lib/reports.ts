@@ -109,6 +109,83 @@ export function buildStudentReportHtml(i: ReportInput): string {
   </body></html>`;
 }
 
+type HourVerificationInput = {
+  memberName: string;
+  orgName: string;
+  totalHours: number;
+  fromDate: string | null; // ISO of earliest approved log, or null if none
+  toDate: string | null;   // ISO of latest approved log, or null if none
+  signerName?: string | null; // organizations.hours_signer_name
+  signerRole?: string | null; // organizations.hours_signer_role
+  today: string; // pass in — Date formatting is done by the caller
+};
+
+/**
+ * The VOLUNTEER HOUR VERIFICATION CERTIFICATE — the official artifact a member
+ * hands to a school, court, or scholarship board to prove logged service hours.
+ * A leader "signs" it: their name renders in a cursive hand above the line and
+ * their role prints below it. If the org hasn't configured a signer, the org
+ * name stands in for the signature and no personal line is drawn.
+ */
+export function buildHourVerificationHtml(i: HourVerificationInput): string {
+  const name = esc(i.memberName || 'Volunteer');
+  const org = esc(i.orgName || 'the organization');
+  const hours = Number.isFinite(i.totalHours) ? i.totalHours : 0;
+  const range =
+    i.fromDate && i.toDate
+      ? `between <b>${esc(fmtDate(i.fromDate))}</b> and <b>${esc(fmtDate(i.toDate))}</b>`
+      : 'to date';
+  const signer = (i.signerName ?? '').trim();
+  const role = (i.signerRole ?? '').trim();
+
+  // Signature block: a real signer gets a cursive name over a line with their
+  // role beneath; with no signer we fall back to the org name and no line.
+  const signatureBlock = signer
+    ? `<div style="width:60%;">
+         <div style="font-style:italic;font-family:'Snell Roundhand','Brush Script MT','Apple Chancery',cursive,serif;font-size:34px;color:#1a1a1a;line-height:1;padding-bottom:6px;">${esc(signer)}</div>
+         <div style="border-top:1px solid ${INK};padding-top:7px;font-size:12.5px;color:${SAGE};">${role ? `— ${esc(role)}` : `— ${org}`}</div>
+       </div>`
+    : `<div style="width:60%;">
+         <div style="font-size:15px;font-weight:bold;color:${INK};padding-bottom:6px;">${org}</div>
+         <div style="border-top:1px solid ${INK};padding-top:7px;font-size:12.5px;color:${SAGE};">Authorized on behalf of ${org}</div>
+       </div>`;
+
+  return `
+  <html><head><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
+  <body style="font-family:Georgia,'Times New Roman',serif;color:${INK};margin:0;padding:56px 54px;">
+    <div style="border:2px solid ${PINE};border-radius:8px;padding:44px 46px;">
+      <div style="text-align:center;border-bottom:1px solid #CFC8B8;padding-bottom:20px;">
+        <div style="font-size:12px;letter-spacing:5px;color:${SAGE};">${esc(i.orgName.toUpperCase())}</div>
+        <div style="font-size:27px;font-weight:bold;margin-top:8px;letter-spacing:-0.5px;">Certificate of Volunteer Hours</div>
+        <div style="font-size:12px;color:${SAGE};margin-top:8px;">Issued ${esc(i.today)}</div>
+      </div>
+
+      <p style="font-size:15.5px;line-height:1.85;margin-top:30px;text-align:center;">
+        This certifies that<br/>
+        <span style="font-size:24px;font-weight:bold;color:${PINE};display:inline-block;margin:10px 0;">${name}</span><br/>
+        has completed <b>${hours}</b> verified volunteer ${hours === 1 ? 'hour' : 'hours'} with
+        <b>${org}</b> ${range}.
+      </p>
+
+      <div style="margin:28px auto;padding:22px;background:${PAPER};border-radius:8px;display:flex;justify-content:space-between;align-items:center;max-width:420px;">
+        <div style="font-size:13.5px;color:${SAGE};">Total Verified Hours</div>
+        <div style="font-size:38px;font-weight:bold;letter-spacing:-1px;color:${PINE};">${hours}</div>
+      </div>
+
+      <div style="margin-top:52px;display:flex;justify-content:space-between;align-items:flex-end;">
+        ${signatureBlock}
+        <div style="width:34%;text-align:right;font-size:11px;color:${SAGE};line-height:1.5;">
+          Verified by Alloy Mentors<br/>Issued ${esc(i.today)}
+        </div>
+      </div>
+
+      <p style="font-size:10.5px;color:${SAGE};text-align:center;margin-top:40px;border-top:1px solid #E7E0D2;padding-top:14px;">
+        Verified by Alloy Mentors · Hours are logged by members and approved by ${org} leadership.
+      </p>
+    </div>
+  </body></html>`;
+}
+
 /**
  * The GUARDIAN DIGEST — a warm, plain-language note home. No jargon, no metrics
  * tables; just "here's how your child is doing and what they worked on."

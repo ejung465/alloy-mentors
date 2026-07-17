@@ -39,6 +39,7 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="kiosk" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="add-student" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="import-students" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="students" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="my-pairing" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="my-qr" options={{ presentation: 'modal', headerShown: false }} />
@@ -46,6 +47,12 @@ export default function RootLayout() {
           <Stack.Screen name="edit-profile" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="org-tree" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="org-settings" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="data-export" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="admin-analytics" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="admin-chat-viewer" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="resources" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="audit-log" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="upgrade" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="admin" options={{ headerShown: false }} />
         </Stack>

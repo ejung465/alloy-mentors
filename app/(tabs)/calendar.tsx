@@ -2,13 +2,15 @@ import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Modal, TextInput, Alert, Linking, Platform, Image,
-  Dimensions, RefreshControl, Pressable,
+  Dimensions, RefreshControl, Pressable, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { colors } from '@/lib/theme';
 import { BlurView } from 'expo-blur';
+import * as Sharing from 'expo-sharing';
+import { File, Paths } from 'expo-file-system';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import { canCreateEvents } from '@/lib/roles';
@@ -20,6 +22,7 @@ import {
   getMyRsvp,
   setMyRsvp,
   getRsvpCoverage,
+  buildSessionsIcs,
   type SessionListItem,
   type RsvpCoverage,
 } from '@/lib/sessions';
@@ -187,7 +190,7 @@ function WheelPicker({
 export default function CalendarScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const router = useRouter();
-  const { user, profile } = useUser();
+  const { user, profile, org } = useUser();
   const canCreate = canCreateEvents(profile?.role);
   const { add, rsvp } = useLocalSearchParams<{ add?: string; rsvp?: string }>();
 
@@ -250,6 +253,9 @@ export default function CalendarScreen() {
   // ── Form state ────────────────────────────────────────────────────────────
   const [title,    setTitle]    = useState('');
   const [location, setLocation] = useState('');
+  // Repeats: 1 = "None" (single event), 2-12 = weekly for N weeks.
+  const [repeatWeeks, setRepeatWeeks] = useState(1);
+  const [exportingIcs, setExportingIcs] = useState(false);
 
   // Global toggle: 'wheels' | 'type'
   const [inputMode, setInputMode] = useState<'wheels'|'type'>('wheels');
@@ -380,7 +386,8 @@ export default function CalendarScreen() {
     setSelStart(TIME_SLOTS.includes(startStr) ? startStr : '10:00 AM');
     setSelDur('1 hr');
     setTouched(['duration', 'start']); // Makes 'End' the auto-computed field
-    
+    setRepeatWeeks(1);
+
     setShowAddEvent(true);
   };
 
@@ -461,19 +468,82 @@ export default function CalendarScreen() {
     }
 
     setCreating(true);
-    const { error } = await createSession({
-      title: title.trim(),
-      location: location.trim() || null,
-      startISO: start.toISOString(),
-      endISO: end.toISOString(),
-      organizationId: profile?.organization_id ?? null,
-      createdBy: profile?.id ?? null,
-    });
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const occurrences = Math.max(1, Math.min(12, repeatWeeks));
+    for (let i = 0; i < occurrences; i++) {
+      const occStart = new Date(start.getTime() + i * WEEK_MS);
+      const occEnd = new Date(end.getTime() + i * WEEK_MS);
+      const { error } = await createSession({
+        title: title.trim(),
+        location: location.trim() || null,
+        startISO: occStart.toISOString(),
+        endISO: occEnd.toISOString(),
+        organizationId: profile?.organization_id ?? null,
+        createdBy: profile?.id ?? null,
+      });
+      if (error) {
+        setCreating(false);
+        Alert.alert('Could not create event', i > 0 ? `${i} of ${occurrences} occurrences were created before this error: ${error.message}` : error.message);
+        await loadSessions();
+        return;
+      }
+    }
     setCreating(false);
-    if (error) { Alert.alert('Could not create event', error.message); return; }
     setShowAddEvent(false);
-    setTitle(''); setLocation('');
+    setTitle(''); setLocation(''); setRepeatWeeks(1);
     await loadSessions();
+  };
+
+  // ── Calendar export (.ics) — share via the OS share sheet ──────────────────
+  const shareIcs = async (ics: string, filename: string) => {
+    const file = new File(Paths.cache, filename);
+    if (file.exists) file.delete();
+    file.create();
+    file.write(ics);
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(file.uri, { UTI: 'com.apple.ical.ics', mimeType: 'text/calendar' });
+    } else {
+      Alert.alert('Saved', 'The calendar file was generated but sharing is unavailable on this device.');
+    }
+  };
+
+  const exportSessionToCalendar = async (session: SessionListItem) => {
+    setExportingIcs(true);
+    try {
+      const ics = buildSessionsIcs(
+        [{
+          id: session.id, title: session.title, description: session.description ?? null,
+          location: session.location, start_time: session.start_time, end_time: session.end_time,
+        }],
+        org?.name || 'Alloy Mentors'
+      );
+      await shareIcs(ics, `${session.title.replace(/[^a-z0-9]+/gi, '-').slice(0, 40) || 'session'}.ics`);
+    } catch (e: any) {
+      Alert.alert("Couldn't export", e?.message ?? 'Try again.');
+    } finally {
+      setExportingIcs(false);
+    }
+  };
+
+  const exportAllUpcomingToCalendar = async () => {
+    const now = Date.now();
+    const upcoming = sessions.filter((s) => s.endMs >= now);
+    if (upcoming.length === 0) { Alert.alert('Nothing to export', 'There are no upcoming sessions yet.'); return; }
+    setExportingIcs(true);
+    try {
+      const ics = buildSessionsIcs(
+        upcoming.map((s) => ({
+          id: s.id, title: s.title, description: s.description ?? null,
+          location: s.location, start_time: s.start_time, end_time: s.end_time,
+        })),
+        org?.name || 'Alloy Mentors'
+      );
+      await shareIcs(ics, `${(org?.name || 'alloy-mentors').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-schedule.ics`);
+    } catch (e: any) {
+      Alert.alert("Couldn't export", e?.message ?? 'Try again.');
+    } finally {
+      setExportingIcs(false);
+    }
   };
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -523,6 +593,10 @@ export default function CalendarScreen() {
             </View>
 
             <View style={{ flex: 1 }} />
+
+            <TouchableOpacity onPress={exportAllUpcomingToCalendar} style={styles.addBtn} activeOpacity={0.8} disabled={exportingIcs}>
+              {exportingIcs ? <ActivityIndicator size="small" color={colors.platinum} /> : <Ionicons name="calendar-outline" size={18} color={colors.platinum} />}
+            </TouchableOpacity>
 
             {canCreate && (
               <TouchableOpacity onPress={handleOpenAddEvent} style={styles.addBtn} activeOpacity={0.8}>
@@ -760,6 +834,20 @@ export default function CalendarScreen() {
                         <Text style={[styles.rsvpBtnTxt, detailRsvp === 'not_going' && { color: '#F4F6F6' }]}>Can't make it</Text>
                       </TouchableOpacity>
                     </View>
+
+                    <TouchableOpacity
+                      style={styles.icsBtn}
+                      activeOpacity={0.85}
+                      disabled={exportingIcs}
+                      onPress={() => exportSessionToCalendar(detail)}
+                    >
+                      {exportingIcs ? (
+                        <ActivityIndicator size="small" color="#2C7C96" />
+                      ) : (
+                        <Ionicons name="calendar-outline" size={16} color="#2C7C96" />
+                      )}
+                      <Text style={styles.icsBtnTxt}>Add to Calendar</Text>
+                    </TouchableOpacity>
                   </>
                 ) : null}
               </GlassCard>
@@ -930,12 +1018,42 @@ export default function CalendarScreen() {
               )}
             </View>
 
+            {/* Repeats */}
+            <View style={styles.fieldSection}>
+              <Text style={styles.fieldLabel}>Repeats</Text>
+              <View style={styles.repeatRow}>
+                <View>
+                  <Text style={styles.repeatLabel}>{repeatWeeks <= 1 ? 'None' : `Weekly · ${repeatWeeks} weeks`}</Text>
+                  <Text style={styles.repeatSub}>{repeatWeeks <= 1 ? 'A single event' : `Creates ${repeatWeeks} sessions, 7 days apart`}</Text>
+                </View>
+                <View style={styles.repeatStepper}>
+                  <TouchableOpacity
+                    onPress={() => setRepeatWeeks(w => Math.max(1, w - 1))}
+                    disabled={repeatWeeks <= 1}
+                    style={[styles.repeatStepBtn, repeatWeeks <= 1 && styles.repeatStepBtnDisabled]}
+                    activeOpacity={0.75}
+                  >
+                    <Ionicons name="remove" size={16} color="#2C7C96" />
+                  </TouchableOpacity>
+                  <Text style={styles.repeatValue}>{repeatWeeks}</Text>
+                  <TouchableOpacity
+                    onPress={() => setRepeatWeeks(w => Math.min(12, w + 1))}
+                    disabled={repeatWeeks >= 12}
+                    style={[styles.repeatStepBtn, repeatWeeks >= 12 && styles.repeatStepBtnDisabled]}
+                    activeOpacity={0.75}
+                  >
+                    <Ionicons name="add" size={16} color="#2C7C96" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
             <TouchableOpacity
               style={[styles.createBtn, creating && { opacity: 0.6 }]}
               disabled={creating}
               onPress={handleCreateEvent}
             >
-              <Text style={styles.createBtnTxt}>{creating ? 'Creating…' : 'Create Event'}</Text>
+              <Text style={styles.createBtnTxt}>{creating ? 'Creating…' : repeatWeeks > 1 ? `Create ${repeatWeeks} Events` : 'Create Event'}</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -1052,4 +1170,16 @@ const styles = StyleSheet.create({
   coverageFillGoing: { height:'100%', backgroundColor:'#2C7C96' },
   coverageFillNo: { height:'100%', backgroundColor:'#B15A4E' },
   coverageNote: { fontFamily:'Inter-Regular', fontSize:11.5, color:'rgba(34,39,31,0.5)', marginTop:8 },
+
+  icsBtn: { flexDirection:'row', alignItems:'center', justifyContent:'center', gap:8, marginTop:12, paddingVertical:13, borderRadius:14, borderWidth:1, borderColor:'rgba(44,124,150,0.3)', backgroundColor:'rgba(44,124,150,0.08)' },
+  icsBtnTxt: { fontFamily:'Inter-SemiBold', fontSize:13.5, color:'#2C7C96' },
+
+  // Repeat stepper
+  repeatRow: { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'rgba(196,196,196,0.12)', borderWidth:1, borderColor:'rgba(196,196,196,0.22)', borderRadius:16, paddingHorizontal:14, paddingVertical:12 },
+  repeatLabel: { fontFamily:'Inter-Medium', fontSize:14.5, color:'#22271F' },
+  repeatSub: { fontFamily:'Inter-Regular', fontSize:12, color:'rgba(34,39,31,0.45)', marginTop:2 },
+  repeatStepper: { flexDirection:'row', alignItems:'center', gap:14 },
+  repeatStepBtn: { width:30, height:30, borderRadius:15, backgroundColor:'rgba(44,124,150,0.12)', alignItems:'center', justifyContent:'center' },
+  repeatStepBtnDisabled: { opacity:0.35 },
+  repeatValue: { fontFamily:'Inter-Bold', fontSize:16, color:'#22271F', minWidth:20, textAlign:'center' },
 });

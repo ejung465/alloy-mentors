@@ -1,15 +1,32 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, RefreshControl, TouchableOpacity,
-  Modal, StyleSheet, Animated, Pressable, TextInput, KeyboardAvoidingView, Platform, Alert
+  Modal, StyleSheet, Animated, Pressable, TextInput, KeyboardAvoidingView, Platform, Alert,
+  Image, ActivityIndicator
 } from 'react-native';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { colors } from '@/lib/theme';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabase';
+import { canManageOrg } from '@/lib/roles';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+
+// Lazy-load expo-image-picker so the screen still renders if the native module
+// isn't in the current build (mirrors app/add-student.tsx).
+type ImagePickerModule = typeof import('expo-image-picker');
+let _imagePicker: ImagePickerModule | null | undefined;
+function getImagePicker(): ImagePickerModule | null {
+  if (_imagePicker !== undefined) return _imagePicker;
+  try {
+    _imagePicker = require('expo-image-picker') as ImagePickerModule;
+  } catch {
+    _imagePicker = null;
+  }
+  return _imagePicker;
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type ChatType = 'org' | 'dm' | 'group_chat';
@@ -43,8 +60,10 @@ function AnimPress({ children, onPress, style }: any) {
 // ── Main Screen ───────────────────────────────────────────────────────────────
 export default function ChatScreen() {
   const { profile, org } = useUser();
+  const router = useRouter();
   const membersLabel = org?.memberNounPlural || 'Members';
   const orgName = org?.name || 'your organization';
+  const isLeader = canManageOrg(profile?.role);
 
   // Directory
   const [orgUsers, setOrgUsers]     = useState<any[]>([]);
@@ -68,8 +87,30 @@ export default function ChatScreen() {
   const [msgAction, setMsgAction]     = useState<any | null>(null);
   const [editTarget, setEditTarget]   = useState<any | null>(null);
   const [editText, setEditText]       = useState('');
-  const [showReport, setShowReport]   = useState<{ msgId: string; content: string } | null>(null);
+  const [showReport, setShowReport]   = useState<{ msgId: string; content: string; senderId: string } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+
+  // Images
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageViewer, setImageViewer]       = useState<string | null>(null);
+
+  // Message search (within the open thread)
+  const [showSearch, setShowSearch]   = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [matchIds, setMatchIds]       = useState<string[]>([]);
+  const [matchIdx, setMatchIdx]       = useState(0);
+  const msgYRef = useRef<Record<string, number>>({});
+
+  // Incident reports I filed (for the "cancel report" banner)
+  const [myReports, setMyReports] = useState<any[]>([]);
+
+  // Targeted announcements (leadership, org channel)
+  const [showAnnounce, setShowAnnounce]     = useState(false);
+  const [announceText, setAnnounceText]     = useState('');
+  const [announceAudience, setAnnounceAudience] = useState<'everyone' | 'mentors' | 'students' | 'not_rsvp' | 'attended'>('everyone');
+  const [announceSession, setAnnounceSession]   = useState<string | null>(null);
+  const [sessions, setSessions]             = useState<any[]>([]);
+  const [sendingAnnounce, setSendingAnnounce] = useState(false);
 
   // Chat thread
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -93,6 +134,25 @@ export default function ChatScreen() {
       .select('blocker_id, blocked_id')
       .or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`);
     if (blocks) setBlockedIds(blocks.map((b: any) => (b.blocker_id === user.id ? b.blocked_id : b.blocker_id)));
+
+    // Incident reports I've filed that are still pending (drives the cancel banner).
+    const { data: reps } = await supabase
+      .from('chat_incident_reports')
+      .select('id, reported_user_id, status')
+      .eq('reporter_id', user.id)
+      .eq('status', 'pending');
+    setMyReports(reps || []);
+
+    // Upcoming + recent sessions, for targeting announcements.
+    if (profile?.organization_id) {
+      const { data: sess } = await supabase
+        .from('sessions')
+        .select('id, title, start_time')
+        .eq('organization_id', profile.organization_id)
+        .order('start_time', { ascending: false })
+        .limit(40);
+      setSessions(sess || []);
+    }
 
     let q = supabase.from('users').select('*').neq('id', user.id);
     if (profile?.organization_id) q = q.eq('organization_id', profile.organization_id);
@@ -184,6 +244,8 @@ export default function ChatScreen() {
   // ── Realtime subscription ───────────────────────────────────────────────────
   useEffect(() => {
     setTypingUsers({});
+    setShowSearch(false); setSearchQuery(''); setMatchIds([]);
+    msgYRef.current = {};
     if (!activeChat || !currentUser) { setMessages([]); setHasMore(true); return; }
 
     const loadReactions = async (ids: string[]) => {
@@ -300,6 +362,25 @@ export default function ChatScreen() {
     setLoadingMore(false);
   };
 
+  // ── Search matches within the open thread ────────────────────────────────
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) { setMatchIds([]); setMatchIdx(0); return; }
+    const ids = messages
+      .filter((m) => !m.deleted_at && !blockedIds.includes(m.sender_id) && (m.content || '').toLowerCase().includes(q))
+      .map((m) => m.id);
+    setMatchIds(ids);
+    setMatchIdx(0);
+    if (ids.length > 0) setTimeout(() => jumpToMessage(ids[ids.length - 1]), 60);
+  }, [searchQuery, messages, blockedIds]);
+
+  const stepMatch = (dir: 1 | -1) => {
+    if (matchIds.length === 0) return;
+    const next = (matchIdx + dir + matchIds.length) % matchIds.length;
+    setMatchIdx(next);
+    jumpToMessage(matchIds[next]);
+  };
+
   // ── Typing broadcast ────────────────────────────────────────────────────────
   const typingTimer = useRef<any>(null);
   const handleTyping = (text: string) => {
@@ -388,6 +469,114 @@ export default function ChatScreen() {
     }
   };
 
+  // ── Images ────────────────────────────────────────────────────────────────
+  const uploadChatImage = async (localUri: string): Promise<string | null> => {
+    if (!profile?.organization_id) return null;
+    try {
+      const res = await fetch(localUri);
+      const arrayBuffer = await res.arrayBuffer();
+      const ext = localUri.split('.').pop()?.split('?')[0] || 'jpg';
+      // Path MUST start with the org id — the storage RLS policy checks folder[1].
+      const path = `${profile.organization_id}/${currentUser.id}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from('chat-images')
+        .upload(path, arrayBuffer, { contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`, upsert: true });
+      if (error) { console.warn('[uploadChatImage]', error.message); return null; }
+      return supabase.storage.from('chat-images').getPublicUrl(path).data.publicUrl;
+    } catch (e: any) {
+      console.warn('[uploadChatImage] failed:', e?.message);
+      return null;
+    }
+  };
+
+  const pickAndSendImage = async () => {
+    if (!currentUser || !activeChat || uploadingImage) return;
+    const ImagePicker = getImagePicker();
+    if (!ImagePicker) {
+      Alert.alert('Photos unavailable', 'Sharing images needs a native rebuild (npx expo run:ios / run:android).');
+      return;
+    }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { Alert.alert('Permission needed', 'Allow photo library access to share an image.'); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.6, mediaTypes: ['images'] });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    setUploadingImage(true);
+    const url = await uploadChatImage(result.assets[0].uri);
+    if (!url) { setUploadingImage(false); Alert.alert('Upload failed', 'That image could not be uploaded. Please try again.'); return; }
+
+    const tempId = Math.random().toString(36).substring(7);
+    const optimistic: any = {
+      id: tempId, tempId, content: '', image_url: url,
+      sender_id: currentUser.id,
+      receiver_id: activeChat.type === 'dm' ? activeChat.id : null,
+      group_chat_id: activeChat.type === 'group_chat' ? activeChat.id : null,
+      created_at: new Date().toISOString(), status: 'sending',
+    };
+    setMessages((prev) => [...prev, optimistic]);
+    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 50);
+
+    const { data, error } = await supabase.from('messages').insert({
+      content: '', image_url: url, sender_id: currentUser.id,
+      receiver_id: activeChat.type === 'dm' ? activeChat.id : null,
+      group_chat_id: activeChat.type === 'group_chat' ? activeChat.id : null,
+      organization_id: profile?.organization_id ?? null,
+    }).select().single();
+    setUploadingImage(false);
+    if (error) setMessages((prev) => prev.map((m) => m.tempId === tempId ? { ...m, status: 'error' } : m));
+    else if (data) setMessages((prev) => prev.map((m) => m.tempId === tempId ? { ...data, status: 'sent' } : m));
+  };
+
+  // ── Pinned messages (leadership only) ────────────────────────────────────
+  const togglePin = async (msg: any) => {
+    setMsgAction(null);
+    if (!isLeader || !msg?.id || msg.tempId) return;
+    const nextPinned = !msg.pinned_at;
+    const stamp = new Date().toISOString();
+    // Optimistic
+    setMessages((prev) => prev.map((m) => (m.id === msg.id ? { ...m, pinned_at: nextPinned ? stamp : null } : m)));
+    const { error } = await supabase.rpc('set_message_pin', { p_message_id: msg.id, p_pinned: nextPinned });
+    if (error) {
+      setMessages((prev) => prev.map((m) => (m.id === msg.id ? { ...m, pinned_at: msg.pinned_at } : m)));
+      Alert.alert('Could not update pin', error.message);
+    }
+  };
+
+  const jumpToMessage = (id: string) => {
+    const y = msgYRef.current[id];
+    if (y != null) scrollViewRef.current?.scrollTo({ y: Math.max(y - 80, 0), animated: true });
+  };
+
+  // ── Targeted announcement (leadership, org channel) ──────────────────────
+  const sendAnnouncement = async () => {
+    if (!announceText.trim()) { Alert.alert('Required', 'Enter an announcement.'); return; }
+    if ((announceAudience === 'not_rsvp' || announceAudience === 'attended') && !announceSession) {
+      Alert.alert('Pick a session', 'This audience is based on a specific session.');
+      return;
+    }
+    setSendingAnnounce(true);
+    const { error } = await supabase.rpc('send_targeted_announcement', {
+      p_content: announceText.trim(),
+      p_audience: announceAudience,
+      p_session_id: announceSession,
+      p_image_url: null,
+    });
+    setSendingAnnounce(false);
+    if (error) { Alert.alert('Could not send', error.message); return; }
+    setShowAnnounce(false);
+    setAnnounceText('');
+    setAnnounceAudience('everyone');
+    setAnnounceSession(null);
+  };
+
+  // ── Cancel an incident report I filed (un-blocks, keeps report on file) ──
+  const cancelReport = async (reportId: string, reportedUserId: string) => {
+    const { error } = await supabase.rpc('cancel_chat_incident_report', { p_report_id: reportId });
+    if (error) { Alert.alert('Could not cancel', error.message); return; }
+    setMyReports((prev) => prev.filter((r) => r.id !== reportId));
+    setBlockedIds((prev) => prev.filter((id) => id !== reportedUserId));
+  };
+
   // ── Moderation ──────────────────────────────────────────────────────────────
   const blockUser = async (targetId: string) => {
     if (!currentUser) return;
@@ -425,12 +614,40 @@ export default function ChatScreen() {
     );
   };
 
-  const submitReport = async (msgId: string, reason: string) => {
-    if (!currentUser) return;
-    const { error } = await supabase.from('message_reports').insert({ reporter_id: currentUser.id, message_id: msgId, reason });
+  const submitReport = async (msgId: string, reportedUserId: string, reason: string) => {
+    if (!currentUser || !reportedUserId) { setShowReport(null); return; }
+    // Snapshot the last ~20 messages of this thread as immutable evidence
+    // (survives later edits/unsends).
+    const snapshot = visibleMessages
+      .filter((m) => !m.tempId)
+      .slice(-20)
+      .map((m) => ({
+        id: m.id,
+        sender_id: m.sender_id,
+        content: m.deleted_at ? null : m.content,
+        image_url: m.image_url ?? null,
+        created_at: m.created_at,
+      }));
+
+    const { data, error } = await supabase.rpc('file_chat_incident_report', {
+      p_reported_user_id: reportedUserId,
+      p_reason: reason,
+      p_snapshot: snapshot,
+      p_message_id: msgId,
+    });
     setShowReport(null);
-    if (error) Alert.alert('Could not report', 'That message could not be reported. Please try again.');
-    else Alert.alert('Reported', `Your report has been sent to ${orgName} admins.`);
+    if (error) {
+      Alert.alert('Could not report', 'That message could not be reported. Please try again.');
+      return;
+    }
+    // Auto-block took effect server-side; reflect it locally + track for cancel.
+    setBlockedIds((prev) => (prev.includes(reportedUserId) ? prev : [...prev, reportedUserId]));
+    if (data) setMyReports((prev) => [...prev, { id: data, reported_user_id: reportedUserId, status: 'pending' }]);
+    setActiveChat(null);
+    Alert.alert(
+      'Reported & blocked',
+      `Your report was sent to ${orgName} leadership as high priority, and ${orgUsers.find((u) => u.id === reportedUserId)?.full_name || 'this user'} has been blocked. You can cancel the report from the conversation if this was a mistake.`
+    );
   };
 
   // ── iMessage actions: tapbacks, edit, unsend ───────────────────────────────
@@ -502,6 +719,35 @@ export default function ChatScreen() {
   const filteredUsers = search
     ? visibleUsers.filter((u) => u.full_name?.toLowerCase().includes(search.toLowerCase()))
     : visibleUsers;
+
+  // Most-recent pinned message in the open thread (drives the banner strip).
+  const pinnedMsg = [...visibleMessages]
+    .filter((m) => m.pinned_at && !m.deleted_at)
+    .sort((a, b) => new Date(a.pinned_at).getTime() - new Date(b.pinned_at).getTime())
+    .pop() || null;
+
+  // If viewing a DM with someone I've filed a still-pending report against.
+  const activeReport = activeChat?.type === 'dm'
+    ? myReports.find((r) => r.reported_user_id === activeChat.id && r.status === 'pending')
+    : null;
+
+  const searchActive = showSearch && searchQuery.trim().length > 0;
+  const highlightMatch = (text: string, mine: boolean) => {
+    const q = searchQuery.trim();
+    if (!searchActive || !q) return <Text style={mine ? styles.bubbleTxtSent : styles.bubbleTxt}>{text}</Text>;
+    const parts: React.ReactNode[] = [];
+    const lower = text.toLowerCase();
+    const ql = q.toLowerCase();
+    let i = 0, k = 0;
+    while (i < text.length) {
+      const found = lower.indexOf(ql, i);
+      if (found === -1) { parts.push(<Text key={k++}>{text.slice(i)}</Text>); break; }
+      if (found > i) parts.push(<Text key={k++}>{text.slice(i, found)}</Text>);
+      parts.push(<Text key={k++} style={styles.searchHit}>{text.slice(found, found + q.length)}</Text>);
+      i = found + q.length;
+    }
+    return <Text style={mine ? styles.bubbleTxtSent : styles.bubbleTxt}>{parts}</Text>;
+  };
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -740,6 +986,22 @@ export default function ChatScreen() {
                   : (activeChat as any)?.role}
               </Text>
             </View>
+            {activeChat?.type === 'org' && isLeader && (
+              <TouchableOpacity
+                style={[styles.closeBtn, { marginRight: 8 }]}
+                activeOpacity={0.8}
+                onPress={() => setShowAnnounce(true)}
+              >
+                <Ionicons name="megaphone-outline" size={18} color="#165B74" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[styles.closeBtn, { marginRight: (activeChat?.type === 'dm' || activeChat?.type === 'group_chat') ? 8 : 0 }]}
+              activeOpacity={0.8}
+              onPress={() => { setShowSearch((s) => !s); setSearchQuery(''); }}
+            >
+              <Ionicons name={showSearch ? 'close' : 'search'} size={18} color="rgba(34,39,31,0.7)" />
+            </TouchableOpacity>
             {(activeChat?.type === 'dm' || activeChat?.type === 'group_chat') && (
               <TouchableOpacity
                 style={styles.closeBtn}
@@ -763,6 +1025,63 @@ export default function ChatScreen() {
               </TouchableOpacity>
             )}
           </View>
+
+          {/* Search bar */}
+          {showSearch && (
+            <View style={styles.searchThreadBar}>
+              <Ionicons name="search" size={15} color="rgba(34,39,31,0.4)" />
+              <TextInput
+                style={styles.searchThreadInput}
+                placeholder="Search this conversation…"
+                placeholderTextColor="rgba(34,39,31,0.4)"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus
+              />
+              {searchQuery.trim().length > 0 && (
+                <View style={styles.searchNav}>
+                  <Text style={styles.searchNavCount}>
+                    {matchIds.length > 0 ? `${matchIdx + 1}/${matchIds.length}` : '0'}
+                  </Text>
+                  <TouchableOpacity onPress={() => stepMatch(-1)} disabled={matchIds.length === 0}>
+                    <Ionicons name="chevron-up" size={17} color={matchIds.length ? '#22271F' : 'rgba(34,39,31,0.25)'} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => stepMatch(1)} disabled={matchIds.length === 0}>
+                    <Ionicons name="chevron-down" size={17} color={matchIds.length ? '#22271F' : 'rgba(34,39,31,0.25)'} />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Pinned message banner */}
+          {pinnedMsg && !showSearch && (
+            <TouchableOpacity style={styles.pinnedBanner} activeOpacity={0.85} onPress={() => jumpToMessage(pinnedMsg.id)}>
+              <Ionicons name="pin" size={14} color="#C5642D" />
+              <Text style={styles.pinnedBannerTxt} numberOfLines={1}>
+                {pinnedMsg.image_url && !pinnedMsg.content ? 'Pinned: photo' : `Pinned: ${pinnedMsg.content}`}
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color="rgba(34,39,31,0.35)" />
+            </TouchableOpacity>
+          )}
+
+          {/* Reporter-side cancel banner (only while status='pending') */}
+          {activeReport && (
+            <View style={styles.cancelReportBanner}>
+              <Ionicons name="flag" size={14} color="#B15A4E" />
+              <Text style={styles.cancelReportTxt}>You reported this conversation. It's under review.</Text>
+              <TouchableOpacity
+                onPress={() =>
+                  Alert.alert('Cancel report?', 'This removes the automatic block and marks your report cancelled.', [
+                    { text: 'Keep report', style: 'cancel' },
+                    { text: 'Cancel report', style: 'destructive', onPress: () => cancelReport(activeReport.id, activeReport.reported_user_id) },
+                  ])
+                }
+              >
+                <Text style={styles.cancelReportAction}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <ScrollView
             ref={scrollViewRef}
@@ -789,8 +1108,13 @@ export default function ChatScreen() {
                 const showDate = !prev || new Date(m.created_at).toDateString() !== new Date(prev.created_at).toDateString();
                 const senderName = isMe ? 'Me' : orgUsers.find((u) => u.id === m.sender_id)?.full_name || 'Member';
 
+                const isCurrentMatch = matchIds.length > 0 && matchIds[matchIdx] === m.id;
+
                 return (
-                  <View key={m.id || m.tempId}>
+                  <View
+                    key={m.id || m.tempId}
+                    onLayout={(e) => { if (m.id) msgYRef.current[m.id] = e.nativeEvent.layout.y; }}
+                  >
                     {showDate && (
                       <View style={styles.dateDivider}>
                         <View style={styles.divideLine} />
@@ -808,6 +1132,9 @@ export default function ChatScreen() {
                         </Text>
                       ) : (
                       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6 }}>
+                        {m.pinned_at && (
+                          <Ionicons name="pin" size={11} color="#C5642D" style={{ marginBottom: 6 }} />
+                        )}
                         <TouchableOpacity
                           activeOpacity={0.9}
                           onLongPress={() => {
@@ -815,15 +1142,25 @@ export default function ChatScreen() {
                             if (m.tempId || m.status === 'sending' || m.status === 'error') return;
                             setMsgAction(m);
                           }}
+                          onPress={() => { if (m.image_url) setImageViewer(m.image_url); }}
                           style={[
                             isMe ? styles.bubbleSent : styles.bubbleRecv,
                             !isGroupFooter && (isMe ? { borderBottomRightRadius: 20 } : { borderBottomLeftRadius: 20 }),
                             m.status === 'sending' && { opacity: 0.6 },
                             m.status === 'error' && { borderWidth: 1, borderColor: '#B15A4E' },
                             (reactions[m.id]?.length ?? 0) > 0 && { marginTop: 12 },
+                            isCurrentMatch && styles.bubbleMatched,
+                            m.image_url && { padding: 4 },
                           ]}
                         >
-                          <Text style={isMe ? styles.bubbleTxtSent : styles.bubbleTxt}>{m.content}</Text>
+                          {m.image_url && (
+                            <Image source={{ uri: m.image_url }} style={styles.chatImage} />
+                          )}
+                          {!!m.content && (
+                            <View style={m.image_url ? { paddingHorizontal: 9, paddingTop: 6, paddingBottom: 2 } : undefined}>
+                              {highlightMatch(m.content, isMe)}
+                            </View>
+                          )}
                           {/* tapback pill overlapping the top corner */}
                           {(reactions[m.id]?.length ?? 0) > 0 && (
                             <View style={[styles.reactPill, isMe ? { left: -10 } : { right: -10 }]}>
@@ -876,6 +1213,13 @@ export default function ChatScreen() {
           </ScrollView>
 
           <View style={styles.chatInputRow}>
+            <TouchableOpacity style={styles.imageBtn} onPress={pickAndSendImage} disabled={uploadingImage}>
+              {uploadingImage ? (
+                <ActivityIndicator size="small" color="#2C7C96" />
+              ) : (
+                <Ionicons name="image-outline" size={20} color="#2C7C96" />
+              )}
+            </TouchableOpacity>
             <View style={styles.chatInputBox}>
               <TextInput
                 style={styles.chatInputReal}
@@ -892,6 +1236,92 @@ export default function ChatScreen() {
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ── Full-screen image viewer ───────────────────────────────────────── */}
+      <Modal visible={!!imageViewer} transparent animationType="fade" onRequestClose={() => setImageViewer(null)}>
+        <Pressable style={styles.imageScrim} onPress={() => setImageViewer(null)}>
+          {imageViewer && <Image source={{ uri: imageViewer }} style={styles.fullImage} resizeMode="contain" />}
+        </Pressable>
+      </Modal>
+
+      {/* ── Targeted announcement (leadership) ─────────────────────────────── */}
+      <Modal visible={showAnnounce} transparent animationType="slide">
+        <View style={styles.newChatBackdrop}>
+          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFillObject} />
+          <Pressable style={{ flex: 1 }} onPress={() => setShowAnnounce(false)} />
+          <View style={[styles.newChatSheet, { height: 'auto', paddingBottom: 40 }]}>
+            <View style={styles.newChatTop}>
+              <View style={styles.sheetHeader}>
+                <Text style={styles.sheetTitle}>New Announcement</Text>
+                <TouchableOpacity onPress={() => setShowAnnounce(false)} style={styles.closeBtn}>
+                  <Ionicons name="close" size={20} color="#22271F" />
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                style={[styles.groupNameInput, { minHeight: 80, textAlignVertical: 'top' }]}
+                placeholder="Write your announcement…"
+                placeholderTextColor="rgba(34,39,31,0.4)"
+                value={announceText}
+                onChangeText={setAnnounceText}
+                multiline
+              />
+              <Text style={styles.sectionLabel}>NOTIFY</Text>
+              <View style={styles.audienceGrid}>
+                {([
+                  { key: 'everyone', label: '@Everyone' },
+                  { key: 'mentors', label: `@${membersLabel}` },
+                  { key: 'students', label: '@Students' },
+                  { key: 'not_rsvp', label: "Not RSVP'd" },
+                  { key: 'attended', label: 'Attended' },
+                ] as const).map((a) => (
+                  <TouchableOpacity
+                    key={a.key}
+                    style={[styles.audienceChip, announceAudience === a.key && styles.audienceChipActive]}
+                    onPress={() => setAnnounceAudience(a.key)}
+                  >
+                    <Text style={[styles.audienceChipTxt, announceAudience === a.key && styles.audienceChipTxtActive]}>{a.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {(announceAudience === 'not_rsvp' || announceAudience === 'attended') && (
+                <>
+                  <Text style={styles.sectionLabel}>SESSION</Text>
+                  <ScrollView style={{ maxHeight: 160 }} showsVerticalScrollIndicator={false}>
+                    {sessions.length === 0 ? (
+                      <Text style={{ color: 'rgba(34,39,31,0.4)', fontSize: 13, paddingVertical: 8 }}>No sessions found.</Text>
+                    ) : (
+                      sessions.map((s) => (
+                        <TouchableOpacity
+                          key={s.id}
+                          style={styles.memberSelectRow}
+                          onPress={() => setAnnounceSession(s.id)}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.memberName}>{s.title || 'Session'}</Text>
+                            <Text style={styles.memberRole}>{new Date(s.start_time).toLocaleString()}</Text>
+                          </View>
+                          <View style={[styles.checkCircle, announceSession === s.id && styles.checkCircleSel]}>
+                            {announceSession === s.id && <Ionicons name="checkmark" size={14} color="#F4F6F6" />}
+                          </View>
+                        </TouchableOpacity>
+                      ))
+                    )}
+                  </ScrollView>
+                </>
+              )}
+
+              <TouchableOpacity
+                style={[styles.createGroupBtn, { marginTop: 16 }, (sendingAnnounce || !announceText.trim()) && styles.createGroupBtnDisabled]}
+                onPress={sendAnnouncement}
+                disabled={sendingAnnounce || !announceText.trim()}
+              >
+                <Text style={styles.createGroupBtnTxt}>{sendingAnnounce ? 'Sending…' : 'Send Announcement'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
 
       {/* ── iMessage action overlay (long-press) ──────────────────────────── */}
@@ -926,13 +1356,19 @@ export default function ChatScreen() {
                     <Ionicons name="pencil-outline" size={18} color="#22271F" />
                   </TouchableOpacity>
                 )}
+                {isLeader && (
+                  <TouchableOpacity style={styles.actionRow} onPress={() => togglePin(msgAction)}>
+                    <Text style={styles.actionRowTxt}>{msgAction.pinned_at ? 'Unpin' : 'Pin'}</Text>
+                    <Ionicons name={msgAction.pinned_at ? 'pin' : 'pin-outline'} size={18} color="#22271F" />
+                  </TouchableOpacity>
+                )}
                 {msgAction.sender_id === currentUser?.id ? (
                   <TouchableOpacity style={[styles.actionRow, { borderBottomWidth: 0 }]} onPress={() => unsendMessage(msgAction)}>
                     <Text style={[styles.actionRowTxt, { color: '#B15A4E' }]}>Unsend</Text>
                     <Ionicons name="trash-outline" size={18} color="#B15A4E" />
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity style={[styles.actionRow, { borderBottomWidth: 0 }]} onPress={() => { setShowReport({ msgId: msgAction.id, content: msgAction.content }); setMsgAction(null); }}>
+                  <TouchableOpacity style={[styles.actionRow, { borderBottomWidth: 0 }]} onPress={() => { setShowReport({ msgId: msgAction.id, content: msgAction.content, senderId: msgAction.sender_id }); setMsgAction(null); }}>
                     <Text style={[styles.actionRowTxt, { color: '#B15A4E' }]}>Report</Text>
                     <Ionicons name="flag-outline" size={18} color="#B15A4E" />
                   </TouchableOpacity>
@@ -982,13 +1418,13 @@ export default function ChatScreen() {
                 </TouchableOpacity>
               </View>
               <Text style={{ color: 'rgba(34,39,31,0.6)', marginBottom: 20 }}>
-                Selecting a reason will notify your organization's admins.
+                This will notify your organization's leadership as high priority and automatically block this person. You can cancel from the conversation if it was a mistake.
               </Text>
               {['Inappropriate Language', 'Bullying or Harassment', 'Personal Info Sharing', 'Spam'].map((reason) => (
                 <TouchableOpacity
                   key={reason}
                   style={styles.memberSelectRow}
-                  onPress={() => submitReport(showReport!.msgId, reason)}
+                  onPress={() => submitReport(showReport!.msgId, showReport!.senderId, reason)}
                 >
                   <Text style={{ color: '#22271F', fontSize: 16 }}>{reason}</Text>
                   <Ionicons name="chevron-forward" size={16} color="rgba(34,39,31,0.3)" />
@@ -1057,6 +1493,22 @@ const styles = StyleSheet.create({
   chatAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(44,124,150,0.15)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
   chatName: { fontFamily: 'Inter-SemiBold', fontSize: 16, color: '#22271F' },
   onlineTxt: { fontFamily: 'Inter-Medium', fontSize: 12, color: 'rgba(34,39,31,0.4)', marginTop: 2, textTransform: 'capitalize' },
+
+  // Search bar (within open thread)
+  searchThreadBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(196,196,196,0.16)', backgroundColor: 'rgba(196,196,196,0.06)' },
+  searchThreadInput: { flex: 1, fontFamily: 'Inter-Regular', fontSize: 14.5, color: '#22271F' },
+  searchNav: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  searchNavCount: { fontFamily: 'Inter-Medium', fontSize: 12, color: 'rgba(34,39,31,0.45)' },
+
+  // Pinned message banner
+  pinnedBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 9, backgroundColor: 'rgba(197,100,45,0.08)', borderBottomWidth: 1, borderBottomColor: 'rgba(197,100,45,0.16)' },
+  pinnedBannerTxt: { flex: 1, fontFamily: 'Inter-Medium', fontSize: 12.5, color: '#22271F' },
+
+  // Reporter cancel banner
+  cancelReportBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 9, backgroundColor: 'rgba(177,90,78,0.08)', borderBottomWidth: 1, borderBottomColor: 'rgba(177,90,78,0.16)' },
+  cancelReportTxt: { flex: 1, fontFamily: 'Inter-Medium', fontSize: 12, color: '#22271F' },
+  cancelReportAction: { fontFamily: 'Inter-Bold', fontSize: 12.5, color: '#B15A4E' },
+
   dateChip: { alignSelf: 'center', backgroundColor: 'rgba(196,196,196,0.16)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginBottom: 8 },
   dateChipTxt: { fontFamily: 'Inter-Medium', fontSize: 12, color: 'rgba(34,39,31,0.4)' },
   bubbleSentWrap: { alignSelf: 'flex-end', maxWidth: '78%' },
@@ -1065,6 +1517,9 @@ const styles = StyleSheet.create({
   bubbleSent: { backgroundColor: '#165B74', borderRadius: 18, borderBottomRightRadius: 5, paddingVertical: 10, paddingHorizontal: 14 },
   bubbleTxt: { fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F', lineHeight: 21 },
   bubbleTxtSent: { fontFamily: 'Inter-Regular', fontSize: 15, color: '#F4F6F6', lineHeight: 21 },
+  searchHit: { backgroundColor: 'rgba(197,100,45,0.32)', borderRadius: 3 },
+  bubbleMatched: { borderWidth: 2, borderColor: '#C5642D' },
+  chatImage: { width: 210, height: 210, borderRadius: 14, backgroundColor: 'rgba(196,196,196,0.2)' },
   unsentTxt: { fontFamily: 'Inter-Regular', fontSize: 13, fontStyle: 'italic', color: 'rgba(34,39,31,0.4)', paddingVertical: 8, paddingHorizontal: 4 },
   editedTxt: { fontFamily: 'Inter-Regular', fontSize: 10.5, color: 'rgba(34,39,31,0.4)', marginTop: 2, marginHorizontal: 6 },
   reactPill: { position: 'absolute', top: -14, flexDirection: 'row', gap: 3, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', borderRadius: 14, paddingHorizontal: 7, paddingVertical: 3, shadowColor: '#2B3325', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 4, elevation: 3 },
@@ -1083,6 +1538,16 @@ const styles = StyleSheet.create({
   chatInputBox: { flex: 1, height: 48, borderRadius: 24, backgroundColor: 'rgba(196,196,196,0.16)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', paddingHorizontal: 18, justifyContent: 'center' },
   chatInputReal: { flex: 1, fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F' },
   sendBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(44,124,150,0.35)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.5)', alignItems: 'center', justifyContent: 'center' },
+  imageBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(196,196,196,0.16)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)' },
+
+  imageScrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center' },
+  fullImage: { width: '100%', height: '80%' },
+
+  audienceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+  audienceChip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(196,196,196,0.24)', backgroundColor: 'rgba(196,196,196,0.08)' },
+  audienceChipActive: { backgroundColor: 'rgba(44,124,150,0.14)', borderColor: 'rgba(44,124,150,0.4)' },
+  audienceChipTxt: { fontFamily: 'Inter-SemiBold', fontSize: 13, color: 'rgba(34,39,31,0.55)' },
+  audienceChipTxtActive: { color: '#165B74' },
 
   // Settings
   settingsBackdrop: { flex: 1, justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 110, paddingRight: 20 },

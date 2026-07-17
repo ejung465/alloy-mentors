@@ -19,7 +19,9 @@ import { getActiveSession } from '@/lib/checkin';
 import {
   listGoals, activeGoal, createGoal, listSkills, upsertSkill, listTimeline, logProgress,
   getStudentById, listLinkableAccounts, getAccountById, linkStudentAccount,
+  listStudentAttendance, setStudentReaction,
   SKILL_LEVELS, type StudentGoal, type StudentSkill, type TimelineEntry, type Marker, type StudentAccount,
+  type AttendanceVisit, type StudentReaction,
 } from '@/lib/progress';
 
 const PINE_DEEP = '#0E3E4F';
@@ -37,6 +39,13 @@ const MARKERS: { key: Marker; label: string; color: string; icon: any }[] = [
 ];
 const markerMeta = (m: Marker | null) =>
   MARKERS.find((x) => x.key === m) ?? { key: 'milestone' as Marker, label: 'Milestone', color: 'rgba(196,196,196,0.35)', icon: 'flag' };
+
+// Student self-feedback reactions (student_feedback module).
+const REACTIONS: { key: StudentReaction; label: string; emoji: string }[] = [
+  { key: 'got_it', label: 'I got it', emoji: '👍' },
+  { key: 'in_between', label: 'In between', emoji: '😐' },
+  { key: 'confused', label: 'Still confused', emoji: '🤔' },
+];
 
 function ageFrom(iso?: string | null): number | null {
   if (!iso) return null;
@@ -77,6 +86,7 @@ export default function StudentProgressScreen() {
   const [goals, setGoals] = useState<StudentGoal[]>([]);
   const [skills, setSkills] = useState<StudentSkill[]>([]);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceVisit[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Log-session modal
@@ -101,15 +111,29 @@ export default function StudentProgressScreen() {
 
   const goal = activeGoal(goals);
 
+  // The signed-in user IS the roster student being viewed → simplified,
+  // read-only self-view (gated by the student_self_view module).
+  const isSelfView =
+    !!student && !!profile?.id && student.user_id === profile.id &&
+    featureEnabled(org, 'student_self_view');
+  const showFeedback = isSelfView && featureEnabled(org, 'student_feedback');
+
   const load = useCallback(async () => {
     if (!id) return;
-    const [st, g, sk, tl] = await Promise.all([
-      getStudentById(id), listGoals(id), listSkills(id), listTimeline(id),
+    const [st, g, sk, tl, att] = await Promise.all([
+      getStudentById(id), listGoals(id), listSkills(id), listTimeline(id), listStudentAttendance(id),
     ]);
-    setStudent(st); setGoals(g); setSkills(sk); setTimeline(tl);
+    setStudent(st); setGoals(g); setSkills(sk); setTimeline(tl); setAttendance(att);
     setLinkedAccount(st?.user_id ? await getAccountById(st.user_id) : null);
     setLoading(false);
   }, [id]);
+
+  const reactTo = async (entry: TimelineEntry, reaction: StudentReaction) => {
+    const next = entry.student_reaction === reaction ? null : reaction;
+    setTimeline((prev) => prev.map((t) => (t.id === entry.id ? { ...t, student_reaction: next } : t)));
+    const { error } = await setStudentReaction(entry.id, next);
+    if (error) { Alert.alert("Couldn't save your reaction", error.message); load(); }
+  };
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
   useFocusEffect(useCallback(() => { getActiveSession().then(({ data }) => setSessionId(data?.id ?? null)); }, []));
@@ -235,10 +259,14 @@ export default function StudentProgressScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
           <Ionicons name="chevron-back" size={22} color={INK} />
         </TouchableOpacity>
-        <Text style={styles.eyebrow}>STUDENT</Text>
-        <TouchableOpacity onPress={exportReport} style={styles.iconBtn} disabled={exporting}>
-          {exporting ? <ActivityIndicator size="small" color={PINE} /> : <Ionicons name="share-outline" size={20} color={INK} />}
-        </TouchableOpacity>
+        <Text style={styles.eyebrow}>{isSelfView ? 'MY PROGRESS' : 'STUDENT'}</Text>
+        {isSelfView ? (
+          <View style={styles.iconBtn} />
+        ) : (
+          <TouchableOpacity onPress={exportReport} style={styles.iconBtn} disabled={exporting}>
+            {exporting ? <ActivityIndicator size="small" color={PINE} /> : <Ionicons name="share-outline" size={20} color={INK} />}
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
@@ -345,12 +373,56 @@ export default function StudentProgressScreen() {
                     </View>
                     <Text style={styles.tlBody}>{t.content}</Text>
                     {t.author_name ? <Text style={styles.tlAuthor}>— {t.author_name}</Text> : null}
+                    {showFeedback ? (
+                      <View style={styles.reactRow}>
+                        {REACTIONS.map((r) => {
+                          const on = t.student_reaction === r.key;
+                          return (
+                            <TouchableOpacity
+                              key={r.key}
+                              onPress={() => reactTo(t, r.key)}
+                              activeOpacity={0.8}
+                              style={[styles.reactChip, on && styles.reactChipOn]}
+                            >
+                              <Text style={styles.reactEmoji}>{r.emoji}</Text>
+                              <Text style={[styles.reactTxt, on && styles.reactTxtOn]}>{r.label}</Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    ) : null}
                   </View>
                 </View>
               );
             })}
           </View>
         )}
+
+        {/* Attendance history — self-view only */}
+        {isSelfView ? (
+          <>
+            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Attendance</Text>
+            {attendance.length === 0 ? (
+              <Text style={styles.emptyLine}>No check-ins recorded yet.</Text>
+            ) : (
+              <View style={styles.attendanceCard}>
+                {attendance.map((a, i) => (
+                  <View key={a.id} style={[styles.attendanceRow, i > 0 && styles.attendanceDivider]}>
+                    <View style={styles.attendanceDot}>
+                      <Ionicons name="checkmark" size={13} color={PINE_MID} />
+                    </View>
+                    <Text style={styles.attendanceDate}>
+                      {new Date(a.checked_in_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                    </Text>
+                    <Text style={styles.attendanceTime}>
+                      {new Date(a.checked_in_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        ) : null}
 
         {/* Details (kept, but secondary to progress) */}
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Details</Text>
@@ -386,7 +458,7 @@ export default function StudentProgressScreen() {
           </TouchableOpacity>
         )}
 
-        {featureEnabled(org, 'guardian_digests') && (student?.guardian_name || student?.guardian_phone || student?.guardian_email) ? (
+        {!isSelfView && featureEnabled(org, 'guardian_digests') && (student?.guardian_name || student?.guardian_phone || student?.guardian_email) ? (
           <TouchableOpacity style={styles.guardianBtn} activeOpacity={0.85} onPress={sendGuardianUpdate} disabled={exporting}>
             <Ionicons name="mail-outline" size={16} color={PINE_MID} />
             <Text style={styles.guardianBtnTxt}>Send {String(student?.guardian_name || 'guardian').split(' ')[0]} a progress update</Text>
@@ -394,13 +466,15 @@ export default function StudentProgressScreen() {
         ) : null}
       </ScrollView>
 
-      {/* Sticky log CTA */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.logCta} activeOpacity={0.9} onPress={() => setLogOpen(true)}>
-          <Ionicons name="create-outline" size={19} color={CREAM} />
-          <Text style={styles.logCtaTxt}>Log today's session</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Sticky log CTA — mentors/coordinators only, never in the student self-view */}
+      {!isSelfView && (
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.logCta} activeOpacity={0.9} onPress={() => setLogOpen(true)}>
+            <Ionicons name="create-outline" size={19} color={CREAM} />
+            <Text style={styles.logCtaTxt}>Log today's session</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* ── Link account picker ── */}
       <Modal visible={linkOpen} transparent animationType="slide">
@@ -584,6 +658,22 @@ const styles = StyleSheet.create({
   tlDate: { fontFamily: font.regular, fontSize: 11.5, color: 'rgba(34,39,31,0.45)' },
   tlBody: { fontFamily: font.regular, fontSize: 13, color: 'rgba(34,39,31,0.62)', lineHeight: 19, marginTop: 3 },
   tlAuthor: { fontFamily: font.medium, fontSize: 11.5, color: 'rgba(34,39,31,0.4)', marginTop: 4 },
+
+  // Student self-feedback
+  reactRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  reactChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 11, borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', backgroundColor: colors.surface },
+  reactChipOn: { backgroundColor: 'rgba(44,124,150,0.12)', borderColor: PINE_MID },
+  reactEmoji: { fontSize: 13 },
+  reactTxt: { fontFamily: font.medium, fontSize: 12, color: 'rgba(34,39,31,0.55)' },
+  reactTxtOn: { color: PINE_MID, fontFamily: font.semibold },
+
+  // Attendance history (self-view)
+  attendanceCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 16, paddingHorizontal: 14 },
+  attendanceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  attendanceDivider: { borderTopWidth: 1, borderTopColor: 'rgba(196,196,196,0.12)' },
+  attendanceDot: { width: 26, height: 26, borderRadius: 13, backgroundColor: 'rgba(44,124,150,0.12)', alignItems: 'center', justifyContent: 'center' },
+  attendanceDate: { flex: 1, fontFamily: font.medium, fontSize: 14, color: INK },
+  attendanceTime: { fontFamily: font.regular, fontSize: 12.5, color: 'rgba(34,39,31,0.45)' },
 
   detailsCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 9 },

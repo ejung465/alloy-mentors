@@ -145,6 +145,60 @@ export async function createSession(input: {
   return supabase.from('sessions').insert(row).select('id').single();
 }
 
+// ── Calendar export (.ics) ────────────────────────────────────────────────────
+
+/** Fold long lines and escape per RFC 5545 (commas, semicolons, newlines). */
+function icsEscape(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+
+/** UTC timestamp in the basic iCalendar form: 20260711T140000Z. */
+function icsStamp(iso: string): string {
+  return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+type IcsSession = {
+  id: string;
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  start_time: string;
+  end_time: string;
+};
+
+/**
+ * Build a standard VCALENDAR string for one or more sessions. The user adds
+ * these to their phone's native calendar via the OS share sheet — no hosted
+ * webcal feed needed.
+ */
+export function buildSessionsIcs(sessions: IcsSession[], calendarName = 'Alloy Mentors'): string {
+  const now = icsStamp(new Date().toISOString());
+  const lines: string[] = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Alloy Mentors//Schedule//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:${icsEscape(calendarName)}`,
+  ];
+  for (const s of sessions) {
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:${s.id}@alloymentors.com`,
+      `DTSTAMP:${now}`,
+      `DTSTART:${icsStamp(s.start_time)}`,
+      `DTEND:${icsStamp(s.end_time)}`,
+      `SUMMARY:${icsEscape(s.title)}`,
+    );
+    if (s.description) lines.push(`DESCRIPTION:${icsEscape(s.description)}`);
+    if (s.location) lines.push(`LOCATION:${icsEscape(s.location)}`);
+    lines.push('END:VEVENT');
+  }
+  lines.push('END:VCALENDAR');
+  // RFC 5545 uses CRLF line endings.
+  return lines.join('\r\n');
+}
+
 // ── RSVP ────────────────────────────────────────────────────────────────────
 
 export async function getMyRsvp(sessionId: string, userId: string): Promise<RsvpStatus> {

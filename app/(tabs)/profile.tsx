@@ -380,7 +380,10 @@ export default function ProfileScreen() {
           {featureEnabled(org, 'hours') && (
             <SettingRow icon="document-text-outline" label={loadingPdf ? 'Generating...' : 'Export Verification PDF'} sublabel="Download your signed hours record" onPress={exportPDF} color="#41785C" />
           )}
-          <SettingRow icon="cloud-download-outline" label="Request Data Export" sublabel="Email us to receive a copy of your data" color="#2C7C96" onPress={() => mail('Data export request')} last />
+          {featureEnabled(org, 'resource_sharing') && (
+            <SettingRow icon="folder-open-outline" label="Lesson Resources" sublabel="Shared materials & worksheets" color="#B08A3E" onPress={() => router.push('/resources' as any)} />
+          )}
+          <SettingRow icon="cloud-download-outline" label="Export My Data" sublabel="Download a copy of your hours & attendance" color="#2C7C96" onPress={() => router.push('/data-export' as any)} last />
         </GlassCard>
 
         {/* ── Support ─────────────────────────────── */}

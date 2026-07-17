@@ -6,6 +6,7 @@ import {
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
+import { TourOverlay } from '@/components/ui/TourOverlay';
 import { colors } from '@/lib/theme';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -89,6 +90,7 @@ export default function DashboardScreen() {
   const hasHours = featureEnabled(org, 'hours');
   const hasCheckin = featureEnabled(org, 'checkin');
   const hasProgress = featureEnabled(org, 'progress');
+  const hasSelfView = featureEnabled(org, 'student_self_view');
 
   const [totalHours, setTotalHours]     = useState(0);
   const [studentCount, setStudentCount] = useState(0);
@@ -279,6 +281,7 @@ export default function DashboardScreen() {
   return (
     <View style={styles.screen}>
       <AuroraBackground />
+      {profile?.role ? <TourOverlay role={profile.role} onDone={() => {}} /> : null}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -431,7 +434,7 @@ export default function DashboardScreen() {
                   </View>
                 </AnimPress>
               )}
-              {isStudent && myLinked && hasProgress && (
+              {isStudent && myLinked && hasProgress && hasSelfView && (
                 <AnimPress style={{ flex: 1 }} onPress={() => router.push(`/student/${myLinked.id}`)}>
                   <View style={[styles.chip, styles.chipPrimary]}>
                     <Ionicons name="trending-up-outline" size={19} color={CREAM} />
@@ -448,7 +451,7 @@ export default function DashboardScreen() {
             </View>
 
             {/* Student without a linked roster profile yet */}
-            {isStudent && !myLinked && (
+            {isStudent && hasSelfView && !myLinked && (
               <View style={styles.linkNotice}>
                 <Ionicons name="link-outline" size={16} color={PINE_MID} />
                 <Text style={styles.linkNoticeTxt}>
