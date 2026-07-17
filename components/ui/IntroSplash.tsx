@@ -81,8 +81,10 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const calledDone = useRef(false);
 
   const markImage = useImage(require('@/assets/images/splash-icon.png'));
-  const alloyFont = useFont(require('@expo-google-fonts/poppins/900Black/Poppins_900Black.ttf'), WORD_SIZE);
-  const mentorsFont = useFont(require('@expo-google-fonts/poppins/900Black/Poppins_900Black.ttf'), WORD_SIZE);
+  // ExtraBold (800), not Black (900) — a real ~11% weight step down, per
+  // user request for "around 10% thinner" text.
+  const alloyFont = useFont(require('@expo-google-fonts/poppins/800ExtraBold/Poppins_800ExtraBold.ttf'), WORD_SIZE);
+  const mentorsFont = useFont(require('@expo-google-fonts/poppins/800ExtraBold/Poppins_800ExtraBold.ttf'), WORD_SIZE);
 
   const cx = W / 2;
   const cy = H / 2;
