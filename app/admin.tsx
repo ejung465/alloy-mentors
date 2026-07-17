@@ -16,6 +16,7 @@ import {
   roleLabel, roleColor, canManageOrg, canCreateEvents, VOLUNTEER_ROLES, ASSIGNABLE_ROLES, type UserRole,
 } from '@/lib/roles';
 import { checkAndAwardBadges } from '@/lib/badges';
+import { TourOverlay } from '@/components/ui/TourOverlay';
 
 const logAudit = (organizationId: string | null | undefined, actorId: string | undefined, action: string, targetType: string, targetId: string, details?: Record<string, any>) => {
   if (!organizationId || !actorId) return;
@@ -65,6 +66,11 @@ export default function AdminDashboard() {
   const [adjHours, setAdjHours] = useState('');
 
   const [stats, setStats] = useState({ pending: 0, approved: 0, totalHours: 0, mentors: 0 });
+
+  // Admin tour — auto-shows the first time an admin/leader lands here
+  // (tracked per-role in AsyncStorage by TourOverlay/lib/tours.ts), and can
+  // be replayed anytime via the "Take a tour" button in the header.
+  const [forceTour, setForceTour] = useState(false);
 
   const fetchData = useCallback(async () => {
     // Fetch all hours logs with mentor info
@@ -193,6 +199,11 @@ export default function AdminDashboard() {
   return (
     <View style={styles.screen}>
       <AuroraBackground variant="warm" />
+      <TourOverlay
+        role={profile?.role}
+        force={forceTour}
+        onDone={() => setForceTour(false)}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -207,6 +218,9 @@ export default function AdminDashboard() {
             <Text style={styles.pageTitle}>Director Panel</Text>
             <Text style={styles.pageSubtitle}>Tutoring Hours Review</Text>
           </View>
+          <TouchableOpacity onPress={() => setForceTour(true)} style={styles.gearBtn} activeOpacity={0.8}>
+            <Ionicons name="help-circle-outline" size={18} color="#2C7C96" />
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push('/org-settings')} style={styles.gearBtn} activeOpacity={0.8}>
             <Ionicons name="settings-outline" size={18} color="#2C7C96" />
           </TouchableOpacity>

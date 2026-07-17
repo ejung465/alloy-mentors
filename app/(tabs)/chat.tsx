@@ -2,8 +2,10 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, RefreshControl, TouchableOpacity,
   Modal, StyleSheet, Animated, Pressable, TextInput, KeyboardAvoidingView, Platform, Alert,
-  Image, ActivityIndicator
+  Image, ActivityIndicator, Dimensions
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { colors } from '@/lib/theme';
@@ -88,7 +90,6 @@ export default function ChatScreen() {
   const [editTarget, setEditTarget]   = useState<any | null>(null);
   const [editText, setEditText]       = useState('');
   const [showReport, setShowReport]   = useState<{ msgId: string; content: string; senderId: string } | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
 
   // Images
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -660,7 +661,12 @@ export default function ChatScreen() {
     if (mine && mine.emoji === emoji) {
       // Optimistic remove
       setReactions((prev) => ({ ...prev, [msg.id]: (prev[msg.id] ?? []).filter((r) => r.user_id !== currentUser.id) }));
-      await supabase.from('message_reactions').delete().eq('message_id', msg.id).eq('user_id', currentUser.id);
+      const { error } = await supabase.from('message_reactions').delete().eq('message_id', msg.id).eq('user_id', currentUser.id);
+      if (error) {
+        // Revert the optimistic removal so the UI matches what's actually in the DB.
+        setReactions((prev) => ({ ...prev, [msg.id]: [...(prev[msg.id] ?? []).filter((r) => r.user_id !== currentUser.id), mine] }));
+        Alert.alert('Could not remove reaction', 'Run migration 0018 if this persists.');
+      }
     } else {
       setReactions((prev) => ({
         ...prev,
@@ -748,6 +754,22 @@ export default function ChatScreen() {
     }
     return <Text style={mine ? styles.bubbleTxtSent : styles.bubbleTxt}>{parts}</Text>;
   };
+
+  // Edge-swipe-to-close on the thread screen — only arms when the touch
+  // starts within ~24px of the left edge, mirroring iOS's native
+  // back-swipe gesture (the thread is a full-screen Modal, not a router
+  // push screen, so it doesn't get that gesture for free).
+  const screenW = Dimensions.get('window').width;
+  const closeThread = () => setActiveChat(null);
+  const edgeSwipeGesture = Gesture.Pan()
+    .activeOffsetX(20)
+    .failOffsetY([-20, 20])
+    .hitSlop({ left: 0, width: 24 })
+    .onEnd((e) => {
+      if (e.translationX > screenW * 0.28 || e.velocityX > 800) {
+        runOnJS(closeThread)();
+      }
+    });
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -962,12 +984,14 @@ export default function ChatScreen() {
         </View>
       </Modal>
 
-      {/* ── Chat Thread Modal ─────────────────────────────────────────────── */}
-      <Modal visible={!!activeChat} animationType="slide" presentationStyle="pageSheet">
+      {/* ── Chat Thread — full-screen "page", not a sheet: back button + */}
+      {/*    left-edge swipe-to-close mimic a real pushed screen. ────────── */}
+      <Modal visible={!!activeChat} animationType="slide" presentationStyle="fullScreen">
+        <GestureDetector gesture={edgeSwipeGesture}>
         <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.chatHeader}>
             <TouchableOpacity onPress={() => setActiveChat(null)} style={styles.closeBtn}>
-              <Ionicons name="chevron-down" size={22} color="#22271F" />
+              <Ionicons name="chevron-back" size={22} color="#22271F" />
             </TouchableOpacity>
             <View style={styles.chatAvatar}>
               {activeChat?.type !== 'dm' ? (
@@ -1236,6 +1260,7 @@ export default function ChatScreen() {
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
+        </GestureDetector>
       </Modal>
 
       {/* ── Full-screen image viewer ───────────────────────────────────────── */}

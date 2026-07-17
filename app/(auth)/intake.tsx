@@ -12,6 +12,7 @@ import { GlassInput } from '@/components/ui/GlassInput';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { BrandMark } from '@/components/ui/Brand';
+import { OtpInput } from '@/components/ui/OtpInput';
 import { colors, font, radius } from '@/lib/theme';
 import {
   SUBJECTS, DAYS, TIMES, TSHIRTS, TRANSPORT, VOLUNTEER_CONSENTS, CONSENT_DISCLAIMER,
@@ -241,15 +242,7 @@ export default function IntakeScreen() {
               <Text style={styles.title}>Check your{'\n'}inbox</Text>
               <Text style={styles.subtitle}>We sent a 6-digit code to {email}. Enter it below.</Text>
               <View style={{ gap: 16, marginTop: 28 }}>
-                <TextInput
-                  style={styles.otpInput}
-                  placeholder="000000"
-                  placeholderTextColor={colors.textGhost}
-                  value={code}
-                  onChangeText={(t) => setCode(t.replace(/\D/g, '').slice(0, 6))}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                />
+                <OtpInput value={code} onChange={setCode} autoFocus />
                 {error ? <ErrorBox text={error} /> : null}
                 <GlassButton title={busy ? 'Verifying…' : 'Verify'} onPress={handleVerify} disabled={busy} />
                 <TouchableOpacity onPress={handleSendCode} disabled={busy}>

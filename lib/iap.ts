@@ -1,17 +1,8 @@
 import { Platform } from 'react-native';
-import {
-  initConnection,
-  endConnection,
-  fetchProducts,
-  requestPurchase,
-  finishTransaction,
-  restorePurchases as iapRestorePurchases,
-  getReceiptDataIOS,
-  purchaseUpdatedListener,
-  purchaseErrorListener,
-  type Product,
-  type Purchase,
-  type PurchaseError,
+import type {
+  Product,
+  Purchase,
+  PurchaseError,
 } from 'react-native-iap';
 import { supabase } from '@/lib/supabase';
 
@@ -27,7 +18,32 @@ import { supabase } from '@/lib/supabase';
  * client sends the receipt to the `verify-iap-receipt` edge function, which
  * validates it with Apple server-side and flips
  * `organizations.subscription_tier`. The client never writes the tier itself.
+ *
+ * Native linking: `react-native-iap` is a Nitro module — its native side has
+ * not been linked into this build yet (no rebuild since the package was
+ * added). Nitro throws synchronously at *import time* of
+ * `react-native-nitro-modules` when the native module is missing
+ * (`TurboModuleRegistry.getEnforcing('NitroModules')`), so a static
+ * `import ... from 'react-native-iap'` at module scope would crash any screen
+ * that imports this file. We lazy-require it instead (mirrors the
+ * `getImagePicker()` pattern in app/(tabs)/chat.tsx) so screens that import
+ * `lib/iap.ts` still render, with IAP calls failing gracefully until the app
+ * is rebuilt with the native module linked.
  */
+type IAPModule = typeof import('react-native-iap');
+let _iapModule: IAPModule | null | undefined;
+function getIAP(): IAPModule | null {
+  if (_iapModule !== undefined) return _iapModule;
+  try {
+    _iapModule = require('react-native-iap') as IAPModule;
+  } catch {
+    _iapModule = null;
+  }
+  return _iapModule;
+}
+
+const NATIVE_UNAVAILABLE_ERROR =
+  'In-app purchases aren’t available in this build yet. Please try again after the next app update.';
 
 /**
  * PLACEHOLDER product ID — replace once the real App Store Connect
@@ -52,17 +68,19 @@ let errorSub: { remove: () => void } | null = null;
  */
 export async function initIAP(): Promise<void> {
   if (connected) return;
+  const IAP = getIAP();
+  if (!IAP) throw new Error(NATIVE_UNAVAILABLE_ERROR);
   try {
-    await initConnection();
+    await IAP.initConnection();
     connected = true;
 
     // These listeners are the source of truth for purchase outcomes in the
     // OpenIAP/StoreKit 2 model. The per-purchase promise in
     // `purchaseSubscription` resolves off these via a short-lived bridge.
-    updateSub = purchaseUpdatedListener((purchase: Purchase) => {
+    updateSub = IAP.purchaseUpdatedListener((purchase: Purchase) => {
       void handlePurchaseUpdate(purchase);
     });
-    errorSub = purchaseErrorListener((err: PurchaseError) => {
+    errorSub = IAP.purchaseErrorListener((err: PurchaseError) => {
       handlePurchaseError(err);
     });
   } catch (e) {
@@ -79,7 +97,8 @@ export async function endIAP(): Promise<void> {
     updateSub = null;
     errorSub = null;
     if (connected) {
-      await endConnection();
+      const IAP = getIAP();
+      if (IAP) await IAP.endConnection();
       connected = false;
     }
   } catch {
@@ -90,8 +109,10 @@ export async function endIAP(): Promise<void> {
 /** Fetch the subscription product(s) from the store for display on the paywall. */
 export async function getSubscriptionProducts(): Promise<Product[]> {
   if (!connected) await initIAP();
+  const IAP = getIAP();
+  if (!IAP) throw new Error(NATIVE_UNAVAILABLE_ERROR);
   // `subs` = auto-renewable subscription products.
-  const products = await fetchProducts({
+  const products = await IAP.fetchProducts({
     skus: [SUBSCRIPTION_PRODUCT_ID],
     type: 'subs',
   });
@@ -129,7 +150,8 @@ async function handlePurchaseUpdate(purchase: Purchase): Promise<void> {
 
     // Acknowledge/finish the transaction with StoreKit so it is not replayed.
     try {
-      await finishTransaction({ purchase, isConsumable: false });
+      const IAP = getIAP();
+      if (IAP) await IAP.finishTransaction({ purchase, isConsumable: false });
     } catch {
       // If it was auto-finished natively, that's fine.
     }
@@ -174,6 +196,8 @@ export async function purchaseSubscription(
     return { ok: false, cancelled: false, error: 'Subscriptions are only available on iOS right now.' };
   }
   if (!connected) await initIAP();
+  const IAP = getIAP();
+  if (!IAP) return { ok: false, cancelled: false, error: NATIVE_UNAVAILABLE_ERROR };
 
   // If a purchase is already in flight, refuse a second one.
   if (pending && !pending.settled) {
@@ -195,7 +219,7 @@ export async function purchaseSubscription(
       original(r);
     };
 
-    requestPurchase({
+    IAP.requestPurchase({
       request: { apple: { sku: productId } },
       type: 'subs',
     }).catch((e: unknown) => {
@@ -216,7 +240,9 @@ export async function purchaseSubscription(
  */
 export async function restorePurchases(organizationId?: string): Promise<void> {
   if (!connected) await initIAP();
-  await iapRestorePurchases();
+  const IAP = getIAP();
+  if (!IAP) throw new Error(NATIVE_UNAVAILABLE_ERROR);
+  await IAP.restorePurchases();
   if (organizationId) {
     try {
       await verifyReceiptWithServer(organizationId);
@@ -233,7 +259,10 @@ export async function restorePurchases(organizationId?: string): Promise<void> {
 async function verifyReceiptWithServer(
   organizationId: string,
 ): Promise<{ verified: boolean; tier: string; expiresAt: string | null }> {
-  const receipt = await getReceiptDataIOS();
+  const IAP = getIAP();
+  if (!IAP) return { verified: false, tier: 'free', expiresAt: null };
+
+  const receipt = await IAP.getReceiptDataIOS();
   if (!receipt) {
     return { verified: false, tier: 'free', expiresAt: null };
   }

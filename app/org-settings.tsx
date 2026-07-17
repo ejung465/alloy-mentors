@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Switch,
+  ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Switch,
   Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
+import * as Sharing from 'expo-sharing';
+import { captureRef } from 'react-native-view-shot';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { colors, font } from '@/lib/theme';
 import { supabase } from '@/lib/supabase';
@@ -45,6 +48,11 @@ export default function OrgSettingsScreen() {
   const [harmonies, setHarmonies] = useState<HarmonySuggestion[]>(() => suggestHarmonies(DEFAULT_PRIMARY));
   const [dirty, setDirty] = useState(false);
 
+  const [copiedKind, setCopiedKind] = useState<'member' | 'student' | null>(null);
+  const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [sharingKind, setSharingKind] = useState<'member' | 'student' | null>(null);
+  const shareCardRef = useRef<View>(null);
+
   useEffect(() => {
     (async () => {
       if (!org?.id) return;
@@ -66,6 +74,8 @@ export default function OrgSettingsScreen() {
     })();
   }, [org?.id]);
 
+  useEffect(() => () => { if (copyTimeout.current) clearTimeout(copyTimeout.current); }, []);
+
   if (!canManageOrg(profile?.role)) {
     return (
       <SafeAreaView style={styles.screen}>
@@ -81,13 +91,32 @@ export default function OrgSettingsScreen() {
     );
   }
 
-  const shareCode = (kind: 'member' | 'student') => {
+  const copyCode = async (kind: 'member' | 'student') => {
     const code = kind === 'member' ? codes.member : codes.student;
     if (!code) return;
-    const who = kind === 'member' ? (org?.memberNounPlural ?? 'Members') : (org?.studentNounPlural ?? 'Students');
-    Share.share({
-      message: `Join ${org?.name ?? 'our organization'} on Alloy! ${who}: download Alloy Mentors and enter code ${code}`,
-    }).catch(() => {});
+    await Clipboard.setStringAsync(code).catch(() => {});
+    if (copyTimeout.current) clearTimeout(copyTimeout.current);
+    setCopiedKind(kind);
+    copyTimeout.current = setTimeout(() => setCopiedKind(null), 1500);
+  };
+
+  const shareCode = async (kind: 'member' | 'student') => {
+    const code = kind === 'member' ? codes.member : codes.student;
+    if (!code) return;
+    setSharingKind(kind);
+    // Wait a tick so the offscreen share card renders with the right kind before capture.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    try {
+      const uri = await captureRef(shareCardRef, { format: 'png', quality: 1 });
+      const available = await Sharing.isAvailableAsync();
+      if (available) {
+        await Sharing.shareAsync(uri);
+      }
+    } catch {
+      // ignore capture/share failures
+    } finally {
+      setSharingKind(null);
+    }
   };
 
   const save = async () => {
@@ -160,13 +189,30 @@ export default function OrgSettingsScreen() {
           <>
             {([['member', org?.memberNounPlural ?? 'Members', codes.member], ['student', org?.studentNounPlural ?? 'Students', codes.student]] as const).map(([kind, who, code]) => (
               <View key={kind} style={styles.codeRow}>
-                <View style={{ flex: 1 }}>
+                <TouchableOpacity
+                  style={{ flex: 1 }}
+                  onPress={() => copyCode(kind)}
+                  activeOpacity={0.7}
+                  disabled={!code}
+                >
                   <Text style={styles.codeWho}>{who.toUpperCase()}</Text>
                   <Text style={styles.codeVal}>{code ?? '—'}</Text>
-                </View>
-                <TouchableOpacity onPress={() => shareCode(kind)} style={styles.shareBtn} activeOpacity={0.85}>
-                  <Ionicons name="share-outline" size={16} color={CREAM} />
-                  <Text style={styles.shareTxt}>Share</Text>
+                  {copiedKind === kind && <Text style={styles.copiedTxt}>Copied!</Text>}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => shareCode(kind)}
+                  style={styles.shareBtn}
+                  activeOpacity={0.85}
+                  disabled={sharingKind === kind}
+                >
+                  {sharingKind === kind ? (
+                    <ActivityIndicator color={CREAM} size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="share-outline" size={16} color={CREAM} />
+                      <Text style={styles.shareTxt}>Share</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
               </View>
             ))}
@@ -354,6 +400,24 @@ export default function OrgSettingsScreen() {
           <Text style={styles.saveTxt}>{saving ? 'Saving…' : 'Save changes'}</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Offscreen share card — rendered (not unmounted) so captureRef can snapshot it. */}
+      <View style={styles.shareCardWrap} pointerEvents="none">
+        <View ref={shareCardRef} collapsable={false} style={styles.shareCard}>
+          <Image
+            source={require('@/assets/images/splash-icon.png')}
+            style={styles.shareCardLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.shareCardOrg}>{org?.name ?? 'Your organization'}</Text>
+          <Text style={styles.shareCardLine}>
+            {(sharingKind === 'student' ? (org?.studentNoun ?? 'Student') : (org?.memberNoun ?? 'Tutor'))} Code:{' '}
+            {(sharingKind === 'student' ? codes.student : codes.member) ?? '—'}
+          </Text>
+          <Text style={styles.shareCardBrand}>Alloy Mentors</Text>
+          <Text style={styles.shareCardFooter}>JPX Software Development co.</Text>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -372,8 +436,17 @@ const styles = StyleSheet.create({
   codeRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.16)', borderRadius: 18, padding: 16, marginBottom: 10 },
   codeWho: { fontFamily: font.bold, fontSize: 10.5, color: 'rgba(34,39,31,0.45)', letterSpacing: 1.5 },
   codeVal: { fontFamily: font.black, fontSize: 24, color: INK, letterSpacing: 2, marginTop: 3 },
-  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: PINE, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
+  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: PINE, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, minWidth: 84, justifyContent: 'center' },
   shareTxt: { fontFamily: font.semibold, fontSize: 13, color: CREAM },
+  copiedTxt: { fontFamily: font.semibold, fontSize: 11.5, color: PINE_MID, marginTop: 4 },
+
+  shareCardWrap: { position: 'absolute', top: 0, left: 0, opacity: 0 },
+  shareCard: { width: 320, alignItems: 'center', backgroundColor: '#FFFFFF', padding: 28, borderRadius: 20 },
+  shareCardLogo: { width: 72, height: 72, marginBottom: 14 },
+  shareCardOrg: { fontFamily: font.black, fontSize: 20, color: PINE, textAlign: 'center', marginBottom: 12 },
+  shareCardLine: { fontFamily: font.semibold, fontSize: 15, color: INK, marginBottom: 6 },
+  shareCardBrand: { fontFamily: font.bold, fontSize: 13, color: PINE, letterSpacing: 1, marginTop: 14 },
+  shareCardFooter: { fontFamily: font.regular, fontSize: 10.5, color: 'rgba(34,39,31,0.45)', marginTop: 4 },
 
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.14)', borderRadius: 20, paddingHorizontal: 14 },
   featureRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },

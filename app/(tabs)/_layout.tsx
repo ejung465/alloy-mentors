@@ -83,8 +83,19 @@ function CustomTabBar({ state, navigation }: any) {
     // reserving a white band. Tab screens pad their scroll content to clear it.
     <View style={[styles.outer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
 
-      {/* ── FAB popup – rendered as a Modal so it escapes all clipping ── */}
-      <Modal visible={fabOpen} transparent animationType="fade" statusBarTranslucent>
+      {/* ── FAB popup – rendered as a Modal so it escapes all clipping ──
+          NOTE: statusBarTranslucent was intentionally dropped here. With
+          app.json's edgeToEdgeEnabled (Android), toggling that flag on
+          Modal open/close makes the OS briefly recompute window insets,
+          which SafeAreaProvider then propagates to every screen using
+          useSafeAreaInsets() (e.g. admin.tsx's ScrollView padding) — this
+          reads as the list "jumping"/scrolling on its own when the FAB
+          opens, with no way to scroll back to the cut-off top content.
+          The app is already edge-to-edge, so this Modal doesn't need its
+          own translucent-status-bar flag to draw full-bleed. Best-effort
+          fix — could not reproduce on-device to confirm 1:1, but this
+          removes the only inset-affecting prop in the FAB's code path. */}
+      <Modal visible={fabOpen} transparent animationType="fade">
         <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setFabOpen(false)}>
           <BlurView intensity={45} tint="light" style={StyleSheet.absoluteFillObject} />
           <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(30,36,28,0.16)' }]} />

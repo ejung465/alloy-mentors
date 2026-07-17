@@ -114,11 +114,15 @@ export default function ResourcesScreen() {
   };
 
   const pickFile = async () => {
-    const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
-    if (res.canceled || !res.assets?.length) return;
-    const asset = res.assets[0];
-    setPicked(asset);
-    if (!title.trim()) setTitle(asset.name.replace(/\.[^.]+$/, ''));
+    try {
+      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
+      if (res.canceled || !res.assets?.length) return;
+      const asset = res.assets[0];
+      setPicked(asset);
+      if (!title.trim()) setTitle(asset.name.replace(/\.[^.]+$/, ''));
+    } catch (e: any) {
+      Alert.alert("Couldn't pick file", e?.message ?? 'Try a different file.');
+    }
   };
 
   const toggleMember = (id: string) => {

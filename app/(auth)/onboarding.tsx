@@ -98,6 +98,9 @@ export default function OnboardingScreen() {
           </View>
 
           <Text style={styles.footnote}>Alloy Mentors · v{Constants.expoConfig?.version ?? '1.1.0'}</Text>
+          <TouchableOpacity onPress={() => router.push('/credits')} style={{ marginTop: 6 }}>
+            <Text style={styles.creditsTxt}>an app by JPX.co</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -119,4 +122,5 @@ const styles = StyleSheet.create({
   codeLabel: { fontFamily: font.semibold, fontSize: 11, color: colors.silver, letterSpacing: 1.5, marginBottom: 8, textAlign: 'center' },
   codeInput: { fontFamily: font.bold, fontSize: 22, color: colors.text, textAlign: 'center', letterSpacing: 5, backgroundColor: colors.surfaceStrong, borderWidth: 1.5, borderColor: 'rgba(22,91,116,0.3)', borderRadius: 16, paddingVertical: 17, paddingHorizontal: 16 },
   footnote: { fontFamily: font.medium, fontSize: 12, color: colors.textGhost, textAlign: 'center', marginTop: 36, letterSpacing: 0.5 },
+  creditsTxt: { fontFamily: font.regular, fontSize: 11, color: colors.textGhost, textAlign: 'center', opacity: 0.6 },
 });

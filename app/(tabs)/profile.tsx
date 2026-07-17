@@ -22,6 +22,8 @@ import { clearLastOrg } from '@/lib/org';
 import { getAttendanceStreak } from '@/lib/checkin';
 import { Image } from 'expo-image';
 import Constants from 'expo-constants';
+import { requestNotificationPermission } from '@/lib/notifications';
+import { isBiometricAvailable, getAppLockEnabled, setAppLockEnabled } from '@/lib/appLock';
 
 function PressRow({ children, onPress }: any) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -95,6 +97,7 @@ export default function ProfileScreen() {
   const [loadingPdf, setLoadingPdf]   = useState(false);
   const [showStats, setShowStats]     = useState(false);
   const [notifEnabled, setNotif]      = useState(true);
+  const [appLockEnabled, setAppLock]  = useState(false);
   const [showEmail, setShowEmail]     = useState(false);
   const [newEmail, setNewEmail]       = useState('');
   const [emailStep, setEmailStep]     = useState<'address' | 'code'>('address');
@@ -164,13 +167,25 @@ export default function ProfileScreen() {
   };
 
   // Support / legal row handlers — real actions, no dead taps
-  const mail = (subject: string) =>
-    Linking.openURL(`mailto:support@alloymentors.com?subject=${encodeURIComponent(subject)}`)
-      .catch(() => Alert.alert('No mail app found', 'Reach us at support@alloymentors.com'));
   const openURL = (url: string) =>
     Linking.openURL(url).catch(() => Alert.alert('Could not open link', url));
 
   const toggleNotif = async (v: boolean) => {
+    if (v) {
+      // Turning ON: only persist the flag if the OS permission is actually granted.
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        Alert.alert(
+          'Notifications are off',
+          'Enable notifications for Alloy Mentors in Settings to turn this on.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ]
+        );
+        return; // leave the switch (and stored flag) unchanged
+      }
+    }
     setNotif(v);
     await AsyncStorage.setItem('alloy.notifEnabled', v ? '1' : '0');
     const { data: { user } } = await supabase.auth.getUser();
@@ -185,7 +200,24 @@ export default function ProfileScreen() {
       const { data } = await supabase.from('users').select('notifications_enabled').eq('id', user.id).maybeSingle();
       if (data && typeof data.notifications_enabled === 'boolean') setNotif(data.notifications_enabled);
     })();
+    getAppLockEnabled().then(setAppLock);
   }, []);
+
+  // App lock (Face ID / Touch ID) toggle — checks hardware/enrollment before enabling.
+  const toggleAppLock = async (v: boolean) => {
+    if (v) {
+      const available = await isBiometricAvailable();
+      if (!available) {
+        Alert.alert(
+          'Face ID / Touch ID unavailable',
+          'This device has no biometric authentication set up. Add Face ID, Touch ID, or a passcode in Settings first.'
+        );
+        return;
+      }
+    }
+    setAppLock(v);
+    await setAppLockEnabled(v);
+  };
 
   // App Store 5.1.1(v): account deletion must be available in-app.
   const handleDeleteAccount = () => {
@@ -358,7 +390,7 @@ export default function ProfileScreen() {
         <Text style={styles.sectionLabel}>ACCOUNT</Text>
         <GlassCard style={styles.settingsCard} contentStyle={{ padding: 0 }}>
           <SettingRow icon="mail-outline"     label="Email"        sublabel={profile?.email || '—'}           color="#2C7C96" onPress={() => { setNewEmail(profile?.email || ''); setShowEmail(true); }} />
-          <SettingRow icon="school-outline"   label="Institution"  sublabel={profile?.school || 'Not set'}    color="#7A7A7A" onPress={() => router.push('/edit-profile')} />
+          <SettingRow icon="school-outline"   label="Profile"      sublabel={profile?.school || 'Not set'}    color="#7A7A7A" onPress={() => router.push('/edit-profile')} />
           <SettingRow icon="person-outline"   label="Role"         sublabel={roleText}                        color={colors.gold} onPress={() => router.push('/org-tree')} />
           {featureEnabled(org, 'checkin') && (
             <SettingRow icon="qr-code-outline"  label="Check-In QR"  sublabel="Show this at the door"           color={colors.silver} onPress={() => router.push('/my-qr')} />
@@ -369,8 +401,11 @@ export default function ProfileScreen() {
         {/* ── Preferences ────────────────────────── */}
         <Text style={styles.sectionLabel}>PREFERENCES</Text>
         <GlassCard style={styles.settingsCard} contentStyle={{ padding: 0 }}>
-          <SettingRow icon="notifications-outline" label="Push Notifications" sublabel="Session reminders & approvals" color="#C77E88" last
+          <SettingRow icon="notifications-outline" label="Push Notifications" sublabel="Session reminders & approvals" color="#C77E88"
             rightEl={<Switch value={notifEnabled} onValueChange={toggleNotif} trackColor={{ true: 'rgba(199,126,136,0.5)' }} thumbColor="#C77E88" />}
+          />
+          <SettingRow icon="finger-print-outline" label="Require Face ID / Touch ID to open" sublabel="Lock the app when it's backgrounded" color={colors.platinum} last
+            rightEl={<Switch value={appLockEnabled} onValueChange={toggleAppLock} trackColor={{ true: 'rgba(22,91,116,0.5)' }} thumbColor={colors.platinum} />}
           />
         </GlassCard>
 
@@ -389,8 +424,8 @@ export default function ProfileScreen() {
         {/* ── Support ─────────────────────────────── */}
         <Text style={styles.sectionLabel}>SUPPORT</Text>
         <GlassCard style={styles.settingsCard} contentStyle={{ padding: 0 }}>
-          <SettingRow icon="help-circle-outline" label="Help Center" color="#B08A3E" onPress={() => mail('Help request')} />
-          <SettingRow icon="chatbox-outline" label="Contact Support" sublabel="Email the Alloy Mentors team" color="#2C7C96" onPress={() => mail('Support')} />
+          <SettingRow icon="help-circle-outline" label="Help Center" color="#B08A3E" onPress={() => openURL('https://alloymentors.com/help')} />
+          <SettingRow icon="chatbox-outline" label="Contact Support" sublabel="Send us a message" color="#2C7C96" onPress={() => router.push('/contact-support' as any)} />
           <SettingRow icon="star-outline" label="Rate the App" color="#C77E88" onPress={() => Alert.alert('Thanks!', 'Ratings open once Alloy is on the App Store.')} last />
         </GlassCard>
 
@@ -410,7 +445,13 @@ export default function ProfileScreen() {
         <TouchableOpacity onPress={handleDeleteAccount} style={{ alignItems: 'center', marginTop: 14 }} activeOpacity={0.7}>
           <Text style={styles.deleteAccountText}>Delete account</Text>
         </TouchableOpacity>
-        <Text style={styles.versionText}>Alloy Mentors · v{Constants.expoConfig?.version ?? '1.1.0'}</Text>
+
+        <View style={styles.footerBlock}>
+          <Text style={styles.versionText}>Alloy Mentors · v{Constants.expoConfig?.version ?? '1.1.0'}</Text>
+          <TouchableOpacity onPress={() => router.push('/credits' as any)} activeOpacity={0.6}>
+            <Text style={styles.jpxLink}>an app by JPX.co</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* ── VIDEO GAME STATS MODAL ─────────────────── */}
@@ -571,7 +612,9 @@ const styles = StyleSheet.create({
   signOutBtn: { overflow: 'hidden', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(44,124,150,0.25)', backgroundColor: 'rgba(44,124,150,0.1)', paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   signOutText: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: '#2C7C96' },
   deleteAccountText: { fontFamily: 'Inter-SemiBold', fontSize: 13, color: '#B15A4E', textDecorationLine: 'underline' },
+  footerBlock: { alignItems: 'center', marginTop: 32, gap: 8 },
   versionText: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(34,39,31,0.32)', textAlign: 'center' },
+  jpxLink: { fontFamily: 'Inter-Regular', fontSize: 11, color: 'rgba(34,39,31,0.24)', textAlign: 'center' },
 
   // Stats modal
   statsSheet: { overflow: 'hidden', borderTopLeftRadius: 32, borderTopRightRadius: 32, borderWidth: 1, borderColor: 'rgba(196,196,196,0.32)', backgroundColor: '#FFFFFF', padding: 24, paddingBottom: 48 },
