@@ -11,8 +11,8 @@ const PINE = '#165B74';
 const INK = '#22271F';
 
 const WEBSITE = 'https://jpx.co';
-const PHONE = '+1 (000) 000-0000'; // TODO(JPX): replace with the real support/contact phone number
-const EMAIL = 'contact@jpx.co'; // TODO(JPX): replace with the real contact email
+const PHONE = '+1 (224) 724-9020';
+const EMAIL = 'contact@jpxco.dev';
 
 function InfoRow({ icon, label, value, onPress, last = false }: {
   icon: any; label: string; value: string; onPress: () => void; last?: boolean;
