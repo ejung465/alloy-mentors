@@ -104,6 +104,7 @@ export default function IntakeScreen() {
   const [phone, setPhone] = useState('');
   const [birthday, setBirthday] = useState('');
   const [school, setSchool] = useState('');
+  const [location, setLocation] = useState('');
   const [gradeOcc, setGradeOcc] = useState('');
 
   // skills / availability
@@ -178,7 +179,7 @@ export default function IntakeScreen() {
 
     setBusy(true);
     const { error } = await completeVolunteerIntake({
-      fullName, preferredName: '', email, phone, birthday: birthdayISO, school, gradeOrOccupation: gradeOcc,
+      fullName, preferredName: '', email, phone, birthday: birthdayISO, school, location, gradeOrOccupation: gradeOcc,
       subjects, languages: languages.split(',').map((s) => s.trim()).filter(Boolean),
       availableDays: days, availableTimes: times, tutoringExperience: experience, transportation: transport, tshirtSize: tshirt,
       emergencyName: emName, emergencyPhone: emPhone,
@@ -275,6 +276,7 @@ export default function IntakeScreen() {
                 <View style={{ flex: 1 }}><GlassInput label="Birthday" placeholder="MM/DD/YYYY" value={birthday} onChangeText={setBirthday} keyboardType="numbers-and-punctuation" /></View>
               </View>
               <GlassInput label="School *" placeholder="Your school or institution" value={school} onChangeText={setSchool} />
+              <GlassInput label="Location" placeholder="City, State" value={location} onChangeText={setLocation} />
               <GlassInput label="Grade" placeholder="11th grade" value={gradeOcc} onChangeText={setGradeOcc} />
 
               {/* Skills */}

@@ -82,6 +82,7 @@ export type VolunteerIntake = {
   phone: string;
   birthday: string | null;        // ISO yyyy-mm-dd
   school?: string | null;
+  location?: string | null;
   gradeOrOccupation?: string | null;
   subjects: string[];
   languages: string[];
@@ -126,6 +127,7 @@ export async function completeVolunteerIntake(intake: VolunteerIntake) {
     phone: intake.phone.trim() || null,
     birthday: intake.birthday,
     school: intake.school?.trim() || null,
+    location: intake.location?.trim() || null,
     grade_or_occupation: intake.gradeOrOccupation?.trim() || null,
     subjects: intake.subjects,
     languages: intake.languages,

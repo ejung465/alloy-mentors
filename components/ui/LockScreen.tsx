@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { colors, font } from '@/lib/theme';
-import { authenticateAsync } from '@/lib/appLock';
+import { authenticateAsync, setAppLockEnabled } from '@/lib/appLock';
+import { supabase } from '@/lib/supabase';
 
 const PINE = '#165B74';
 const INK = '#22271F';
@@ -37,6 +38,29 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
     }
   };
 
+  // Escape hatch: if Face ID/Touch ID is stuck failing (removed biometrics,
+  // hardware issue, etc.), a user must never be permanently locked out with
+  // no way forward. Signing out and disabling the lock lets them get back in
+  // through a normal email/social login, then re-enable the lock later.
+  const handleCantUnlock = () => {
+    Alert.alert(
+      "Can't unlock?",
+      'Signing out will turn off the app lock and take you back to sign-in. You can turn it on again anytime from Settings.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await setAppLockEnabled(false);
+            await supabase.auth.signOut();
+            onUnlock();
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.overlay}>
       <AuroraBackground variant="iris" />
@@ -52,6 +76,10 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
         <TouchableOpacity onPress={handleUnlock} disabled={busy} style={[styles.unlockBtn, busy && { opacity: 0.6 }]} activeOpacity={0.85}>
           <Ionicons name="finger-print-outline" size={18} color={colors.base} style={{ marginRight: 8 }} />
           <Text style={styles.unlockBtnText}>{busy ? 'Checking…' : 'Unlock'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={handleCantUnlock} disabled={busy} style={styles.escapeBtn} activeOpacity={0.7}>
+          <Text style={styles.escapeBtnText}>Can't unlock? Sign out</Text>
         </TouchableOpacity>
       </SafeAreaView>
     </View>
@@ -74,4 +102,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.platinum, borderRadius: 16, paddingVertical: 15, paddingHorizontal: 36,
   },
   unlockBtnText: { fontFamily: font.bold, fontSize: 15, color: colors.base },
+  escapeBtn: { marginTop: 18, paddingVertical: 8, paddingHorizontal: 12 },
+  escapeBtnText: { fontFamily: font.medium, fontSize: 13, color: colors.textFaint, textDecorationLine: 'underline' },
 });

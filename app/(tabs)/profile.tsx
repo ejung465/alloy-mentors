@@ -22,7 +22,7 @@ import { clearLastOrg } from '@/lib/org';
 import { getAttendanceStreak } from '@/lib/checkin';
 import { Image } from 'expo-image';
 import Constants from 'expo-constants';
-import { requestNotificationPermission } from '@/lib/notifications';
+import { requestNotificationPermission, registerForPushNotificationsAsync, removePushToken } from '@/lib/notifications';
 import { isBiometricAvailable, getAppLockEnabled, setAppLockEnabled } from '@/lib/appLock';
 
 function PressRow({ children, onPress }: any) {
@@ -172,7 +172,8 @@ export default function ProfileScreen() {
 
   const toggleNotif = async (v: boolean) => {
     if (v) {
-      // Turning ON: only persist the flag if the OS permission is actually granted.
+      // Turning ON: only persist the flag if the OS permission is actually granted,
+      // and register this device's Expo push token so the backend can address it.
       const granted = await requestNotificationPermission();
       if (!granted) {
         Alert.alert(
@@ -185,6 +186,14 @@ export default function ProfileScreen() {
         );
         return; // leave the switch (and stored flag) unchanged
       }
+      const token = await registerForPushNotificationsAsync();
+      if (token) await AsyncStorage.setItem('alloy.pushToken', token);
+    } else {
+      // Turning OFF: remove this device's token so nothing gets pushed to it.
+      const { data: { user } } = await supabase.auth.getUser();
+      const token = await AsyncStorage.getItem('alloy.pushToken');
+      if (user && token) await removePushToken(user.id, token);
+      await AsyncStorage.removeItem('alloy.pushToken');
     }
     setNotif(v);
     await AsyncStorage.setItem('alloy.notifEnabled', v ? '1' : '0');
