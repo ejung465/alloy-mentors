@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  ActivityIndicator, Alert, Dimensions, FlatList, Modal, Pressable, ScrollView, StyleSheet,
+  ActivityIndicator, Alert, Dimensions, FlatList, ScrollView, StyleSheet,
   Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,13 +22,6 @@ const { width: SCREEN_W } = Dimensions.get('window');
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
-function ageFrom(iso?: string | null): number | null {
-  if (!iso) return null;
-  const d = new Date(iso); if (isNaN(d.getTime())) return null;
-  const n = new Date(); let a = n.getFullYear() - d.getFullYear();
-  const m = n.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && n.getDate() < d.getDate())) a--;
-  return a;
-}
 
 function Avatar({ s, size }: { s: Student; size: number }) {
   const initials = s.full_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -40,18 +33,6 @@ function Avatar({ s, size }: { s: Student; size: number }) {
   );
 }
 
-function InfoRow({ icon, label, value, color = colors.titanium }: { icon: any; label: string; value?: string | null; color?: string }) {
-  if (!value) return null;
-  return (
-    <View style={styles.infoRow}>
-      <View style={[styles.infoIcon, { backgroundColor: `${color}1A` }]}><Ionicons name={icon} size={15} color={color} /></View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.infoLabel}>{label}</Text>
-        <Text style={styles.infoValue}>{value}</Text>
-      </View>
-    </View>
-  );
-}
 
 // ── One swipeable pairing card: notes-first, profile on tap ──────────────────
 function PairingCard({ student, sessionId, elevated }: { student: Student; sessionId: string | null; elevated: boolean }) {
@@ -60,7 +41,6 @@ function PairingCard({ student, sessionId, elevated }: { student: Student; sessi
   const [notes, setNotes] = useState<StudentNote[]>([]);
   const [noteText, setNoteText] = useState('');
   const [saving, setSaving] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
 
   const loadNotes = useCallback(() => { listStudentNotes(student.id).then(setNotes); }, [student.id]);
   useEffect(() => { loadNotes(); }, [loadNotes]);
@@ -133,43 +113,6 @@ function PairingCard({ student, sessionId, elevated }: { student: Student; sessi
         )}
       </ScrollView>
 
-      {/* Full profile (only when they tap) */}
-      <Modal visible={showProfile} transparent animationType="slide">
-        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.scrim }]}>
-          <Pressable style={{ flex: 1 }} onPress={() => setShowProfile(false)} />
-          <View style={styles.sheet}>
-            <View style={styles.sheetHandle} />
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
-              <View style={styles.detailHead}>
-                <Avatar s={student} size={64} />
-                <View style={{ flex: 1, marginLeft: 16 }}>
-                  <Text style={styles.sName}>{student.full_name}</Text>
-                  <Text style={styles.sSub}>{[student.grade, student.school].filter(Boolean).join(' · ') || 'Student'}</Text>
-                </View>
-                <TouchableOpacity onPress={() => setShowProfile(false)} style={styles.closeBtn}>
-                  <Ionicons name="close" size={20} color="#22271F" />
-                </TouchableOpacity>
-              </View>
-              <InfoRow icon="calendar-outline" label="Age" value={ageFrom(student.birthday) ? `${ageFrom(student.birthday)} years` : null} />
-              <InfoRow icon="language-outline" label="Language" value={student.language} color={colors.iris} />
-              <InfoRow icon="book-outline" label="Subjects needing help" value={(student.subjects_help || []).join(', ') || null} color={colors.sky} />
-              <InfoRow icon="chatbubbles-outline" label="English level" value={student.english_level} color={colors.sky} />
-              <InfoRow icon="car-outline" label="Transportation" value={student.transportation} />
-              <InfoRow icon="people-outline" label="Guardian" value={[student.guardian_name, student.guardian_relationship].filter(Boolean).join(' · ') || null} color={colors.gold} />
-              <InfoRow icon="call-outline" label="Guardian phone" value={student.guardian_phone} color={colors.gold} />
-              <InfoRow icon="alert-outline" label="Emergency contact" value={[student.emergency_contact_name, student.emergency_contact_phone].filter(Boolean).join(' · ') || null} color={colors.rose} />
-              <InfoRow icon="document-text-outline" label="Notes" value={student.notes} />
-              {elevated && (student.medical_notes || student.country_of_origin) ? (
-                <>
-                  <Text style={styles.sensitiveLabel}>Restricted · coordinators only</Text>
-                  <InfoRow icon="medical-outline" label="Medical notes" value={student.medical_notes} color={colors.rose} />
-                  <InfoRow icon="earth-outline" label="Country of origin" value={student.country_of_origin} color={colors.steel} />
-                </>
-              ) : null}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -296,15 +239,6 @@ const styles = StyleSheet.create({
   emptyTitle: { fontFamily: font.bold, fontSize: 18, color: colors.text },
   emptySub: { fontFamily: font.regular, fontSize: 14, color: colors.textFaint, textAlign: 'center', lineHeight: 20 },
 
-  // profile sheet
-  sheet: { marginTop: 'auto', maxHeight: '86%', backgroundColor: colors.baseElevated, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: colors.hairlineStrong, padding: 20, paddingTop: 12 },
-  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: colors.hairlineStrong, alignSelf: 'center', marginBottom: 16 },
-  detailHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
   avatar: { backgroundColor: colors.surfaceStrong, borderWidth: 1, borderColor: colors.hairlineStrong, alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { fontFamily: font.bold, color: colors.titanium },
-  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 9 },
-  infoIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  infoLabel: { fontFamily: font.medium, fontSize: 11, color: colors.textFaint, textTransform: 'uppercase', letterSpacing: 0.6 },
-  infoValue: { fontFamily: font.medium, fontSize: 15, color: colors.text, marginTop: 2 },
-  sensitiveLabel: { fontFamily: font.semibold, fontSize: 11, color: colors.steel, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 16, marginBottom: 4 },
 });

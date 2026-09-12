@@ -3,7 +3,6 @@ import {
   Inter_400Regular, Inter_500Medium, Inter_600SemiBold,
   Inter_700Bold, Inter_900Black,
 } from '@expo-google-fonts/inter';
-import { Lato_400Regular, Lato_700Bold } from '@expo-google-fonts/lato';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,8 +23,6 @@ export default function RootLayout() {
     'Inter-SemiBold': Inter_600SemiBold,
     'Inter-Bold': Inter_700Bold,
     'Inter-Black': Inter_900Black,
-    'Lato-Regular': Lato_400Regular,
-    'Lato-Bold': Lato_700Bold,
   });
   const [introDone, setIntroDone] = useState(false);
 

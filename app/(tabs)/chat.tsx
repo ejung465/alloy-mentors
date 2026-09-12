@@ -1,10 +1,14 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, RefreshControl, TouchableOpacity,
   Modal, StyleSheet, Animated, Pressable, TextInput, KeyboardAvoidingView, Platform, Alert,
-  Image, ActivityIndicator, Dimensions
+  ActivityIndicator, Dimensions
 } from 'react-native';
+// expo-image (not RN's Image): disk-caches chat photos so scrolling back
+// doesn't re-download multi-MB images over cellular.
+import { Image } from 'expo-image';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { runOnJS } from 'react-native-reanimated';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
@@ -63,6 +67,9 @@ function AnimPress({ children, onPress, style }: any) {
 export default function ChatScreen() {
   const { profile, org } = useUser();
   const router = useRouter();
+  // The thread is a presentationStyle="fullScreen" Modal, which does NOT inherit
+  // safe-area insets — its header/input row have to apply them by hand.
+  const insets = useSafeAreaInsets();
   const membersLabel = org?.memberNounPlural || 'Members';
   const orgName = org?.name || 'your organization';
   const isLeader = canManageOrg(profile?.role);
@@ -719,18 +726,33 @@ export default function ChatScreen() {
     return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   };
 
-  const visibleUsers = orgUsers.filter((u) => !blockedIds.includes(u.id));
+  const visibleUsers = useMemo(
+    () => orgUsers.filter((u) => !blockedIds.includes(u.id)),
+    [orgUsers, blockedIds]
+  );
   // Hide messages from blocked users (either direction) in any thread.
-  const visibleMessages = messages.filter((m) => !blockedIds.includes(m.sender_id));
-  const filteredUsers = search
-    ? visibleUsers.filter((u) => u.full_name?.toLowerCase().includes(search.toLowerCase()))
-    : visibleUsers;
+  const visibleMessages = useMemo(
+    () => messages.filter((m) => !blockedIds.includes(m.sender_id)),
+    [messages, blockedIds]
+  );
+  // O(1) sender lookup — a .find() per rendered message is O(messages × users).
+  const nameById = useMemo(() => new Map(orgUsers.map((u) => [u.id, u])), [orgUsers]);
+  const filteredUsers = useMemo(
+    () => (search
+      ? visibleUsers.filter((u) => u.full_name?.toLowerCase().includes(search.toLowerCase()))
+      : visibleUsers),
+    [visibleUsers, search]
+  );
 
   // Most-recent pinned message in the open thread (drives the banner strip).
-  const pinnedMsg = [...visibleMessages]
-    .filter((m) => m.pinned_at && !m.deleted_at)
-    .sort((a, b) => new Date(a.pinned_at).getTime() - new Date(b.pinned_at).getTime())
-    .pop() || null;
+  const pinnedMsg = useMemo(
+    () =>
+      [...visibleMessages]
+        .filter((m) => m.pinned_at && !m.deleted_at)
+        .sort((a, b) => new Date(a.pinned_at).getTime() - new Date(b.pinned_at).getTime())
+        .pop() || null,
+    [visibleMessages]
+  );
 
   // If viewing a DM with someone I've filed a still-pending report against.
   const activeReport = activeChat?.type === 'dm'
@@ -760,16 +782,20 @@ export default function ChatScreen() {
   // back-swipe gesture (the thread is a full-screen Modal, not a router
   // push screen, so it doesn't get that gesture for free).
   const screenW = Dimensions.get('window').width;
-  const closeThread = () => setActiveChat(null);
-  const edgeSwipeGesture = Gesture.Pan()
-    .activeOffsetX(20)
-    .failOffsetY([-20, 20])
-    .hitSlop({ left: 0, width: 24 })
-    .onEnd((e) => {
-      if (e.translationX > screenW * 0.28 || e.velocityX > 800) {
-        runOnJS(closeThread)();
-      }
-    });
+  const closeThread = useCallback(() => setActiveChat(null), []);
+  const edgeSwipeGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetX(20)
+        .failOffsetY([-20, 20])
+        .hitSlop({ left: 0, width: 24 })
+        .onEnd((e) => {
+          if (e.translationX > screenW * 0.28 || e.velocityX > 800) {
+            runOnJS(closeThread)();
+          }
+        }),
+    [screenW, closeThread]
+  );
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -929,7 +955,15 @@ export default function ChatScreen() {
               </View>
             </View>
 
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+            {/* keyboardShouldPersistTaps: the search field above autoFocuses, so
+                without this the first tap on a member row is swallowed dismissing
+                the keyboard and selection takes two taps. */}
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               {filteredUsers.map((u) => {
                 const isSel = selectedMembers.includes(u.id);
                 return (
@@ -989,7 +1023,7 @@ export default function ChatScreen() {
       <Modal visible={!!activeChat} animationType="slide" presentationStyle="fullScreen">
         <GestureDetector gesture={edgeSwipeGesture}>
         <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={styles.chatHeader}>
+          <View style={[styles.chatHeader, { paddingTop: insets.top + 8 }]}>
             <TouchableOpacity onPress={() => setActiveChat(null)} style={styles.closeBtn}>
               <Ionicons name="chevron-back" size={22} color="#22271F" />
             </TouchableOpacity>
@@ -1130,7 +1164,7 @@ export default function ChatScreen() {
                   new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() > 300000;
                 const isGroupFooter = !next || next.sender_id !== m.sender_id;
                 const showDate = !prev || new Date(m.created_at).toDateString() !== new Date(prev.created_at).toDateString();
-                const senderName = isMe ? 'Me' : orgUsers.find((u) => u.id === m.sender_id)?.full_name || 'Member';
+                const senderName = isMe ? 'Me' : nameById.get(m.sender_id)?.full_name || 'Member';
 
                 const isCurrentMatch = matchIds.length > 0 && matchIds[matchIdx] === m.id;
 
@@ -1178,7 +1212,7 @@ export default function ChatScreen() {
                           ]}
                         >
                           {m.image_url && (
-                            <Image source={{ uri: m.image_url }} style={styles.chatImage} />
+                            <Image source={{ uri: m.image_url }} style={styles.chatImage} contentFit="cover" />
                           )}
                           {!!m.content && (
                             <View style={m.image_url ? { paddingHorizontal: 9, paddingTop: 6, paddingBottom: 2 } : undefined}>
@@ -1236,7 +1270,7 @@ export default function ChatScreen() {
             })}
           </ScrollView>
 
-          <View style={styles.chatInputRow}>
+          <View style={[styles.chatInputRow, { paddingBottom: Math.max(insets.bottom, 12) }]}>
             <TouchableOpacity style={styles.imageBtn} onPress={pickAndSendImage} disabled={uploadingImage}>
               {uploadingImage ? (
                 <ActivityIndicator size="small" color="#2C7C96" />
@@ -1266,17 +1300,29 @@ export default function ChatScreen() {
       {/* ── Full-screen image viewer ───────────────────────────────────────── */}
       <Modal visible={!!imageViewer} transparent animationType="fade" onRequestClose={() => setImageViewer(null)}>
         <Pressable style={styles.imageScrim} onPress={() => setImageViewer(null)}>
-          {imageViewer && <Image source={{ uri: imageViewer }} style={styles.fullImage} resizeMode="contain" />}
+          {imageViewer && <Image source={{ uri: imageViewer }} style={styles.fullImage} contentFit="contain" />}
         </Pressable>
       </Modal>
 
       {/* ── Targeted announcement (leadership) ─────────────────────────────── */}
+      {/* KeyboardAvoidingView + a scrolling body: the composer is multiline (so
+          Return inserts a newline, not "send") and the Send button sits at the
+          sheet's bottom edge — without this the keyboard buries it on small
+          phones and the session list can push the sheet past screen height. */}
       <Modal visible={showAnnounce} transparent animationType="slide">
-        <View style={styles.newChatBackdrop}>
+        <KeyboardAvoidingView
+          style={styles.newChatBackdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFillObject} />
           <Pressable style={{ flex: 1 }} onPress={() => setShowAnnounce(false)} />
-          <View style={[styles.newChatSheet, { height: 'auto', paddingBottom: 40 }]}>
-            <View style={styles.newChatTop}>
+          <View style={[styles.newChatSheet, { height: 'auto', maxHeight: '88%', paddingBottom: 40 }]}>
+            <ScrollView
+              style={{ flexGrow: 0, flexShrink: 1 }}
+              contentContainerStyle={styles.newChatTop}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.sheetHeader}>
                 <Text style={styles.sheetTitle}>New Announcement</Text>
                 <TouchableOpacity onPress={() => setShowAnnounce(false)} style={styles.closeBtn}>
@@ -1313,7 +1359,12 @@ export default function ChatScreen() {
               {(announceAudience === 'not_rsvp' || announceAudience === 'attended') && (
                 <>
                   <Text style={styles.sectionLabel}>SESSION</Text>
-                  <ScrollView style={{ maxHeight: 160 }} showsVerticalScrollIndicator={false}>
+                  <ScrollView
+                    style={{ maxHeight: 160 }}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled
+                    keyboardShouldPersistTaps="handled"
+                  >
                     {sessions.length === 0 ? (
                       <Text style={{ color: 'rgba(34,39,31,0.4)', fontSize: 13, paddingVertical: 8 }}>No sessions found.</Text>
                     ) : (
@@ -1344,9 +1395,9 @@ export default function ChatScreen() {
               >
                 <Text style={styles.createGroupBtnTxt}>{sendingAnnounce ? 'Sending…' : 'Send Announcement'}</Text>
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── iMessage action overlay (long-press) ──────────────────────────── */}
@@ -1470,7 +1521,6 @@ const styles = StyleSheet.create({
   pageSubtitle: { fontFamily: 'Inter-Regular', fontSize: 14, color: 'rgba(34,39,31,0.45)', marginTop: 3 },
   headerActions: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(196,196,196,0.16)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', borderRadius: 20, overflow: 'hidden' },
   headerBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  headerDivider: { width: 1, height: 22, backgroundColor: 'rgba(196,196,196,0.32)' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 140 },
   sectionLabel: { fontFamily: 'Inter-SemiBold', fontSize: 11, color: 'rgba(34,39,31,0.3)', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 10, marginTop: 4 },
   memberRow: { flexDirection: 'row', alignItems: 'center' },
@@ -1560,7 +1610,7 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(196,196,196,0.08)' },
   actionRowTxt: { fontFamily: 'Inter-Medium', fontSize: 15.5, color: '#22271F' },
   chatInputRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 32, borderTopWidth: 1, borderTopColor: 'rgba(196,196,196,0.16)', gap: 10 },
-  chatInputBox: { flex: 1, height: 48, borderRadius: 24, backgroundColor: 'rgba(196,196,196,0.16)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', paddingHorizontal: 18, justifyContent: 'center' },
+  chatInputBox: { flex: 1, minHeight: 48, borderRadius: 24, backgroundColor: 'rgba(196,196,196,0.16)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', paddingHorizontal: 18, justifyContent: 'center' },
   chatInputReal: { flex: 1, fontFamily: 'Inter-Regular', fontSize: 15, color: '#22271F' },
   sendBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(44,124,150,0.35)', borderWidth: 1, borderColor: 'rgba(44,124,150,0.5)', alignItems: 'center', justifyContent: 'center' },
   imageBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(196,196,196,0.16)', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)' },
@@ -1573,13 +1623,6 @@ const styles = StyleSheet.create({
   audienceChipActive: { backgroundColor: 'rgba(44,124,150,0.14)', borderColor: 'rgba(44,124,150,0.4)' },
   audienceChipTxt: { fontFamily: 'Inter-SemiBold', fontSize: 13, color: 'rgba(34,39,31,0.55)' },
   audienceChipTxtActive: { color: '#165B74' },
-
-  // Settings
-  settingsBackdrop: { flex: 1, justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 110, paddingRight: 20 },
-  settingsMenu: { width: 220, borderRadius: 20, overflow: 'hidden', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: 'rgba(196,196,196,0.26)', shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 10 },
-  settingsItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12, gap: 12 },
-  settingsItemTxt: { fontFamily: 'Inter-Medium', fontSize: 14, color: '#22271F' },
-  settingsDivider: { height: 1, backgroundColor: 'rgba(196,196,196,0.16)', marginHorizontal: 12 },
 
   // Message
   dateDivider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10, paddingHorizontal: 10 },

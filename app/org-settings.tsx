@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Switch,
+  ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch,
   Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -179,7 +179,12 @@ export default function OrgSettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* ── Join codes ── */}
         <Text style={styles.section}>JOIN CODES</Text>
         <Text style={styles.sectionHelp}>Anyone with a code can join in that role. Share them wherever your people are.</Text>
@@ -400,6 +405,7 @@ export default function OrgSettingsScreen() {
           <Text style={styles.saveTxt}>{saving ? 'Saving…' : 'Save changes'}</Text>
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Offscreen share card — rendered (not unmounted) so captureRef can snapshot it. */}
       <View style={styles.shareCardWrap} pointerEvents="none">
@@ -428,7 +434,7 @@ const styles = StyleSheet.create({
   eyebrow: { fontFamily: font.bold, fontSize: 10.5, color: PINE_MID, letterSpacing: 2.5 },
   title: { fontFamily: font.black, fontSize: 28, color: PINE, letterSpacing: -0.9, marginTop: 4 },
   closeBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.surfaceStrong, borderWidth: 1, borderColor: colors.hairlineStrong, alignItems: 'center', justifyContent: 'center' },
-  scroll: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 60 },
+  scroll: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 120 },
 
   section: { fontFamily: font.bold, fontSize: 11.5, color: PINE_MID, letterSpacing: 2 },
   sectionHelp: { fontFamily: font.regular, fontSize: 12.5, color: 'rgba(34,39,31,0.5)', lineHeight: 18, marginTop: 6, marginBottom: 12 },

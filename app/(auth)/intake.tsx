@@ -368,7 +368,6 @@ const styles = StyleSheet.create({
   subtitle: { fontFamily: font.regular, fontSize: 15, color: colors.textDim, lineHeight: 22 },
   errorBox: { backgroundColor: 'rgba(176,138,62,0.12)', borderRadius: radius.sm, padding: 14, borderWidth: 1, borderColor: 'rgba(176,138,62,0.3)' },
   errorText: { fontFamily: font.medium, fontSize: 13, color: colors.gold, textAlign: 'center' },
-  otpInput: { backgroundColor: colors.surface, color: colors.text, fontSize: 32, fontFamily: font.bold, letterSpacing: 10, textAlign: 'center', paddingVertical: 16, borderRadius: radius.md, borderWidth: 1, borderColor: colors.hairline },
   resend: { fontFamily: font.medium, fontSize: 14, color: colors.titanium, textAlign: 'center', marginTop: 4 },
 
   minorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(176,138,62,0.12)', borderWidth: 1, borderColor: 'rgba(176,138,62,0.3)', borderRadius: radius.md, padding: 12, marginTop: 20 },

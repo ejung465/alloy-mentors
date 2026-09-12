@@ -65,7 +65,8 @@ export default function AdminChatViewerScreen() {
         .from('chat_incident_reports')
         .select('*')
         .eq('organization_id', org.id)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .limit(100),
     ]);
     setMembers((users as Member[]) || []);
     setReports((reps as IncidentReport[]) || []);
@@ -77,7 +78,31 @@ export default function AdminChatViewerScreen() {
     else setLoading(false);
   }, [load, profile?.role]);
 
-  // Gate: leadership only.
+  // Fetches the most recent slice of a DM thread, then flips it back to
+  // oldest → newest for rendering.
+  const loadThread = useCallback(async (a: Member, b: Member) => {
+    setThreadLoading(true);
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .is('group_chat_id', null)
+      .or(
+        `and(sender_id.eq.${a.id},receiver_id.eq.${b.id}),and(sender_id.eq.${b.id},receiver_id.eq.${a.id})`
+      )
+      .order('created_at', { ascending: false })
+      .limit(200);
+    setThread((data || []).slice().reverse());
+    setThreadLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (personA && personB && personA.id !== personB.id) loadThread(personA, personB);
+    else setThread([]);
+  }, [personA, personB, loadThread]);
+
+  // Gate: leadership only. Declared AFTER every hook above so the hook order is
+  // identical on every render (profile resolves asynchronously, so this
+  // condition flips from true to false mid-mount).
   if (!canManageOrg(profile?.role)) {
     return (
       <SafeAreaView style={styles.screen}>
@@ -92,25 +117,6 @@ export default function AdminChatViewerScreen() {
       </SafeAreaView>
     );
   }
-
-  const loadThread = useCallback(async (a: Member, b: Member) => {
-    setThreadLoading(true);
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .is('group_chat_id', null)
-      .or(
-        `and(sender_id.eq.${a.id},receiver_id.eq.${b.id}),and(sender_id.eq.${b.id},receiver_id.eq.${a.id})`
-      )
-      .order('created_at', { ascending: true });
-    setThread(data || []);
-    setThreadLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (personA && personB && personA.id !== personB.id) loadThread(personA, personB);
-    else setThread([]);
-  }, [personA, personB, loadThread]);
 
   const pending = reports.filter((r) => r.status === 'pending');
   const resolved = reports.filter((r) => r.status !== 'pending');

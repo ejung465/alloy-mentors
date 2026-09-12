@@ -65,6 +65,7 @@ export default function LoginScreen() {
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.centerWrap}>
           <BrandMark size={56} style={{ marginBottom: 18 }} />
           {orgName ? (
             <View style={styles.orgChip}>
@@ -147,6 +148,7 @@ export default function LoginScreen() {
               <Text style={styles.switchOrgTxt}>Join a different organization</Text>
             </TouchableOpacity>
           </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -162,7 +164,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.65)',
     alignItems: 'center', justifyContent: 'center',
   },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 60, justifyContent: 'center', paddingTop: 120 },
+  // NOTE: no `justifyContent: 'center'` here. When the content is taller than the
+  // scroll viewport (keyboard open on a small phone) centering overflows the top
+  // out of reach. `marginVertical: 'auto'` on the wrapper centers only when there
+  // IS free space, so tall phones look identical and short ones stay scrollable.
+  scrollContent: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 60, paddingTop: 120 },
+  centerWrap: { marginVertical: 'auto' },
   title: { fontFamily: font.black, fontSize: 42, color: colors.text, letterSpacing: -1.5, lineHeight: 44, marginBottom: 12 },
   subtitle: { fontFamily: font.regular, fontSize: 15, color: colors.textDim, lineHeight: 22 },
   errorBox: { backgroundColor: 'rgba(176,138,62,0.12)', borderRadius: radius.sm, padding: 14, borderWidth: 1, borderColor: 'rgba(176,138,62,0.3)' },

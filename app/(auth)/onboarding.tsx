@@ -55,6 +55,7 @@ export default function OnboardingScreen() {
       <AuroraBackground />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <View style={styles.centerWrap}>
 
           <BrandMark size={68} />
 
@@ -101,6 +102,7 @@ export default function OnboardingScreen() {
           <TouchableOpacity onPress={() => router.push('/credits')} style={{ marginTop: 6 }}>
             <Text style={styles.creditsTxt}>an app by JPX.co</Text>
           </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -114,7 +116,10 @@ const styles = StyleSheet.create({
   orText: { fontFamily: font.medium, fontSize: 13, color: colors.textGhost, marginHorizontal: 14 },
   createOrgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(196,196,196,0.18)', borderRadius: 16, paddingVertical: 15 },
   createOrgTxt: { fontFamily: font.semibold, fontSize: 14.5, color: '#2C7C96' },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 60, justifyContent: 'center', paddingTop: 80 },
+  // See login.tsx: centering via `marginVertical: 'auto'` instead of
+  // `justifyContent: 'center'` so overflowing content stays scrollable to the top.
+  scrollContent: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 60, paddingTop: 80 },
+  centerWrap: { marginVertical: 'auto' },
   title: { fontFamily: font.black, fontSize: 30, color: '#165B74', letterSpacing: -0.8, marginTop: 26, marginBottom: 12 },
   subtitle: { fontFamily: font.regular, fontSize: 15.5, color: colors.textDim, lineHeight: 24 },
   errorBox: { backgroundColor: 'rgba(176,138,62,0.12)', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: 'rgba(176,138,62,0.3)' },

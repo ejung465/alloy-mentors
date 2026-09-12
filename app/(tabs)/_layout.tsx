@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   View, TouchableOpacity, Text, Animated,
-  StyleSheet, Modal, Pressable
+  StyleSheet, Modal, Pressable, useWindowDimensions
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
@@ -75,6 +75,23 @@ function CustomTabBar({ state, navigation }: any) {
 
   const handle = (action: () => void) => { setFabOpen(false); setTimeout(action, 50); };
 
+  // The FAB options stack upward from the tab bar. At the original fixed 68pt
+  // pitch, an admin in a fully-featured org (9 options) needs 110 + 8*68 =
+  // 654pt — taller than an iPhone SE's 667pt screen once the top inset is
+  // accounted for, so the topmost options ("My Student", "Student Roster")
+  // were off-screen and unreachable, with no scroll to recover them. Compress
+  // the pitch only when the stack would otherwise overflow; on roomy screens
+  // the spacing is unchanged.
+  const { height: winH } = useWindowDimensions();
+  const FAB_BASE = 110;   // bottom offset of the first row
+  const FAB_PITCH = 68;   // preferred row-to-row spacing
+  const FAB_ROW_H = 52;   // approximate height of one row
+  const fabHeadroom = winH - insets.top - 24 - FAB_BASE - FAB_ROW_H;
+  const fabPitch = FAB_OPTIONS.length > 1
+    ? Math.max(FAB_ROW_H + 4, Math.min(FAB_PITCH, fabHeadroom / (FAB_OPTIONS.length - 1)))
+    : FAB_PITCH;
+  const fabBottomFor = (i: number) => FAB_BASE + i * fabPitch;
+
   const left  = state.routes.slice(0, 2);
   const right = state.routes.slice(2, 4);
 
@@ -101,9 +118,8 @@ function CustomTabBar({ state, navigation }: any) {
           <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(30,36,28,0.16)' }]} />
         </Pressable>
         {FAB_OPTIONS.map((opt, i) => (
-          <View key={opt.label} style={[styles.fabOption, { bottom: 110 + i * 68 }]}>
+          <View key={opt.label} style={[styles.fabOption, { bottom: fabBottomFor(i) }]}>
             <TouchableOpacity onPress={() => handle(opt.action)} style={styles.fabRow} activeOpacity={0.85}>
-              <BlurView intensity={55} tint="light" style={StyleSheet.absoluteFillObject} />
               <View style={[styles.fabIcon, { backgroundColor: `${opt.color}25`, borderColor: `${opt.color}50` }]}>
                 <Ionicons name={opt.icon as any} size={17} color={opt.color} />
               </View>

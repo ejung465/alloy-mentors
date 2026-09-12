@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, RefreshControl, TouchableOpacity,
-  Modal, StyleSheet, Animated, Pressable, Linking, Platform
+  Modal, StyleSheet, Animated, Pressable, Linking, Platform, useWindowDimensions
 } from 'react-native';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
@@ -85,6 +85,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { compose } = useLocalSearchParams<{ compose?: string }>();
   const { user, profile, org } = useUser();
+  const { height: windowHeight } = useWindowDimensions();
   const memberNoun = org?.memberNoun || 'Tutor';
   const isStudent = profile?.role === 'student';
   const hasHours = featureEnabled(org, 'hours');
@@ -289,7 +290,7 @@ export default function DashboardScreen() {
       >
         {/* ── Masthead ─────────────────────────────────── */}
         <View style={styles.mastRow}>
-          <Text style={styles.eyebrow}>{dateEyebrow}</Text>
+          <Text style={styles.eyebrow} numberOfLines={1}>{dateEyebrow}</Text>
           {isAdmin && (
             <TouchableOpacity onPress={toggleAdminMode} activeOpacity={0.85}
               style={[styles.adminBadge, adminMode && styles.adminBadgeActive]}>
@@ -301,7 +302,12 @@ export default function DashboardScreen() {
           )}
         </View>
         <Text style={styles.hello}>{greeting()}</Text>
-        <Text style={styles.name}>{adminMode ? `${org?.name || 'Dashboard'}.` : `${firstName}.`}</Text>
+        <Text
+          style={styles.name}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >{adminMode ? `${org?.name || 'Dashboard'}.` : `${firstName}.`}</Text>
         <Text style={styles.subline}>{subline()}</Text>
 
         <View style={{ height: 22 }} />
@@ -344,7 +350,7 @@ export default function DashboardScreen() {
                 </View>
                 <View style={{ flex: 1, marginLeft: 14 }}>
                   <Text style={[styles.listLabel, { color: PINE_MID }]}>Broadcast announcement</Text>
-                  <Text style={styles.listSub}>Post to everyone in {org?.name || 'your org'}</Text>
+                  <Text style={styles.listSub} numberOfLines={2}>Post to everyone in {org?.name || 'your org'}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="rgba(44,124,150,0.4)" />
               </View>
@@ -477,7 +483,7 @@ export default function DashboardScreen() {
                             <View style={styles.studentAvatar}><Text style={styles.studentAvatarTxt}>{initials || '?'}</Text></View>
                           )}
                           <View style={{ flex: 1, marginLeft: 12 }}>
-                            <Text style={styles.studentName}>{student.full_name}</Text>
+                            <Text style={styles.studentName} numberOfLines={1}>{student.full_name}</Text>
                             {goal ? (
                               <>
                                 <Text style={styles.studentGoal} numberOfLines={1}>{goal.title}</Text>
@@ -574,13 +580,20 @@ export default function DashboardScreen() {
                     </TouchableOpacity>
                   </View>
 
+                  {/* Body scrolls so a long title / notes paragraph can never push
+                      the header off the top or the action button out of reach. */}
+                  <ScrollView
+                    style={{ maxHeight: Math.max(160, windowHeight * 0.8 - 150) }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                  >
                   <View style={{ marginBottom: 18 }}>
                     <View style={{ alignSelf: 'flex-start', backgroundColor: 'rgba(44,124,150,0.15)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 8 }}>
                       <Text style={{ fontFamily: 'Inter-Bold', fontSize: 10, color: PINE_MID, letterSpacing: 0.8 }}>
                         {sessionDetail.tag}
                       </Text>
                     </View>
-                    <Text style={{ fontFamily: 'Inter-Bold', fontSize: 22, color: INK, letterSpacing: -0.3, lineHeight: 28 }}>{sessionDetail.title}</Text>
+                    <Text numberOfLines={3} style={{ fontFamily: 'Inter-Bold', fontSize: 22, color: INK, letterSpacing: -0.3, lineHeight: 28 }}>{sessionDetail.title}</Text>
                   </View>
 
                   <View style={styles.infoBlock}>
@@ -625,7 +638,9 @@ export default function DashboardScreen() {
                       </View>
                     ) : null}
                   </View>
+                  </ScrollView>
 
+                  {/* Pinned outside the ScrollView — always reachable. */}
                   {sessionDetail.location ? (
                     <TouchableOpacity onPress={() => openMaps(sessionDetail.location!)} style={styles.dirBtn} activeOpacity={0.8}>
                       <Ionicons name="navigate-outline" size={17} color="#2C7C96" />
@@ -704,7 +719,7 @@ const styles = StyleSheet.create({
 
   // Masthead
   mastRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
-  eyebrow: { fontFamily: 'Inter-Bold', fontSize: 11.5, color: PINE_MID, letterSpacing: 2 },
+  eyebrow: { fontFamily: 'Inter-Bold', fontSize: 11.5, color: PINE_MID, letterSpacing: 2, flexShrink: 1, marginRight: 8 },
   hello: { fontFamily: 'Inter-Medium', fontSize: 19, color: 'rgba(34,39,31,0.55)', letterSpacing: -0.2 },
   name: { fontFamily: 'Inter-Black', fontSize: 40, color: PINE, letterSpacing: -1.6, lineHeight: 44, marginTop: 2 },
   subline: { fontFamily: 'Inter-Regular', fontSize: 14.5, color: 'rgba(34,39,31,0.6)', lineHeight: 21, marginTop: 10, maxWidth: '94%' },

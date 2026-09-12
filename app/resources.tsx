@@ -86,7 +86,8 @@ export default function ResourcesScreen() {
       .from('resources')
       .select('*')
       .eq('organization_id', org.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100);
     setResources((data as Resource[]) ?? []);
     setLoading(false);
   }, [org?.id]);

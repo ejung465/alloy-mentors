@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { 
   View, Text, StyleSheet, Modal, Pressable,
-  TouchableOpacity, ScrollView, Alert, 
-  ActivityIndicator, KeyboardAvoidingView, Platform
+  TouchableOpacity, ScrollView, Alert,
+  ActivityIndicator, KeyboardAvoidingView, Platform, useWindowDimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
@@ -22,6 +22,7 @@ type Urgency = 'info' | 'warning' | 'emergency';
 
 export default function CreateAnnouncementModal({ visible, onClose, onSuccess }: Props) {
   const { profile } = useUser();
+  const { height: windowHeight } = useWindowDimensions();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [urgency, setUrgency] = useState<Urgency>('info');
@@ -88,8 +89,11 @@ export default function CreateAnnouncementModal({ visible, onClose, onSuccess }:
           style={styles.modalContent}
           pointerEvents="box-none"
         >
-          <Pressable onPress={(e: any) => e.stopPropagation()}>
-          <GlassCard style={styles.card} contentStyle={{ padding: 24 }}>
+          <Pressable onPress={(e: any) => e.stopPropagation()} style={{ flexShrink: 1 }}>
+          <GlassCard
+            style={[styles.card, { maxHeight: Math.round(windowHeight * 0.85) }]}
+            contentStyle={{ padding: 24, flexShrink: 1 }}
+          >
             <View style={styles.header}>
               <Text style={styles.modalTitle}>Broadcast Message</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -97,7 +101,7 @@ export default function CreateAnnouncementModal({ visible, onClose, onSuccess }:
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <View style={{ marginBottom: 20 }}>
                 <GlassInput 
                   label="Announcement Title"
@@ -148,7 +152,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   card: {
-    maxHeight: '85%',
+    // Concrete maxHeight is applied at the call site from useWindowDimensions();
+    // a percentage against the auto-height Pressable parent never resolved.
+    flexShrink: 1,
   },
   header: {
     flexDirection: 'row',

@@ -72,7 +72,8 @@ export default function OrgTreeScreen() {
         .from('users')
         .select('id, full_name, role, director_subject, school')
         .eq('organization_id', profile.organization_id)
-        .order('full_name');
+        .order('full_name')
+        .limit(500);
       setMembers((data as Member[]) ?? []);
       setLoading(false);
     })();

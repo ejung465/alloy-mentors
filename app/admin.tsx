@@ -74,10 +74,13 @@ export default function AdminDashboard() {
 
   const fetchData = useCallback(async () => {
     // Fetch all hours logs with mentor info
+    // Bounded: newest 100 submissions. Stats below are computed from the full
+    // table (not this page) so the dashboard totals stay accurate.
     const { data: logsData, error } = await supabase
       .from('hours_logs')
       .select('*, mentor:users!hours_logs_mentor_id_fkey(full_name, email, school)')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) {
       console.log('Admin fetch error:', error.message);
@@ -87,12 +90,15 @@ export default function AdminDashboard() {
 
     setLogs(logsData || []);
 
-    // Compute stats
-    const pending = (logsData || []).filter(l => l.status === 'pending').length;
-    const approved = (logsData || []).filter(l => l.status === 'approved').length;
-    const totalHours = (logsData || [])
-      .filter(l => l.status === 'approved')
-      .reduce((acc, l) => acc + Number(l.hours), 0);
+    // Compute stats across ALL logs, not just the page fetched above.
+    const [{ count: pendingCount }, { count: approvedCount }, { data: approvedHours }] = await Promise.all([
+      supabase.from('hours_logs').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('hours_logs').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+      supabase.from('hours_logs').select('hours').eq('status', 'approved'),
+    ]);
+    const pending = pendingCount ?? 0;
+    const approved = approvedCount ?? 0;
+    const totalHours = (approvedHours || []).reduce((acc, l: any) => acc + Number(l.hours), 0);
 
     const { count: mentorCount } = await supabase
       .from('users')

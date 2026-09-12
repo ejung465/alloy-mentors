@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Modal, TextInput, Alert, Linking, Platform, Image,
+  Modal, TextInput, Alert, Linking, Platform, Image, KeyboardAvoidingView,
   Dimensions, RefreshControl, Pressable, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -225,6 +225,9 @@ export default function CalendarScreen() {
   useEffect(() => {
     void loadSessions();
   }, [loadSessions]);
+
+  // O(sessions) once, instead of an O(days x sessions) scan per rendered day cell.
+  const daysWithEvents = useMemo(() => new Set(sessions.map(s => s.isoDate)), [sessions]);
 
   const onSessionsRefresh = useCallback(async () => {
     setSessionsRefreshing(true);
@@ -640,7 +643,7 @@ export default function CalendarScreen() {
                       const dayYMD = toYMD(d);
                       const isTdy = dayYMD === todayYMD;
                       const isCurMonth = d.getMonth() === selectedDate.getMonth();
-                      const hasEvt = sessions.some(s => s.isoDate === dayYMD);
+                      const hasEvt = daysWithEvents.has(dayYMD);
                       
                       return (
                         <TouchableOpacity 
@@ -694,7 +697,7 @@ export default function CalendarScreen() {
                   const dayYMD = toYMD(d);
                   const isSel = (viewMode === 'day' && dayYMD === selectedYMD); 
                   const isTdy = dayYMD===todayYMD;
-                  const hasEvt = sessions.some(s => s.isoDate === dayYMD);
+                  const hasEvt = daysWithEvents.has(dayYMD);
                   return (
                     <View key={i} style={styles.stripItemContainer}>
                       <TouchableOpacity
@@ -858,7 +861,10 @@ export default function CalendarScreen() {
 
       {/* ── Create Event Sheet ────────────────────────────────────────────── */}
       <Modal visible={showAddEvent} transparent animationType="slide">
-        <View style={{ flex:1, justifyContent:'flex-end', backgroundColor:'rgba(0,0,0,0.5)' }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex:1, justifyContent:'flex-end', backgroundColor:'rgba(0,0,0,0.5)' }}
+        >
           <BlurView intensity={25} tint="light" style={StyleSheet.absoluteFillObject} />
           {/* Tap the empty area above the sheet to dismiss */}
           <Pressable style={{ flex: 1 }} onPress={() => setShowAddEvent(false)} />
@@ -1056,7 +1062,7 @@ export default function CalendarScreen() {
               <Text style={styles.createBtnTxt}>{creating ? 'Creating…' : repeatWeeks > 1 ? `Create ${repeatWeeks} Events` : 'Create Event'}</Text>
             </TouchableOpacity>
           </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -1081,10 +1087,6 @@ const styles = StyleSheet.create({
   segmentTxt:    { fontFamily:'Inter-SemiBold', fontSize:13, color:'rgba(34,39,31,0.45)' },
   segmentTxtActive: { color:'#165B74' },
   addBtn:        { width:34, height:34, borderRadius:12, backgroundColor:'rgba(196,196,196,0.08)', borderWidth:1, borderColor:'rgba(196,196,196,0.18)', alignItems:'center', justifyContent:'center' },
-  headerPill:    { flexDirection:'row', alignItems:'center', backgroundColor:'rgba(44,124,150,0.1)', borderWidth:1, borderColor:'rgba(44,124,150,0.25)', borderRadius:20, overflow:'hidden' },
-  pillBtn:       { flexDirection:'row', alignItems:'center', paddingHorizontal:12, paddingVertical:9, gap:4 },
-  pillTxt:       { fontFamily:'Inter-Medium', fontSize:13, color:'#2C7C96' },
-  pillDivider:   { width:1, height:20, backgroundColor:'rgba(44,124,150,0.3)' },
   stripContent:       { paddingHorizontal:170, paddingVertical:10 },
   stripItemContainer: { width:ITEM_WIDTH, alignItems:'center' },
   dayCell:   { alignItems:'center', width:44, paddingVertical:8, borderRadius:14 },
@@ -1103,7 +1105,7 @@ const styles = StyleSheet.create({
 
   // Sheet
   addSheet:        { backgroundColor:'#FFFFFF', borderTopLeftRadius:36, borderTopRightRadius:36, maxHeight:'95%', borderWidth:1, borderColor:'rgba(196,196,196,0.16)' },
-  addSheetContent: { padding:20, paddingBottom:52 },
+  addSheetContent: { padding:20, paddingBottom:120 },
   sheetHandle:     { width:38, height:4, borderRadius:2, backgroundColor:'rgba(196,196,196,0.32)' },
   sheetHeader:     { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:20 },
   sheetTitle:      { fontFamily:'Inter-Bold', fontSize:24, color:'#22271F' },

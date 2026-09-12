@@ -140,33 +140,5 @@ const styles = StyleSheet.create({
   allergyTag: { backgroundColor: 'rgba(177,90,78,0.12)', borderColor: 'rgba(177,90,78,0.3)' },
   tagTxt: { fontFamily: font.medium, fontSize: 11, color: colors.textDim },
   empty: { fontFamily: font.regular, fontSize: 14, color: colors.textFaint, textAlign: 'center', marginTop: 50 },
-
-  sheet: { marginTop: 'auto', maxHeight: '86%', backgroundColor: colors.baseElevated, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: colors.hairlineStrong, padding: 20, paddingTop: 12 },
-  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: colors.hairlineStrong, alignSelf: 'center', marginBottom: 16 },
-  detailHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
-  detailName: { fontFamily: font.bold, fontSize: 20, color: colors.text, letterSpacing: -0.3 },
-  detailSub: { fontFamily: font.regular, fontSize: 13, color: colors.textFaint, marginTop: 3 },
-
-  safetyBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(177,90,78,0.10)', borderWidth: 1, borderColor: 'rgba(177,90,78,0.3)', borderRadius: radius.md, padding: 12, marginBottom: 14 },
-  safetyTxt: { flex: 1, fontFamily: font.semibold, fontSize: 14, color: colors.rose },
-
-  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 9 },
-  infoIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  infoLabel: { fontFamily: font.medium, fontSize: 11, color: colors.textFaint, textTransform: 'uppercase', letterSpacing: 0.6 },
-  infoValue: { fontFamily: font.medium, fontSize: 15, color: colors.text, marginTop: 2 },
-  sensitiveLabel: { fontFamily: font.semibold, fontSize: 11, color: colors.steel, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 16, marginBottom: 4 },
-
-  notesHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 22, marginBottom: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.hairline },
-  notesTitle: { fontFamily: font.bold, fontSize: 17, color: colors.text, letterSpacing: -0.3 },
-  noteComposer: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, borderRadius: radius.md, padding: 12, marginBottom: 14 },
-  noteInput: { fontFamily: font.regular, fontSize: 15, color: colors.text, minHeight: 60, textAlignVertical: 'top' },
-  noteAddBtn: { alignSelf: 'flex-end', backgroundColor: colors.platinum, paddingHorizontal: 18, paddingVertical: 9, borderRadius: 18, marginTop: 8 },
-  noteAddTxt: { fontFamily: font.bold, fontSize: 13, color: colors.base },
-  notesEmpty: { fontFamily: font.regular, fontSize: 13, color: colors.textFaint, textAlign: 'center', paddingVertical: 16 },
-  noteCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, borderRadius: radius.md, padding: 14, marginBottom: 10 },
-  noteMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  noteAuthor: { fontFamily: font.semibold, fontSize: 13, color: colors.titanium },
-  noteDate: { fontFamily: font.regular, fontSize: 12, color: colors.textFaint },
-  noteBody: { fontFamily: font.regular, fontSize: 15, color: colors.text, lineHeight: 21 },
 });
 

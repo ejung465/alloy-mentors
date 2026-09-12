@@ -135,8 +135,10 @@ export default function ProfileScreen() {
     setStreak(await getAttendanceStreak(user.id));
   };
 
-  useEffect(() => { fetchProfile(); }, []);
-  // Refetch when returning from the edit screen so changes show immediately.
+  // useFocusEffect already fires on mount, so a separate mount-time useEffect
+  // would double every query on this screen (10 instead of 5, including the
+  // unbounded hours/attendance scans). This one hook covers both mount and
+  // returning from the edit screen.
   useFocusEffect(React.useCallback(() => { fetchProfile(); }, []));
 
   // ── Change email: step 1 sends a 6-digit code to the new address, step 2
@@ -658,10 +660,4 @@ const styles = StyleSheet.create({
   saveCTAText: { fontFamily: 'Inter-Bold', fontSize: 15, color: colors.base },
 
   // QR modal
-  qrBackdrop: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
-  qrTitle: { fontFamily: 'Inter-Bold', fontSize: 20, color: '#22271F', letterSpacing: -0.3 },
-  qrSub: { fontFamily: 'Inter-Regular', fontSize: 13, color: 'rgba(34,39,31,0.5)', textAlign: 'center', marginTop: 6, lineHeight: 19 },
-  qrPanel: { backgroundColor: '#F7F8F8', borderRadius: 20, padding: 14, marginVertical: 18 },
-  qrName: { fontFamily: 'Inter-Bold', fontSize: 17, color: '#22271F' },
-  qrRole: { fontFamily: 'Inter-Medium', fontSize: 13, color: 'rgba(34,39,31,0.5)', marginTop: 2 },
 });

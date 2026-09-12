@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
-  ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput,
-  TouchableOpacity, View,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView,
+  StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -518,7 +518,11 @@ export default function StudentProgressScreen() {
 
       {/* ── Log session modal ── */}
       <Modal visible={logOpen} transparent animationType="slide">
-        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.scrim }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <Pressable
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.scrim }]}
+            onPress={() => setLogOpen(false)}
+          />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -561,46 +565,58 @@ export default function StudentProgressScreen() {
               </TouchableOpacity>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Set goal modal ── */}
       <Modal visible={goalOpen} transparent animationType="slide">
-        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.scrim }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <Pressable
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.scrim }]}
+            onPress={() => setGoalOpen(false)}
+          />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>New learning goal</Text>
-            <Text style={styles.fieldLabel}>GOAL</Text>
-            <TextInput style={styles.input} placeholder="e.g. Double-digit multiplication" placeholderTextColor={colors.textGhost} value={goalTitle} onChangeText={setGoalTitle} />
-            <Text style={styles.fieldLabel}>SUBJECT (OPTIONAL)</Text>
-            <TextInput style={styles.input} placeholder="e.g. Math" placeholderTextColor={colors.textGhost} value={goalSubject} onChangeText={setGoalSubject} />
-            <TouchableOpacity style={[styles.saveBtn, !goalTitle.trim() && { opacity: 0.5 }]} disabled={!goalTitle.trim()} onPress={submitGoal}>
-              <Text style={styles.saveTxt}>Set goal</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setGoalOpen(false)}>
-              <Text style={styles.cancelTxt}>Cancel</Text>
-            </TouchableOpacity>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <Text style={styles.sheetTitle}>New learning goal</Text>
+              <Text style={styles.fieldLabel}>GOAL</Text>
+              <TextInput style={styles.input} placeholder="e.g. Double-digit multiplication" placeholderTextColor={colors.textGhost} value={goalTitle} onChangeText={setGoalTitle} />
+              <Text style={styles.fieldLabel}>SUBJECT (OPTIONAL)</Text>
+              <TextInput style={styles.input} placeholder="e.g. Math" placeholderTextColor={colors.textGhost} value={goalSubject} onChangeText={setGoalSubject} />
+              <TouchableOpacity style={[styles.saveBtn, !goalTitle.trim() && { opacity: 0.5 }]} disabled={!goalTitle.trim()} onPress={submitGoal}>
+                <Text style={styles.saveTxt}>Set goal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setGoalOpen(false)}>
+                <Text style={styles.cancelTxt}>Cancel</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Add skill modal ── */}
       <Modal visible={skillOpen} transparent animationType="slide">
-        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.scrim }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <Pressable
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.scrim }]}
+            onPress={() => setSkillOpen(false)}
+          />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Track a skill</Text>
-            <Text style={styles.fieldLabel}>SKILL NAME</Text>
-            <TextInput style={styles.input} placeholder="e.g. Reading comprehension" placeholderTextColor={colors.textGhost} value={skillName} onChangeText={setSkillName} />
-            <Text style={styles.hint}>Tip: tap a skill card to move it Learning → Practicing → Mastered.</Text>
-            <TouchableOpacity style={[styles.saveBtn, !skillName.trim() && { opacity: 0.5 }]} disabled={!skillName.trim()} onPress={submitSkill}>
-              <Text style={styles.saveTxt}>Add skill</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setSkillOpen(false)}>
-              <Text style={styles.cancelTxt}>Cancel</Text>
-            </TouchableOpacity>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <Text style={styles.sheetTitle}>Track a skill</Text>
+              <Text style={styles.fieldLabel}>SKILL NAME</Text>
+              <TextInput style={styles.input} placeholder="e.g. Reading comprehension" placeholderTextColor={colors.textGhost} value={skillName} onChangeText={setSkillName} />
+              <Text style={styles.hint}>Tip: tap a skill card to move it Learning → Practicing → Mastered.</Text>
+              <TouchableOpacity style={[styles.saveBtn, !skillName.trim() && { opacity: 0.5 }]} disabled={!skillName.trim()} onPress={submitSkill}>
+                <Text style={styles.saveTxt}>Add skill</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setSkillOpen(false)}>
+                <Text style={styles.cancelTxt}>Cancel</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
