@@ -10,13 +10,28 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 
 Deno.serve(async (req) => {
-  const { record } = await req.json();
-  if (!record) return new Response('no record', { status: 400 });
+  let payload: any;
+  try { payload = await req.json(); } catch { return new Response('bad json', { status: 400 }); }
+  const messageId = payload?.record?.id;
+  if (!messageId) return new Response('no record', { status: 400 });
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
+
+  // This endpoint is public (the DB webhook can't send a JWT), so never trust
+  // the posted payload: re-read the message from the database. A forged call
+  // can then at most re-send a push for a real, recent message.
+  const { data: record } = await supabase
+    .from('messages')
+    .select('id, sender_id, receiver_id, group_chat_id, content, image_url, created_at')
+    .eq('id', messageId)
+    .maybeSingle();
+  if (!record) return new Response('no such message', { status: 404 });
+  if (Date.now() - new Date(record.created_at).getTime() > 2 * 60 * 1000) {
+    return new Response('stale', { status: 200 });
+  }
 
   const recipientIds: string[] = [];
 
@@ -58,7 +73,8 @@ Deno.serve(async (req) => {
   const messages = tokens.map((token: string) => ({
     to: token,
     title: senderName,
-    body: record.content.length > 100 ? record.content.slice(0, 97) + '…' : record.content,
+    body: !record.content ? (record.image_url ? 'Sent a photo' : 'New message')
+      : record.content.length > 100 ? record.content.slice(0, 97) + '…' : record.content,
     data: { messageId: record.id },
     sound: 'default',
   }));

@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { colors } from '@/lib/theme';
 import { supabase } from '@/lib/supabase';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const PINE = '#165B74';
 const PINE_MID = '#2C7C96';

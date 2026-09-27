@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, RefreshControl, TouchableOpacity,
-  Modal, StyleSheet, Animated, Pressable, Linking, Platform, useWindowDimensions
+  Modal, StyleSheet, Animated, Pressable, Linking, Platform, useWindowDimensions, Alert
 } from 'react-native';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
@@ -9,7 +9,7 @@ import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { TourOverlay } from '@/components/ui/TourOverlay';
 import { colors } from '@/lib/theme';
 import { supabase } from '@/lib/supabase';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { canManageOrg, canCreateEvents } from '@/lib/roles';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
@@ -23,7 +23,7 @@ import {
   formatSessionLongDate,
   formatSessionTimeRange,
   getMyRsvp,
-  setMyRsvp,
+  setMyRsvp, clearMyRsvp,
   type SessionListItem,
 } from '@/lib/sessions';
 
@@ -221,11 +221,19 @@ export default function DashboardScreen() {
   }, [user, nextUpcomingSession?.id]);
 
   const persistRsvp = async (status: 'going' | 'not_going') => {
+    const prev = rsvpStatus;
     const next = rsvpStatus === status ? 'none' : status;
-    setRsvpStatus(next as any);
-    if (user && nextUpcomingSession && next !== 'none') {
-      const { error } = await setMyRsvp(nextUpcomingSession.id, user.id, next as any);
-      if (error) console.warn('[rsvp] save failed:', error.message);
+    setRsvpStatus(next);
+    if (!user || !nextUpcomingSession) return;
+    // Un-toggling used to only change local state, so the RSVP silently
+    // came back on the next load. Persist both directions; revert on failure.
+    const { error } = next === 'none'
+      ? await clearMyRsvp(nextUpcomingSession.id, user.id)
+      : await setMyRsvp(nextUpcomingSession.id, user.id, next);
+    if (error) {
+      console.warn('[rsvp] save failed:', error.message);
+      setRsvpStatus(prev);
+      Alert.alert("Couldn't save your RSVP", 'Check your connection and try again.');
     }
   };
 

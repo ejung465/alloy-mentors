@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
@@ -27,6 +27,7 @@ const PINE = '#165B74';
 const PINE_MID = '#2C7C96';
 const CLAY = '#C5642D';
 const INK = '#22271F';
+const MAX_RESOURCE_BYTES = 25 * 1024 * 1024;
 
 type Audience = 'all' | 'students' | 'mentors' | 'specific';
 
@@ -119,6 +120,12 @@ export default function ResourcesScreen() {
       const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
       if (res.canceled || !res.assets?.length) return;
       const asset = res.assets[0];
+      // Matches the bucket's file_size_limit (migration 0034) — fail early with
+      // a clear message instead of a vague upload error.
+      if (asset.size && asset.size > MAX_RESOURCE_BYTES) {
+        Alert.alert('File too large', `Resources can be up to ${MAX_RESOURCE_BYTES / 1024 / 1024} MB. Try a smaller file, or share a link instead.`);
+        return;
+      }
       setPicked(asset);
       if (!title.trim()) setTitle(asset.name.replace(/\.[^.]+$/, ''));
     } catch (e: any) {

@@ -16,8 +16,9 @@ import { colors } from '@/lib/theme';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabase';
 import { canManageOrg } from '@/lib/roles';
+import { shrinkImage } from '@/lib/image';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { BlurView } from 'expo-blur';
 
 // Lazy-load expo-image-picker so the screen still renders if the native module
@@ -278,11 +279,25 @@ export default function ChatScreen() {
     setReactions({});
     loadHistory();
 
-    const chanKey = activeChat.type === 'org' ? 'org' : activeChat.id;
-    const channel = supabase.channel(`chat_${chanKey}`, {
-      config: { presence: { key: currentUser.id } },
-    })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+    // One channel per conversation, shared by everyone in it. Org chat is keyed
+    // by org id (a bare "org" key put every organization in the same channel,
+    // leaking presence/typing across tenants); DMs use the sorted user pair so
+    // both people land in the same channel (keying by the other person's id
+    // put them in different channels, so DM typing indicators never arrived).
+    const orgId = profile?.organization_id ?? null;
+    const chanKey = activeChat.type === 'org' ? `org_${orgId ?? 'none'}`
+      : activeChat.type === 'dm' ? `dm_${[currentUser.id, activeChat.id].sort().join('_')}`
+      : activeChat.id;
+
+    // Server-side filters so this thread only receives rows it could show,
+    // instead of every message insert in the database. DMs need two filters
+    // (sent to me / sent by me) since Realtime filters can't express OR.
+    const msgFilters: (string | undefined)[] =
+      activeChat.type === 'org' ? [orgId ? `organization_id=eq.${orgId}` : undefined]
+      : activeChat.type === 'group_chat' ? [`group_chat_id=eq.${activeChat.id}`]
+      : [`receiver_id=eq.${currentUser.id}`, `sender_id=eq.${currentUser.id}`];
+
+    const onInsert = (payload: any) => {
         const msg = payload.new as any;
         let belongsHere = false;
         if (activeChat.type === 'org') {
@@ -317,11 +332,21 @@ export default function ChatScreen() {
           return [...prev, { ...msg, status: msg.sender_id === currentUser.id ? 'sent' : 'read' }];
         });
         setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, (payload) => {
+    };
+    const onUpdate = (payload: any) => {
         const msg = payload.new as any;
         setMessages((prev) => prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m)));
-      })
+    };
+
+    const channel = supabase.channel(`chat_${chanKey}`, {
+      config: { presence: { key: currentUser.id } },
+    });
+    for (const filter of msgFilters) {
+      channel
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter }, onInsert)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter }, onUpdate);
+    }
+    channel
       // Tapbacks — filter client-side to messages in this thread.
       .on('postgres_changes', { event: '*', schema: 'public', table: 'message_reactions' }, (payload) => {
         const row = (payload.new ?? payload.old) as any;
@@ -354,7 +379,7 @@ export default function ChatScreen() {
       channelRef.current = null;
       supabase.removeChannel(channel);
     };
-  }, [activeChat, currentUser]);
+  }, [activeChat, currentUser, profile?.organization_id]);
 
   // ── Pagination ──────────────────────────────────────────────────────────────
   const loadMoreMessages = async () => {
@@ -478,12 +503,12 @@ export default function ChatScreen() {
   };
 
   // ── Images ────────────────────────────────────────────────────────────────
-  const uploadChatImage = async (localUri: string): Promise<string | null> => {
+  const uploadChatImage = async (localUri: string, width?: number, height?: number): Promise<string | null> => {
     if (!profile?.organization_id) return null;
     try {
-      const res = await fetch(localUri);
+      const { uri, ext } = await shrinkImage(localUri, { width, height, maxDim: 1600 });
+      const res = await fetch(uri);
       const arrayBuffer = await res.arrayBuffer();
-      const ext = localUri.split('.').pop()?.split('?')[0] || 'jpg';
       // Path MUST start with the org id — the storage RLS policy checks folder[1].
       const path = `${profile.organization_id}/${currentUser.id}-${Date.now()}.${ext}`;
       const { error } = await supabase.storage
@@ -510,7 +535,8 @@ export default function ChatScreen() {
     if (result.canceled || !result.assets?.[0]) return;
 
     setUploadingImage(true);
-    const url = await uploadChatImage(result.assets[0].uri);
+    const picked = result.assets[0];
+    const url = await uploadChatImage(picked.uri, picked.width, picked.height);
     if (!url) { setUploadingImage(false); Alert.alert('Upload failed', 'That image could not be uploaded. Please try again.'); return; }
 
     const tempId = Math.random().toString(36).substring(7);

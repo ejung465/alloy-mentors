@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Modal, TextInput, Alert, Linking, Platform, Image, KeyboardAvoidingView,
+  Modal, TextInput, Alert, Linking, Platform, KeyboardAvoidingView,
   Dimensions, RefreshControl, Pressable, ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { colors } from '@/lib/theme';
@@ -63,7 +63,7 @@ function durSlotToMins(s: string): number {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const TAG_STYLE: Record<string, { bg: string; text: string }> = {
   UPCOMING: { bg:'rgba(44,124,150,0.15)', text:'#2C7C96' },
-  OPTIONAL: { bg:'rgba(94,116,136,0.15)', text:'#7A7A7A' },
+  PAST:     { bg:'rgba(94,116,136,0.15)', text:'#7A7A7A' },
   NEW:      { bg:'rgba(76,122,97,0.15)', text:'#2C7C96' },
 };
 const MONTH_NAMES   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -790,6 +790,15 @@ export default function CalendarScreen() {
                           <Text style={styles.detailValue}>{formatSessionTimeRange(detail.start_time, detail.end_time)}</Text>
                         </View>
                       </View>
+                      {detail.location ? (
+                        <TouchableOpacity style={styles.detailInfoRow} onPress={() => openAppleMaps(detail.location!)} activeOpacity={0.7}>
+                          <Ionicons name="location-outline" size={15} color="#2C7C96" />
+                          <View style={{ flex: 1, marginLeft: 10 }}>
+                            <Text style={styles.detailLabel}>Location · tap for directions</Text>
+                            <Text style={styles.detailValue}>{detail.location}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      ) : null}
                       {detail.description ? (
                         <View style={styles.detailInfoRow}>
                           <Ionicons name="document-text-outline" size={15} color="#B08A3E" />
@@ -1009,18 +1018,15 @@ export default function CalendarScreen() {
               </View>
 
               {location.length > 2 && (
-                <View style={styles.mapCard}>
-                  <Image
-                    source={{ uri:`https://static-maps.yandex.ru/1.x/?l=map&z=14&size=600,180&pt=${encodeURIComponent(location)},pm2rdm&lang=en_US` }}
-                    style={styles.mapImage} resizeMode="cover"
-                  />
-                  <BlurView intensity={40} tint="light" style={styles.mapOverlay}>
-                    <Text style={styles.mapOverlayTxt} numberOfLines={1}>{location}</Text>
-                  </BlurView>
-                  <TouchableOpacity style={styles.mapNavBtn} onPress={() => openAppleMaps(location)}>
-                    <Ionicons name="navigate-circle" size={28} color="#2C7C96" />
-                  </TouchableOpacity>
-                </View>
+                // The old preview was a Yandex static-map image, which needs
+                // coordinates — given an address it returned HTTP 400, so the
+                // card was always blank. Let the user check the spot in Maps.
+                <TouchableOpacity style={styles.mapCard} onPress={() => openAppleMaps(location)} activeOpacity={0.7}>
+                  <Ionicons name="location-outline" size={16} color="#2C7C96" />
+                  <Text style={styles.mapCardTxt} numberOfLines={1}>{location}</Text>
+                  <Text style={styles.mapCardLink}>Check in Maps</Text>
+                  <Ionicons name="open-outline" size={13} color="#2C7C96" />
+                </TouchableOpacity>
               )}
             </View>
 
@@ -1140,11 +1146,9 @@ const styles = StyleSheet.create({
   wheelFadeBottom:  { bottom:0, backgroundColor:'rgba(255,253,247,0.9)' },
 
   // Map
-  mapCard:       { marginTop:10, height:100, borderRadius:18, overflow:'hidden', borderWidth:1, borderColor:'rgba(196,196,196,0.22)' },
-  mapImage:      { width:'100%', height:'100%' },
-  mapOverlay:    { position:'absolute', bottom:0, left:0, right:0, paddingHorizontal:14, paddingVertical:8 },
-  mapOverlayTxt: { fontFamily:'Inter-Medium', fontSize:11, color:'#22271F' },
-  mapNavBtn:     { position:'absolute', top:8, right:10 },
+  mapCard:       { marginTop:10, flexDirection:'row', alignItems:'center', gap:8, paddingHorizontal:14, paddingVertical:12, borderRadius:14, borderWidth:1, borderColor:'rgba(196,196,196,0.22)', backgroundColor:'rgba(44,124,150,0.06)' },
+  mapCardTxt:    { flex:1, fontFamily:'Inter-Medium', fontSize:12, color:'#22271F' },
+  mapCardLink:   { fontFamily:'Inter-SemiBold', fontSize:12, color:'#2C7C96' },
 
   // Create
   createBtn:    { backgroundColor:colors.platinum, borderRadius:20, paddingVertical:18, alignItems:'center', marginTop:4 },

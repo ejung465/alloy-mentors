@@ -4,7 +4,7 @@ import {
   StyleSheet, Animated, Alert, Pressable, Modal, TextInput
 } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { BlurView } from 'expo-blur';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
                       activeOpacity={0.8}
                     >
                       <Ionicons name="close" size={16} color="#2C7C96" />
-                      <Text style={[styles.actionBtnText, { color: '#2C7C96' }]}>Reject</Text>
+                      <Text style={[styles.actionBtnText, { color: '#B15A4E' }]}>Reject</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleDecision(log.id, 'approved')}
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 12, borderRadius: 14, borderWidth: 1,
   },
-  rejectBtn: { backgroundColor: 'rgba(44,124,150,0.08)', borderColor: 'rgba(44,124,150,0.25)' },
+  rejectBtn: { backgroundColor: 'rgba(177,90,78,0.08)', borderColor: 'rgba(177,90,78,0.3)' },
   approveBtn: { backgroundColor: 'rgba(76,122,97,0.1)', borderColor: 'rgba(76,122,97,0.3)' },
   actionBtnText: { fontFamily: 'Inter-SemiBold', fontSize: 14 },
 

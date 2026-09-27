@@ -4,7 +4,7 @@ import {
   TouchableOpacity, ScrollView, Alert,
   ActivityIndicator, KeyboardAvoidingView, Platform, useWindowDimensions
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/lib/theme';
 import { useUser } from '@/contexts/UserContext';

@@ -5,11 +5,12 @@ import {
   StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { colors, font } from '@/lib/theme';
 import { useUser } from '@/contexts/UserContext';
 import { createStudent, uploadStudentPhoto } from '@/lib/checkin';
+import { shrinkImage } from '@/lib/image';
 import { SUBJECTS, ENGLISH_LEVELS, TRANSPORT } from '@/lib/intake';
 
 const GENDERS = ['Male', 'Female', 'Other'];
@@ -88,7 +89,11 @@ export default function AddStudentModal() {
     const result = useCamera
       ? await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.6 })
       : await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.6 });
-    if (!result.canceled && result.assets?.[0]) setPhotoUri(result.assets[0].uri);
+    if (!result.canceled && result.assets?.[0]) {
+      const a = result.assets[0];
+      const small = await shrinkImage(a.uri, { width: a.width, height: a.height, maxDim: 800 });
+      setPhotoUri(small.uri);
+    }
   };
 
   const choosePhoto = () => {

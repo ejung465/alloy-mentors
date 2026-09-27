@@ -9,7 +9,7 @@ import { colors, font, radius } from '@/lib/theme';
 import { clearLastOrg } from '@/lib/org';
 import { supabase } from '@/lib/supabase';
 import { BlurView } from 'expo-blur';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams } from 'expo-router';
 import {
   signInWithApple, signInWithGoogle, signInWithLinkedIn,

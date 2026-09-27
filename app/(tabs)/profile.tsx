@@ -9,7 +9,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { BlurView } from 'expo-blur';
 import { GlassInput } from '@/components/ui/GlassInput';
 import { GlassCard } from '@/components/ui/GlassCard';

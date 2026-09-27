@@ -21,7 +21,7 @@ export type SessionListItem = {
   title: string;
   time: string;
   location: string | null;
-  tag: 'UPCOMING' | 'OPTIONAL' | 'NEW';
+  tag: 'UPCOMING' | 'PAST' | 'NEW';
   description?: string;
   start_time: string;
   end_time: string;
@@ -53,7 +53,7 @@ export function mapSessionRow(row: SessionRow): SessionListItem {
   const time = `${formatTime(start)} – ${formatTime(end)}`;
 
   let tag: SessionListItem['tag'] = 'UPCOMING';
-  if (end.getTime() < now) tag = 'OPTIONAL';
+  if (end.getTime() < now) tag = 'PAST';
   else if (
     start.getTime() > now &&
     now - created.getTime() < 14 * 24 * 60 * 60 * 1000
@@ -218,6 +218,11 @@ export async function setMyRsvp(sessionId: string, userId: string, status: 'goin
       { session_id: sessionId, user_id: userId, status, updated_at: new Date().toISOString() },
       { onConflict: 'session_id,user_id' }
     );
+}
+
+/** Withdraw an RSVP (tapping the active pill again) — back to "no response". */
+export async function clearMyRsvp(sessionId: string, userId: string) {
+  return supabase.from('session_rsvps').delete().eq('session_id', sessionId).eq('user_id', userId);
 }
 
 export type RsvpCoverage = { going: number; notGoing: number; noResponse: number; total: number };

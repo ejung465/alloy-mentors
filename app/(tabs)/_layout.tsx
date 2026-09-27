@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import {
   View, TouchableOpacity, Text, Animated,
   StyleSheet, Modal, Pressable, useWindowDimensions

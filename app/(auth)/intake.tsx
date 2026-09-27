@@ -7,7 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/contexts/UserContext';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { GlassInput } from '@/components/ui/GlassInput';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';

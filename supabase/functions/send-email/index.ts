@@ -2,6 +2,10 @@
 // Sends transactional email (guardian digests, notifications) via Resend.
 //
 // Deploy:   npx supabase functions deploy send-email --no-verify-jwt
+// Auth:     callers must send `Authorization: Bearer <service role key>`.
+//           Without this check the endpoint is an open relay: anyone could
+//           send any HTML from updates@alloymentors.com and burn the domain's
+//           reputation. Nothing in the app calls it; it's for server-side use.
 // Secret:   npx supabase secrets set RESEND_API_KEY=<your key>   (never commit it)
 // Sender:   requires alloymentors.com to be a verified domain in Resend.
 //
@@ -10,6 +14,11 @@
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'POST only' }), { status: 405 });
+  }
+
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!serviceKey || req.headers.get('Authorization') !== `Bearer ${serviceKey}`) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
   const key = Deno.env.get('RESEND_API_KEY');

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { AuroraBackground } from '@/components/ui/AuroraBackground';
 import { colors, font } from '@/lib/theme';
 import { authenticateAsync, setAppLockEnabled } from '@/lib/appLock';
